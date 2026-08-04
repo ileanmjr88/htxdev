@@ -1,0 +1,65 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Meetup//Meetup Calendar 1.0//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+NAME:Houston Code and Coffee
+X-WR-CALNAME:Houston Code and Coffee
+BEGIN:VTIMEZONE
+TZID:America/Chicago
+TZURL:http://tzurl.org/zoneinfo-outlook/America/Chicago
+X-LIC-LOCATION:America/Chicago
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0600
+TZOFFSETTO:-0500
+TZNAME:CDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0600
+TZNAME:CST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:event_315949333@meetup.com
+SEQUENCE:1
+DTSTAMP:20260804T230016Z
+DTSTART;TZID=America/Chicago:20260830T100000
+DTEND;TZID=America/Chicago:20260830T123000
+SUMMARY:Houston Code & Coffee
+DESCRIPTION:Houston Code and Coffee\nCode & Coffee is a friendly\, low-pre
+ ssure meetup for coders and code-curious. All skill levels are welcome!\n\
+ nCome hang out and meet people. If you want to co-work\, feel free to brin
+ g a laptop or a project.\n\n**What to expect**\n\n1. **Arrival and Set up*
+ *\n\n* Get in and hang out a bit. It's Houston traffic\, so show up any ti
+ me before we end.\n\n2. **Announcements**\n\n* We will start with some sli
+ des and news. Sometimes we have a lightning talk presentation.\n\n3. **Qui
+ ck Intro Circle**\n\n* This is low pressure\, everything is low pressure. 
+ Just try to remember your name\, what you can help with\, and what you nee
+ d help with.\n\n4. **Open Networking**\n\n* The rest of the time is for ch
+ ating or co-working.\n\nWe have plenty of coffee and soft drinks available
+  for the caffienated types. There is also a filtered water dispenser.\n\n*
+ *🧑‍🤝‍🧑 Code & Coffee Discord (The in-between spot)**\n[www.co
+ deandcoffee.chat](http://www.codeandcoffee.chat/) \\- Be sure to select Ho
+ uston as your city\\. The career and coding help forums are a great resour
+ ce\\.\n\n**Shout out to our venue host - Improving!**\n"[Improving](https:
+ //www.improving.com/locations/houston/) is dedicated to building and advan
+ cing a great work culture that exemplifies teamwork\, excellence\, and fun
+ ! We believe this inspires and motivates all of us while establishing life
+ -long relationships. Improving is a long-time supporter of the Conscious C
+ apitalism movement. We work to serve the interests of all our stakeholders
+ \, establishing trust along the way."
+URL;VALUE=URI:https://www.meetup.com/houston-code-and-coffee/events/315949
+ 333/
+STATUS:CONFIRMED
+CREATED:20260802T172855Z
+LAST-MODIFIED:20260802T172855Z
+CLASS:PUBLIC
+END:VEVENT
+X-ORIGINAL-URL:https://www.meetup.com/houston-code-and-coffee/events/ical/
+X-WR-CALNAME:Houston Code and Coffee
+END:VCALENDAR
