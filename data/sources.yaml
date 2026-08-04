@@ -1,0 +1,195 @@
+# htxdev source registry — the curated list of Houston tech groups and where
+# their events come from. This file is the product; the code is plumbing.
+#
+# Adding a group is one entry. For a Meetup group, copy the slug out of the URL
+# and append /events/ical/ — that's the whole onboarding cost.
+#
+# VERIFICATION
+#   verified_by / verified_at are deliberately blank. Filling one in is the act
+#   of verification: it means a human confirmed this group is real and its feed
+#   is legitimately theirs. Until then the group's events stay `pending` and do
+#   not publish. Change these only in a PR — the commit author is the provenance.
+#
+#   This matters concretely: Houston Linux User Group's public calendar contains
+#   personal appointments ("Dental", "Family visit") mixed in with real events.
+#   Review a source's first sync before trusting it.
+#
+# PRIORITY
+#   Lower wins when the same event appears in two feeds. A group's own feed
+#   (10) beats a venue's listing of it (50) — the organizer is authoritative
+#   about their own event.
+
+venues:
+  # Venues are mostly discovered from event data. Curate one here when its name
+  # needs canonicalizing or it shows up under several spellings.
+
+  - slug: ion
+    name: Ion
+    address: 4201 Main St
+    city: Houston
+    state: TX
+    zip: "77002"
+    url: https://iondistrict.com
+    # Ion's own feed emits nine variants of this building. Everything after a
+    # dash is a room, not a venue: "Ion – Conference Room 028" → venue Ion,
+    # room "Conference Room 028". Industrious and Second Draught share the
+    # address but are separate venues, so match on name + address, never
+    # address alone.
+
+  - slug: improving-houston
+    name: Improving Houston
+    address: 10111 Richmond Avenue, Suite 100
+    city: Houston
+    state: TX
+    zip: "77042"
+    url: https://improving.com
+    # Publishes its monthly schedule only as an image, which is unusable as a
+    # feed. It doesn't need to be a source: the groups that meet here (HOSS,
+    # Code and Coffee) publish their own calendars, and their events resolve to
+    # this venue. Treat the image as a discovery tool — read it, see who's
+    # meeting here, add those groups.
+
+  - slug: txrx-labs
+    name: TXRX Labs
+    address: 6501 Navigation Blvd
+    city: Houston
+    state: TX
+    zip: "77011"
+    url: https://txrxlabs.org
+
+groups:
+  - slug: ion-district
+    name: Ion District
+    url: https://iondistrict.com
+    category: startup
+    verified_by:
+    verified_at:
+    # A venue, not a community — its calendar carries many groups' events.
+    # Attribute each event to its `organizer` and fall back to Ion only when
+    # that can't be resolved. High leverage: one source, a dozen groups.
+    # Roughly a third of its events are technical; the rest is investor
+    # programming, office hours and coworking days.
+    sources:
+      - kind: tribe
+        url: https://iondistrict.com/wp-json/tribe/events/v1/events
+        priority: 50
+        enabled: true
+
+  - slug: houston-linux-user-group
+    name: Houston Linux User Group
+    url: https://www.houstonlinux.org/
+    category: dev
+    verified_by:
+    verified_at:
+    aliases:
+      # Ion writes it this way, with a curly apostrophe (U+2019)
+      - "Houston Linux User’s Group"
+      - "Houston Linux"
+      - HLUG
+    # Weekly Wednesday user meetings plus a monthly meeting at Ion — the Ion one
+    # arrives from both this feed and Ion's, which is the main dedupe case.
+    # The feed also carries the calendar owner's personal appointments; do not
+    # publish without reviewing.
+    sources:
+      - kind: ics
+        url: https://calendar.google.com/calendar/ical/houstonlinuxusergroup%40gmail.com/public/basic.ics
+        priority: 10
+        enabled: true
+
+  - slug: houston-open-source-society
+    name: Houston Open Source Society
+    url: https://houstonopensourcesociety.com
+    category: dev
+    verified_by:
+    verified_at:
+    aliases:
+      - HOSS
+      - "Houston OSS"
+    # Meets weekly on Wednesdays, mostly at Improving Houston. Publishes NO
+    # machine-readable feed — atom.xml is talk announcements, not events. Their
+    # /meetings/ pages do carry proper <time datetime="…"> markup, so an html
+    # fetcher is possible.
+    #
+    # Better first move: ask them to publish an ICS feed. They're an open source
+    # group on Codeberg with a Discord; it's a small favor and it turns them
+    # into a permanent source instead of a scraper to maintain.
+    sources: []
+
+  - slug: houston-code-and-coffee
+    name: Houston Code and Coffee
+    url: https://www.meetup.com/houston-code-and-coffee/
+    category: dev
+    verified_by:
+    verified_at:
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/houston-code-and-coffee/events/ical/
+        priority: 10
+        enabled: true
+
+  - slug: code-for-houston
+    name: Code for Houston
+    url: https://www.meetup.com/codeforhouston/
+    category: dev
+    verified_by:
+    verified_at:
+    aliases:
+      - "Ideas to Impact!"
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/codeforhouston/events/ical/
+        priority: 10
+        enabled: true
+
+  - slug: code4yall
+    name: Code4Y'all
+    url: https://www.meetup.com/code4yall/
+    category: dev
+    verified_by:
+    verified_at:
+    # Houston metro, meets around The Woodlands; Improving and Sparksuite
+    # sponsor it. Feed is currently empty — Meetup only lists scheduled events.
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/code4yall/events/ical/
+        priority: 10
+        enabled: true
+
+  - slug: houston-robotics-group
+    name: Houston Robotics Group
+    url: https://www.meetup.com/houstonroboticsgroup/
+    category: hardware
+    verified_by:
+    verified_at:
+    # Meets at TXRX Labs, occasionally at Ion. Feed currently empty.
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/houstonroboticsgroup/events/ical/
+        priority: 10
+        enabled: true
+
+  - slug: houston-ai-meetup
+    name: Houston Artificial Intelligence Meetup Group
+    url: https://www.meetup.com/meetup-group-btoomzkr/
+    category: data
+    verified_by:
+    verified_at:
+    # UNCONFIRMED: found by search, not by Ilean. This may not be the Heights
+    # AI group you had in mind — check before verifying. Feed currently empty.
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/meetup-group-btoomzkr/events/ical/
+        priority: 10
+        enabled: true
+
+# Deliberately excluded — recorded so they don't get re-added later:
+#
+#   PyTexas — meetup.com/pytexas-virtual-meetup/ is Austin-based. No Houston
+#     Python group found under the obvious Meetup slugs. Worth another look if
+#     you know it under a different name.
+#
+#   Eventbrite (any group) — robots.txt disallows /rss/, /atom/, /events/rss/
+#     and *?calendar*. No polite automated path exists.
+#
+#   Discord-only groups — scheduled events require a bot token and per-server
+#     membership. Unreachable. Use data/manual-events.yaml if one matters.

@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Meetup//Meetup Calendar 1.0//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+NAME:Houston Robotics Group
+X-WR-CALNAME:Houston Robotics Group
+X-ORIGINAL-URL:https://www.meetup.com/houstonroboticsgroup/events/ical/
+X-WR-CALNAME:Houston Robotics Group
+END:VCALENDAR
