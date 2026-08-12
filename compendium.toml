@@ -1,0 +1,16 @@
+[compendium]
+name = "htxdev"
+version = "0.1.0"
+min_compendium = "dev"
+
+[registry]
+source = "public"
+
+[languages]
+go = "1.26.1"
+
+[tools]
+golangci-lint = "2.11.4"
+
+[packages]
+go = "go.mod"

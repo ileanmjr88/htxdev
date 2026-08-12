@@ -1,0 +1,33 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Coverage profiles
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace
+go.work
+go.work.sum
+
+# env
+.env
+
+# Build dirs
+bin/
+build/
+dist/
+
+# NOT ignored, deliberately: htxdev.db
+# It is the permanent record of every event ever seen, committed on purpose.
+# Measured at roughly 30 MB/year at ten sources. See the Architecture page.
+# Two rules that keep that cheap: never VACUUM in CI, and set a concurrency
+# group on the sync workflow so two runs cannot both commit the binary.
