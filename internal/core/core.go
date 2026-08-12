@@ -64,7 +64,12 @@ type RawVenue struct {
 
 // RawEvent is what a feed literally said. No derivation.
 type RawEvent struct {
-	SourceID    int64  // stamped by the fetch layer in Phase 2, not the decoder
+	// SourceKey is the feed URL this record came from, stamped by the fetch
+	// layer rather than the decoder. It is a URL and not Source.ID because
+	// int64 IDs come from the database, which does not exist yet at fetch
+	// time. Inventing IDs by load order would mean reordering sources.yaml
+	// silently rewrites the attribution stored against every historical event.
+	SourceKey   string
 	UpstreamID  string // global_id or ICS UID. Becomes Event.Fingerprint
 	Title       string // unescaped at decode
 	Description string // raw HTML, whole. Excerpt is derived later

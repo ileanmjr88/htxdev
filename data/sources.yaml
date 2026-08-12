@@ -25,16 +25,25 @@ venues:
 
   - slug: ion
     name: Ion
+    aliases:
+      # Exactly how HLUG's Google Calendar writes it:
+      #   LOCATION:The Ion\, Rooms 29 and 30\, 4201 Main St\, Houston\, TX 77002
+      - The Ion
     address: 4201 Main St
     city: Houston
     state: TX
     zip: "77002"
     url: https://iondistrict.com
-    # Ion's own feed emits nine variants of this building. Everything after a
+    # Ion's own feed emits ten variants of this building. Everything after a
     # dash is a room, not a venue: "Ion – Conference Room 028" → venue Ion,
-    # room "Conference Room 028". Industrious and Second Draught share the
-    # address but are separate venues, so match on name + address, never
-    # address alone.
+    # room "Conference Room 028". Two caveats found in the fixture: the dash is
+    # an en dash (U+2013) arriving HTML-escaped as &#8211;, so unescape before
+    # splitting; and "Ion Plaza" has no dash at all, so splitting alone misses
+    # it. Better signal where it exists: Ion's `venue` field is a
+    # [room, building] array on 11 of 50 events, stating the hierarchy outright.
+    #
+    # Industrious and Second Draught share the address but are separate venues,
+    # so match on name + address, never address alone.
 
   - slug: improving-houston
     name: Improving Houston

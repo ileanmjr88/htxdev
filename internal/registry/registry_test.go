@@ -1,0 +1,252 @@
+package registry
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/ileanmjr88/htxdev/internal/core"
+)
+
+// The committed registry must always be loadable. This is the test that turns
+// the loader into a CI gate: a pull request that breaks sources.yaml fails here
+// rather than at the next sync.
+func TestRealSourcesYAMLIsValid(t *testing.T) {
+	reg, err := LoadFile("../../data/sources.yaml")
+	if err != nil {
+		t.Fatalf("committed sources.yaml does not load:\n%v", err)
+	}
+
+	if len(reg.Groups) != 8 {
+		t.Errorf("got %d groups, want 8", len(reg.Groups))
+	}
+	if len(reg.Venues) != 3 {
+		t.Errorf("got %d venues, want 3", len(reg.Venues))
+	}
+	if len(reg.Sources) != 7 {
+		t.Errorf("got %d sources, want 7", len(reg.Sources))
+	}
+	if got := len(reg.EnabledSources()); got != 7 {
+		t.Errorf("got %d enabled sources, want 7", got)
+	}
+
+	// HOSS publishes no feed at all; it is in the registry so its absence is
+	// recorded rather than forgotten.
+	if _, ok := reg.Group("houston-open-source-society"); !ok {
+		t.Error("HOSS missing from the registry")
+	}
+	for _, s := range reg.Sources {
+		if s.GroupSlug == "houston-open-source-society" {
+			t.Error("HOSS should have no sources")
+		}
+	}
+
+	// The alias that lets HLUG's "The Ion, Rooms 29 and 30, ..." resolve to
+	// the same venue Ion's own feed calls "Ion".
+	var ion *core.Venue
+	for i := range reg.Venues {
+		if reg.Venues[i].Slug == "ion" {
+			ion = &reg.Venues[i]
+		}
+	}
+	if ion == nil {
+		t.Fatal("no venue with slug ion")
+	}
+	if len(ion.Aliases) == 0 || ion.Aliases[0] != "The Ion" {
+		t.Errorf("ion aliases = %v, want [The Ion]", ion.Aliases)
+	}
+
+	// Nothing is verified yet, so nothing may publish. If this ever starts
+	// failing it means a verification landed, which is a deliberate act.
+	for _, s := range reg.Sources {
+		if reg.IsVerified(s) {
+			t.Errorf("source %s is verified; every group should still be pending", s.URL)
+		}
+	}
+}
+
+func TestLoadFlattensSourcesOntoGroups(t *testing.T) {
+	const in = `
+venues: []
+groups:
+  - slug: alpha
+    name: Alpha
+    sources:
+      - kind: ics
+        url: https://example.org/a.ics
+        priority: 10
+        enabled: true
+      - kind: tribe
+        url: https://example.org/wp-json/tribe/events/v1/events
+        priority: 50
+        enabled: false
+`
+	reg, err := Load(strings.NewReader(in))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(reg.Sources) != 2 {
+		t.Fatalf("got %d sources, want 2", len(reg.Sources))
+	}
+	for _, s := range reg.Sources {
+		if s.GroupSlug != "alpha" {
+			t.Errorf("source %s has GroupSlug %q, want alpha", s.URL, s.GroupSlug)
+		}
+	}
+	if got := reg.EnabledSources(); len(got) != 1 || got[0].Kind != core.KindICS {
+		t.Errorf("EnabledSources = %+v, want the one enabled ics source", got)
+	}
+	// A group with no `active` key is active. Removing it from the file is how
+	// you deactivate one.
+	if !reg.Groups[0].Active {
+		t.Error("group should default to Active")
+	}
+}
+
+func TestLoadRejects(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want string // substring the error must mention
+	}{
+		{
+			name: "duplicate group slug",
+			in: `
+groups:
+  - {slug: a, name: A}
+  - {slug: a, name: Again}`,
+			want: "duplicate slug",
+		},
+		{
+			name: "duplicate venue slug",
+			in: `
+venues:
+  - {slug: ion, name: Ion}
+  - {slug: ion, name: Ion Again}`,
+			want: "duplicate slug",
+		},
+		{
+			name: "unknown source kind",
+			in: `
+groups:
+  - slug: a
+    name: A
+    sources:
+      - {kind: rss, url: "https://example.org/f", enabled: true}`,
+			want: "unknown kind",
+		},
+		{
+			name: "non-https feed url",
+			in: `
+groups:
+  - slug: a
+    name: A
+    sources:
+      - {kind: ics, url: "http://example.org/f.ics", enabled: true}`,
+			want: "absolute https URL",
+		},
+		{
+			name: "relative feed url",
+			in: `
+groups:
+  - slug: a
+    name: A
+    sources:
+      - {kind: ics, url: "/feed.ics", enabled: true}`,
+			want: "absolute https URL",
+		},
+		{
+			// Two groups pointing at one feed would ingest every event twice
+			// and attribute it to whichever group happened to win.
+			name: "same feed claimed twice",
+			in: `
+groups:
+  - slug: a
+    name: A
+    sources:
+      - {kind: ics, url: "https://example.org/f.ics", enabled: true}
+  - slug: b
+    name: B
+    sources:
+      - {kind: ics, url: "https://example.org/f.ics", enabled: true}`,
+			want: "already claimed",
+		},
+		{
+			name: "verified_by without verified_at",
+			in: `
+groups:
+  - {slug: a, name: A, verified_by: ileanmjr88}`,
+			want: "verified_at is blank",
+		},
+		{
+			name: "malformed verified_at",
+			in: `
+groups:
+  - {slug: a, name: A, verified_by: ileanmjr88, verified_at: "August 2026"}`,
+			want: "not YYYY-MM-DD",
+		},
+		{
+			name: "missing group name",
+			in: `
+groups:
+  - {slug: a}`,
+			want: "missing name",
+		},
+		{
+			// Strict decoding catches a typo'd key instead of silently
+			// ignoring it, which is the difference between a source that is
+			// disabled and a source you think is enabled.
+			name: "unknown key is a typo, not a comment",
+			in: `
+groups:
+  - {slug: a, name: A, enabeld: true}`,
+			want: "enabeld",
+		},
+		{
+			name: "empty file",
+			in:   ``,
+			want: "empty",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Load(strings.NewReader(tc.in))
+			if err == nil {
+				t.Fatal("want error, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q does not mention %q", err.Error(), tc.want)
+			}
+		})
+	}
+}
+
+// Every problem in one pass, so a contributor fixes them all at once rather
+// than discovering them one CI run at a time.
+func TestLoadReportsEveryProblemAtOnce(t *testing.T) {
+	const in = `
+groups:
+  - {slug: a}
+  - {slug: a, name: Duplicate}
+  - slug: c
+    name: C
+    sources:
+      - {kind: rss, url: "https://example.org/f", enabled: true}
+`
+	_, err := Load(strings.NewReader(in))
+	if err == nil {
+		t.Fatal("want error, got nil")
+	}
+	msg := err.Error()
+	for _, want := range []string{"missing name", "duplicate slug", "unknown kind"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("error does not mention %q:\n%s", want, msg)
+		}
+	}
+}
+
+func TestLoadFileMissing(t *testing.T) {
+	if _, err := LoadFile("testdata/does-not-exist.yaml"); err == nil {
+		t.Fatal("want error for a missing file, got nil")
+	}
+}

@@ -298,9 +298,9 @@ func TestToRawEventURLMapping(t *testing.T) {
 	}
 }
 
-// SourceID is stamped by the fetch layer in Phase 2, and UpstreamID carries the
-// raw global_id with no "tribe:" prefix. The namespace is added at normalize,
-// so the ICS decoder can do the identical thing with a UID.
+// SourceKey is stamped by the fetch layer, and UpstreamID carries the raw
+// global_id with no "tribe:" prefix. The namespace is added at normalize, so
+// the ICS decoder can do the identical thing with a UID.
 func TestToRawEventLeavesDerivationAlone(t *testing.T) {
 	te := tribeEvent{
 		GlobalID:     "iondistrict.com?id=61797",
@@ -311,8 +311,8 @@ func TestToRawEventLeavesDerivationAlone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got.SourceID != 0 {
-		t.Errorf("SourceID = %d, want 0", got.SourceID)
+	if got.SourceKey != "" {
+		t.Errorf("SourceKey = %q, want empty; the decoder must not set it", got.SourceKey)
 	}
 	if want := "iondistrict.com?id=61797"; got.UpstreamID != want {
 		t.Errorf("UpstreamID = %q, want %q", got.UpstreamID, want)
