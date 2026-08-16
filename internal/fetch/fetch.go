@@ -3,10 +3,12 @@ package fetch
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ileanmjr88/htxdev/internal/core"
@@ -33,7 +35,7 @@ const (
 	// moving under us) takes out nearly every event on the page, while one odd
 	// entry takes out one, so any threshold in this range separates them.
 	//
-	// Deliberately not load-bearing. Events that skip below this line are
+	//Deliberately not load-bearing. Events that skip below this line are
 	// still missing from Events, which downstream cannot distinguish from a
 	// cancellation. That is handled by deferring cancellation whenever Skipped
 	// is non-empty, not by tuning this number.
@@ -78,10 +80,10 @@ type Result struct {
 	WindowEnd time.Time
 }
 
-func get(ctx context.Context, s core.Source) Result {
+func get(ctx context.Context, s core.Source, now time.Time) Result {
 	switch s.Kind {
 	case core.KindTribe:
-		return getTribe(ctx, s)
+		return getTribe(ctx, s, now)
 	case core.KindICS:
 		return Result{Source: s, Err: fmt.Errorf("kind %q: no decoder yet", s.Kind)}
 	default:
@@ -89,13 +91,115 @@ func get(ctx context.Context, s core.Source) Result {
 	}
 }
 
-// TODO: scaffolding so the package compiles and fetchPage can be tested.
-// Replace with the real thing: build the window query onto s.URL, loop to
-// maxPages calling fetchPage, accumulate Events and Skipped, apply
-// skipTolerance per page, validate NextURL against s.URL's host before
-// following it, then stamp SourceKey, FetchedAt and WindowEnd.
-func getTribe(ctx context.Context, s core.Source) Result {
-	return Result{Source: s, Err: errors.New("getTribe: not implemented")}
+// getTribe fetches one tribe source across the rolling window and returns
+// everything it saw as a single Result. Pagination is internal: callers get one
+// Result per source, never one per page.
+//
+// It walks the feed's own next_rest_url rather than incrementing a page counter,
+// so the server owns the definition of "next" and an empty NextURL is an
+// explicit end rather than something inferred from a short page. Inferring it
+// would mean guessing, and a wrong guess silently drops events that normalize
+// then reads as cancellations.
+func getTribe(ctx context.Context, s core.Source, now time.Time) Result {
+	parsedURL, err := url.Parse(s.URL)
+	if err != nil {
+		return Result{Source: s, Err: fmt.Errorf("parse source url %q: %w", s.URL, err)}
+	}
+	windowStartDate := now.AddDate(0, 0, -1*lookbackDays)
+	windowEndDate := now.AddDate(0, 0, fetchWindowDays)
+
+	params := url.Values{}
+	params.Set("start_date", windowStartDate.Format("2006-01-02 15:04:05"))
+	params.Set("end_date", windowEndDate.Format("2006-01-02 15:04:05"))
+	params.Set("per_page", strconv.Itoa(perPage))
+	params.Set("status", "publish")
+	params.Set("page", "1")
+
+	parsedURL.RawQuery = params.Encode()
+	pageURL := parsedURL.String()
+
+	var (
+		events  []core.RawEvent
+		skipped []error
+	)
+	// pageURL doubles as the work queue. It is cleared whenever pagination ends
+	// for a reason recorded below, so falling out of this loop with one still
+	// set can only mean maxPages cut the walk short.
+	pages := 0
+	for pageURL != "" && pages < maxPages {
+		pages++
+
+		page, err := fetchPage(ctx, pageURL)
+		if err != nil {
+			return Result{Source: s, Err: err}
+		}
+
+		// Integer math rather than floats: fail when skips exceed one event in
+		// skipTolerance. Pages under minPageForRatio are too small for a ratio
+		// to mean anything, so they tolerate any skip.
+		pageTotal := len(page.Events) + len(page.Skipped)
+		if pageTotal >= minPageForRatio && len(page.Skipped)*skipTolerance > pageTotal {
+			return Result{Source: s, Err: fmt.Errorf(
+				"%s: %d of %d events unusable", pageURL, len(page.Skipped), pageTotal)}
+		}
+
+		events = append(events, page.Events...)
+		skipped = append(skipped, page.Skipped...)
+
+		// Stop by default; only a next page that clears the checks below puts
+		// work back on the queue.
+		pageURL = ""
+		if page.NextURL == "" {
+			continue
+		}
+
+		next, err := url.Parse(page.NextURL)
+		if err != nil {
+			skipped = append(skipped, fmt.Errorf("parse next_rest_url %q: %w", page.NextURL, err))
+			continue
+		}
+
+		// Same origin only. next_rest_url is a string a third party controls,
+		// so following it unchecked lets a compromised or simply misconfigured
+		// feed aim this client wherever it likes. Host is compared
+		// case-insensitively because host names are; Scheme is not, because
+		// url.Parse has already lowercased it.
+		//
+		// This closes the door only part way: the client's default
+		// CheckRedirect still follows up to ten hops, off-host included, so a
+		// same-origin URL can still land elsewhere. That belongs in the client,
+		// not here.
+		if !strings.EqualFold(next.Host, parsedURL.Host) || next.Scheme != parsedURL.Scheme {
+			skipped = append(skipped, fmt.Errorf("declining next_rest_url %q: not on %s://%s",
+				page.NextURL, parsedURL.Scheme, parsedURL.Host))
+			continue
+		}
+
+		pageURL = next.String()
+	}
+
+	// Truncation is not an error, it is an incompleteness. Events is missing
+	// entries that exist upstream, which downstream cannot tell apart from a
+	// cancellation, and a non-empty Skipped is what defers cancellation for the
+	// cycle. Returning Err instead would throw away every page that did parse.
+	if pageURL != "" {
+		skipped = append(skipped, fmt.Errorf("stopped after %d pages with more to fetch", maxPages))
+	}
+
+	// Indexed rather than ranged: range yields a copy of each RawEvent, so
+	// assigning through the loop variable would compile, run, and change
+	// nothing.
+	for i := range events {
+		events[i].SourceKey = s.URL
+	}
+
+	return Result{
+		Source:    s,
+		Events:    events,
+		Skipped:   skipped,
+		FetchedAt: now,
+		WindowEnd: windowEndDate,
+	}
 }
 
 // client is shared by every request this package makes. Its nil Transport
