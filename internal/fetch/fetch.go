@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ileanmjr88/htxdev/internal/core"
@@ -78,6 +79,38 @@ type Result struct {
 	// apart without knowing where the horizon was.
 	FetchedAt time.Time
 	WindowEnd time.Time
+}
+
+// Fetch retrieves every source concurrently, at most maxConcurrent at a time,
+// and returns one Result per source in input order.
+//
+// It returns no error, deliberately. A source that fails records that failure
+// in its own Result.Err and its neighbours are unaffected. That is also why the
+// pool is a hand-rolled semaphore rather than errgroup: errgroup.WithContext
+// cancels every sibling goroutine the moment one returns an error, which is
+// exactly backwards here, where one dead feed must not blank the site.
+//
+// Results are assigned by index rather than appended, so no mutex is needed.
+// Each goroutine owns one element, distinct elements are distinct memory, and
+// wg.Wait is the happens-before edge that publishes those writes to the caller.
+// Indexing is also what makes the returned order deterministic.
+func Fetch(ctx context.Context, sources []core.Source) []Result {
+	now := time.Now().UTC()
+	results := make([]Result, len(sources))
+	sem := make(chan struct{}, maxConcurrent)
+
+	var wg sync.WaitGroup
+	for i := range len(sources) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			results[i] = get(ctx, sources[i], now)
+		}()
+	}
+	wg.Wait()
+	return results
 }
 
 func get(ctx context.Context, s core.Source, now time.Time) Result {

@@ -448,3 +448,113 @@ func TestGetTribeCancelledContext(t *testing.T) {
 		t.Errorf("skipped = %v, want none; cancellation is not truncation", res.Skipped)
 	}
 }
+
+// The premise of the entire design, from D15 and §4 of the architecture: one
+// dead feed must not take down the batch.
+//
+// Index 3 carries this test twice over. It proves the error was recorded
+// against the source that actually failed, and because a 500 returns faster
+// than a served page it also proves ordering: a Fetch that appended results as
+// they completed would land this error at index 0 and fail here.
+func TestFetchKeepsGoingWhenOneSourceFails(t *testing.T) {
+	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, tribePage(3, 0, ""))
+	}))
+	defer good.Close()
+
+	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer bad.Close()
+
+	const badIndex = 3
+	sources := make([]core.Source, 7)
+	for i := range sources {
+		if i == badIndex {
+			sources[i] = tribeSource(bad.URL)
+			continue
+		}
+		sources[i] = tribeSource(good.URL)
+	}
+
+	results := Fetch(t.Context(), sources)
+
+	if len(results) != len(sources) {
+		t.Fatalf("results = %d, want %d; every source gets exactly one", len(results), len(sources))
+	}
+	if results[badIndex].Err == nil {
+		t.Errorf("results[%d].Err = nil, want the 500 recorded", badIndex)
+	}
+	if n := len(results[badIndex].Events); n != 0 {
+		t.Errorf("results[%d] carried %d events, want none from a failed source", badIndex, n)
+	}
+
+	for i, res := range results {
+		if i == badIndex {
+			continue
+		}
+		if res.Err != nil {
+			t.Errorf("results[%d].Err = %v, want nil; one bad feed must not fail its neighbours", i, res.Err)
+		}
+		if len(res.Events) != 3 {
+			t.Errorf("results[%d] events = %d, want 3", i, len(res.Events))
+		}
+		if res.Source.URL != good.URL {
+			t.Errorf("results[%d].Source.URL = %q, want %q; results are out of input order",
+				i, res.Source.URL, good.URL)
+		}
+	}
+}
+
+// The semaphore is the only thing bounding this, and deleting it would leave
+// every other test in the package green. This is the one that would notice.
+//
+// atomic.Int32.Add returns the post-increment value, so cur is a safe
+// observation of how many requests were in flight including this one, with no
+// separate maximum to keep in sync.
+//
+// The sleep is load-bearing. Without it a request finishes faster than the
+// next goroutine is scheduled, concurrency never climbs above 1, and the
+// assertion holds for a reason that has nothing to do with the semaphore. The
+// peak check at the bottom is what proves that did not happen.
+func TestFetchCapsConcurrency(t *testing.T) {
+	var inFlight, peak atomic.Int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cur := inFlight.Add(1)
+		defer inFlight.Add(-1)
+
+		// Standard atomic-max: retry until this observation is recorded or a
+		// larger one already is. t.Fatalf is unusable here, since it would
+		// call runtime.Goexit on the server's goroutine rather than the test's.
+		for {
+			old := peak.Load()
+			if cur <= old || peak.CompareAndSwap(old, cur) {
+				break
+			}
+		}
+		if cur > maxConcurrent {
+			t.Errorf("in flight = %d, want at most %d", cur, maxConcurrent)
+		}
+
+		time.Sleep(20 * time.Millisecond)
+		fmt.Fprint(w, tribePage(1, 0, ""))
+	}))
+	defer srv.Close()
+
+	sources := make([]core.Source, 12)
+	for i := range sources {
+		sources[i] = tribeSource(srv.URL)
+	}
+
+	results := Fetch(t.Context(), sources)
+
+	for i, res := range results {
+		if res.Err != nil {
+			t.Fatalf("results[%d].Err = %v, want nil", i, res.Err)
+		}
+	}
+	if got := peak.Load(); got < 2 {
+		t.Errorf("peak concurrency = %d; nothing overlapped, so the cap was never exercised", got)
+	}
+}
