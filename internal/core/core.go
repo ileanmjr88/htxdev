@@ -110,3 +110,26 @@ type Event struct {
 	LastSeen  time.Time
 	SourceIDs []int64 // plural: dedupe merges the same event from several feeds
 }
+
+// Fingerprint is an event's permanent identity: the upstream stable ID,
+// namespaced by the kind of source that supplied it.
+//
+// D7, and deliberately not derived from content. A fingerprint has two jobs
+// that pull against each other: it is a tiebreak for dedupe, and in v1.1 it
+// becomes the UID of the ICS feed htxdev publishes. Include the title and an
+// organizer fixing a typo changes the UID, which duplicates the event in every
+// subscriber's calendar. So it is the ID the source already assigned.
+//
+// Assigned once when an event is first seen and never recomputed. If a
+// higher-priority source later starts carrying the same event, the row that
+// wins dedupe changes, and recomputing would churn the fingerprint with it.
+//
+// Upstream IDs already embed a host, so they are close to globally unique on
+// their own; the kind prefix is cheap insurance against a future source that
+// is sloppier. A source with no stable ID of its own would need a "hash:"
+// form built from the group slug and start time, per D7. Neither decoder can
+// produce an event without an upstream ID today, so that case does not exist
+// yet and is not invented here.
+func Fingerprint(kind SourceKind, upstreamID string) string {
+	return string(kind) + ":" + upstreamID
+}

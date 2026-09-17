@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db test test-v test-race coverage fmt vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -12,10 +12,20 @@ build:
 	go build ./...
 	go build -o bin/htxdev ./cmd/htxdev
 
-# Fetch every enabled source and print what came back. Reads data/sources.yaml
-# relative to the repo root, so run it from here.
+# Fetch every enabled source, write to htxdev.db, and print what came back.
+# Reads data/sources.yaml relative to the repo root, so run it from here.
 run:
 	go run ./cmd/htxdev sync
+
+# The same, without touching the database. htxdev.db is a committed artifact,
+# so looking before writing is a question worth being able to ask.
+sync-dry:
+	go run ./cmd/htxdev sync -n -v
+
+# Open the database. Read-only, so an exploratory session cannot dirty a file
+# that is about to be committed.
+db:
+	sqlite3 -readonly -header -column htxdev.db
 
 # Run tests
 test:
@@ -66,7 +76,9 @@ clean:
 help:
 	@echo "Available targets:"
 	@echo "  make build     - Compile every package and link bin/htxdev"
-	@echo "  make run       - Fetch every enabled source and print the result"
+	@echo "  make run       - Fetch every enabled source into htxdev.db"
+	@echo "  make sync-dry  - Fetch and list everything, writing nothing"
+	@echo "  make db        - Open htxdev.db in sqlite3, read-only"
 	@echo "  make test      - Run tests"
 	@echo "  make test-v    - Run tests with per-test output"
 	@echo "  make test-race - Run tests under the race detector"

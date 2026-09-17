@@ -10,19 +10,30 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/fetch"
 	"github.com/ileanmjr88/htxdev/internal/registry"
+	"github.com/ileanmjr88/htxdev/internal/store"
 )
 
 // Relative, because sync is meant to run from the repo root and Phase 7's
 // workflow will do exactly that. The flag covers every other case.
-const defaultSourcesPath = "data/sources.yaml"
+const (
+	defaultSourcesPath = "data/sources.yaml"
+
+	// Relative for the same reason, and committed to git on purpose: it is the
+	// permanent record of every event htxdev has ever seen, and first_seen
+	// cannot be rebuilt from feeds because feeds forget.
+	defaultDBPath = "htxdev.db"
+)
 
 func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("htxdev sync", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	sourcesPath := fs.String("sources", defaultSourcesPath, "path to the source registry")
+	dbPath := fs.String("db", defaultDBPath, "path to the SQLite database")
 	verbose := fs.Bool("v", false, "list every event fetched, not just the per-source summary")
+	dryRun := fs.Bool("n", false, "fetch and report without writing to the database")
 
 	if err := fs.Parse(args); err != nil {
 		return err // flag already printed why; main lets ErrHelp exit 0
@@ -53,7 +64,75 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 		return fmt.Errorf("interrupted: %w", err)
 	}
 
-	return verdict(report(stdout, reg, results, *verbose))
+	sum := report(stdout, reg, results, *verbose)
+
+	// Writing is skippable on purpose. The database is a committed artifact,
+	// so "let me look at what this run would do before it does it" is a real
+	// question, and it is exactly the question somebody asks before filling in
+	// a group's verified_by.
+	if *dryRun {
+		fmt.Fprintf(stdout, "\nDry run: nothing written to %s.\n", *dbPath)
+		return verdict(sum)
+	}
+
+	saved, counts, err := persist(ctx, *dbPath, reg, results, sum.fetchedAt)
+	if err != nil {
+		return err
+	}
+	reportStore(stdout, *dbPath, saved, counts)
+
+	return verdict(sum)
+}
+
+// persist mirrors the registry and writes everything the successful sources
+// returned.
+//
+// Sources that failed contribute nothing, which is not the same as
+// contributing an empty list: their events keep the last_seen they already
+// had, so a feed being down for a day cannot look like every one of its events
+// being cancelled. That is the first of the three guards in the
+// absence-means-cancelled contract, and it is enforced by this loop rather
+// than by anything in the store.
+func persist(ctx context.Context, dbPath string, reg *registry.Registry, results []fetch.Result, seenAt time.Time) (store.SaveResult, store.Counts, error) {
+	var (
+		saved  store.SaveResult
+		counts store.Counts
+	)
+
+	st, err := store.Open(dbPath)
+	if err != nil {
+		return saved, counts, err
+	}
+	defer func() { _ = st.Close() }()
+
+	// Before the events, always. Event rows reference source rows, and a feed
+	// added to sources.yaml this morning has no source row until this runs.
+	if err := st.SyncRegistry(ctx, reg.Groups, reg.Venues, reg.Sources); err != nil {
+		return saved, counts, fmt.Errorf("sync registry into %s: %w", dbPath, err)
+	}
+
+	var events []core.RawEvent
+	for _, r := range results {
+		if r.Err != nil {
+			continue
+		}
+		events = append(events, r.Events...)
+	}
+
+	if saved, err = st.SaveEvents(ctx, events, seenAt); err != nil {
+		return saved, counts, fmt.Errorf("save events to %s: %w", dbPath, err)
+	}
+	counts, err = st.Counts(ctx)
+	return saved, counts, err
+}
+
+func reportStore(w io.Writer, dbPath string, saved store.SaveResult, counts store.Counts) {
+	fmt.Fprintf(w, "\n%s: %d new, %d updated", dbPath, saved.Inserted, saved.Updated)
+	if saved.Promoted > 0 {
+		fmt.Fprintf(w, ", %d promoted out of pending", saved.Promoted)
+	}
+	fmt.Fprintf(w, ".\n%d rows: %d published, %d pending, %d cancelled.\n",
+		counts.Total, counts.Published, counts.Pending, counts.Cancelled)
 }
 
 // verdict decides the process exit status from what the run produced.
@@ -77,11 +156,16 @@ func verdict(sum syncSummary) error {
 // syncSummary is the tally report accumulates as it prints, kept so the exit
 // code is decided from counts rather than by walking the results a second time.
 type syncSummary struct {
-	sources   int
-	ok        int
-	events    int
-	skipped   int
-	verified  int
+	sources  int
+	ok       int
+	events   int
+	skipped  int
+	verified int
+	// Both come off the first successful Result rather than being recomputed.
+	// fetchedAt is the instant the whole run shares, and storing that rather
+	// than a fresh time.Now() is what keeps last_seen comparable with the
+	// window the same run advertised.
+	fetchedAt time.Time
 	windowEnd time.Time
 }
 
@@ -107,6 +191,7 @@ func report(w io.Writer, reg *registry.Registry, results []fetch.Result, verbose
 			// the same constants here and hoping the two agree.
 			if sum.windowEnd.IsZero() {
 				sum.windowEnd = r.WindowEnd
+				sum.fetchedAt = r.FetchedAt
 			}
 			if !reg.IsVerified(r.Source) {
 				notes = append(notes, "unverified, would stay pending")

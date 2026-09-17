@@ -12,6 +12,7 @@ import (
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/fetch"
 	"github.com/ileanmjr88/htxdev/internal/registry"
+	"github.com/ileanmjr88/htxdev/internal/store"
 )
 
 // There is no end-to-end happy-path test here, deliberately. Reaching one
@@ -156,8 +157,11 @@ groups:
         url: https://127.0.0.1:1/feed.ics
         enabled: true
 `)
+	// -db into a temp directory, not the default. Without it this test writes
+	// an htxdev.db into the package directory and leaves it in the repo.
 	var stdout, stderr bytes.Buffer
-	err := runSync(t.Context(), []string{"-sources", path}, &stdout, &stderr)
+	err := runSync(t.Context(),
+		[]string{"-sources", path, "-db", filepath.Join(t.TempDir(), "htxdev.db")}, &stdout, &stderr)
 	if err == nil || !strings.Contains(err.Error(), "all 1 sources failed") {
 		t.Fatalf("runSync() = %v, want an all-sources-failed error", err)
 	}
@@ -353,6 +357,127 @@ func TestVerdict(t *testing.T) {
 			}
 			if tt.wantErr && !strings.Contains(err.Error(), "all 7 sources failed") {
 				t.Errorf("verdict() = %v, want it to name the count", err)
+			}
+		})
+	}
+}
+
+// The registry used by the database tests below. Every source refuses the
+// connection immediately, so the run is offline and every source fails, which
+// is enough to exercise persist: the registry still gets mirrored and the
+// event save is a well-formed no-op.
+const failingRegistry = `
+groups:
+  - slug: only-ics
+    name: Only ICS
+    url: https://example.test
+    sources:
+      - kind: ics
+        url: https://127.0.0.1:1/feed.ics
+        enabled: true
+`
+
+// The database is a committed git artifact, so "show me what this would do"
+// has to be answerable without doing it.
+func TestSyncDryRunWritesNothing(t *testing.T) {
+	path := writeRegistry(t, failingRegistry)
+	dbPath := filepath.Join(t.TempDir(), "htxdev.db")
+
+	var stdout, stderr bytes.Buffer
+	err := runSync(t.Context(), []string{"-sources", path, "-db", dbPath, "-n"}, &stdout, &stderr)
+	// Every source failed, so the run still reports failure. The point is what
+	// it did not write.
+	if err == nil {
+		t.Fatal("runSync() = nil, want the all-sources-failed error")
+	}
+
+	if _, statErr := os.Stat(dbPath); statErr == nil {
+		t.Errorf("%s exists after a dry run", dbPath)
+	}
+	if !strings.Contains(stdout.String(), "Dry run") {
+		t.Errorf("stdout = %q, want it to say the run was dry", stdout.String())
+	}
+}
+
+func TestSyncCreatesAndMirrorsTheDatabase(t *testing.T) {
+	path := writeRegistry(t, failingRegistry)
+	dbPath := filepath.Join(t.TempDir(), "htxdev.db")
+
+	var stdout, stderr bytes.Buffer
+	// The error is expected: the one source refuses the connection. Persisting
+	// still has to happen, because a run where every feed was down is exactly
+	// when you want the registry mirror and the existing rows left alone.
+	if err := runSync(t.Context(), []string{"-sources", path, "-db", dbPath}, &stdout, &stderr); err == nil {
+		t.Fatal("runSync() = nil, want the all-sources-failed error")
+	}
+
+	if _, err := os.Stat(dbPath); err != nil {
+		t.Fatalf("database was not created: %v", err)
+	}
+	// One file. No -wal, no -shm; neither is in .gitignore.
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if _, err := os.Stat(dbPath + suffix); err == nil {
+			t.Errorf("%s exists beside the database", dbPath+suffix)
+		}
+	}
+
+	st, err := store.Open(dbPath)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer func() { _ = st.Close() }()
+
+	counts, err := st.Counts(t.Context())
+	if err != nil {
+		t.Fatalf("Counts: %v", err)
+	}
+	// A failed source contributes no events, which is not the same as
+	// contributing an empty list: nothing is written and nothing is cancelled.
+	if counts.Total != 0 {
+		t.Errorf("total = %d, want 0 events from a source that never answered", counts.Total)
+	}
+
+	if !strings.Contains(stdout.String(), "0 new, 0 updated") {
+		t.Errorf("stdout = %q, want the store line", stdout.String())
+	}
+}
+
+func TestReportStore(t *testing.T) {
+	cases := []struct {
+		name  string
+		saved store.SaveResult
+		want  []string
+		omit  string
+	}{
+		{
+			name:  "first run",
+			saved: store.SaveResult{Inserted: 71},
+			want:  []string{"71 new, 0 updated"},
+			omit:  "promoted",
+		},
+		{
+			name:  "after a verification",
+			saved: store.SaveResult{Updated: 71, Promoted: 19},
+			want:  []string{"0 new, 71 updated", "19 promoted out of pending"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var out bytes.Buffer
+			reportStore(&out, "htxdev.db", tc.saved, store.Counts{Total: 71, Published: 19, Pending: 52})
+			got := out.String()
+			for _, w := range tc.want {
+				if !strings.Contains(got, w) {
+					t.Errorf("output %q missing %q", got, w)
+				}
+			}
+			// A zero promotion count is noise on every run that is not the one
+			// after a verification.
+			if tc.omit != "" && strings.Contains(got, tc.omit) {
+				t.Errorf("output %q mentions %q, want it left out when zero", got, tc.omit)
+			}
+			if !strings.Contains(got, "71 rows: 19 published, 52 pending, 0 cancelled") {
+				t.Errorf("output %q missing the status tally", got)
 			}
 		})
 	}

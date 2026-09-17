@@ -21,6 +21,9 @@ go.work.sum
 # env
 .env
 
+# macOS
+.DS_Store
+
 # Build dirs
 bin/
 build/
