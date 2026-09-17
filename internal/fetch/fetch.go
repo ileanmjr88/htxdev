@@ -269,7 +269,11 @@ func fetchPage(ctx context.Context, rawURL string) (source.TribePage, error) {
 	if err != nil {
 		return source.TribePage{}, fmt.Errorf("get %s: %w", rawURL, err)
 	}
-	defer resp.Body.Close()
+	// Discarded explicitly, matching LoadFile in internal/registry: this body
+	// is read to completion or abandoned on an error that has already been
+	// returned, and a close failure on a response body tells the caller
+	// nothing it can act on.
+	defer func() { _ = resp.Body.Close() }()
 
 	// Strictly 200, not the 2xx range. A 204 carries no body and a 206 carries
 	// a fragment; both would fail later as an opaque decode error instead of
