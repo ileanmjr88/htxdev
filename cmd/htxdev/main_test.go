@@ -444,40 +444,49 @@ func TestSyncCreatesAndMirrorsTheDatabase(t *testing.T) {
 
 func TestReportStore(t *testing.T) {
 	cases := []struct {
-		name  string
-		saved store.SaveResult
-		want  []string
-		omit  string
+		name string
+		in   stored
+		want []string
+		omit string
 	}{
 		{
-			name:  "first run",
-			saved: store.SaveResult{Inserted: 71},
-			want:  []string{"71 new, 0 updated"},
-			omit:  "promoted",
+			name: "first run, with a merge",
+			in: stored{records: 76, events: 71,
+				saved:  store.SaveResult{Inserted: 71},
+				counts: store.Counts{Total: 71, Published: 0, Pending: 71}},
+			want: []string{"76 records normalized into 71 events (5 merged)", "71 new, 0 updated"},
+			omit: "promoted",
 		},
 		{
-			name:  "after a verification",
-			saved: store.SaveResult{Updated: 71, Promoted: 19},
-			want:  []string{"0 new, 71 updated", "19 promoted out of pending"},
+			name: "after a verification",
+			in: stored{records: 76, events: 76,
+				saved:  store.SaveResult{Updated: 76, Promoted: 19, Merged: 2},
+				counts: store.Counts{Total: 76, Published: 19, Pending: 57}},
+			want: []string{"0 new, 76 updated", "19 promoted out of pending", "2 rows joined"},
+			// Nothing collapsed, so the parenthetical is noise.
+			omit: "merged)",
+		},
+		{
+			name: "an unattributable record is named",
+			in: stored{records: 2, events: 1,
+				problems: []error{errString("event \"x\": no source registered for \"https://nowhere.test/feed\"")},
+				counts:   store.Counts{Total: 1, Pending: 1}},
+			want: []string{"unattributable:", "nowhere.test"},
 		},
 	}
+
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			var out bytes.Buffer
-			reportStore(&out, "htxdev.db", tc.saved, store.Counts{Total: 71, Published: 19, Pending: 52})
+			reportStore(&out, "htxdev.db", tc.in)
 			got := out.String()
 			for _, w := range tc.want {
 				if !strings.Contains(got, w) {
-					t.Errorf("output %q missing %q", got, w)
+					t.Errorf("output missing %q:\n%s", w, got)
 				}
 			}
-			// A zero promotion count is noise on every run that is not the one
-			// after a verification.
 			if tc.omit != "" && strings.Contains(got, tc.omit) {
-				t.Errorf("output %q mentions %q, want it left out when zero", got, tc.omit)
-			}
-			if !strings.Contains(got, "71 rows: 19 published, 52 pending, 0 cancelled") {
-				t.Errorf("output %q missing the status tally", got)
+				t.Errorf("output mentions %q, want it left out:\n%s", tc.omit, got)
 			}
 		})
 	}

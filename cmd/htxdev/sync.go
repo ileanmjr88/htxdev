@@ -12,6 +12,7 @@ import (
 
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/fetch"
+	"github.com/ileanmjr88/htxdev/internal/normalize"
 	"github.com/ileanmjr88/htxdev/internal/registry"
 	"github.com/ileanmjr88/htxdev/internal/store"
 )
@@ -75,11 +76,11 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 		return verdict(sum)
 	}
 
-	saved, counts, err := persist(ctx, *dbPath, reg, results, sum.fetchedAt)
+	stored, err := persist(ctx, *dbPath, reg, results, sum.fetchedAt)
 	if err != nil {
 		return err
 	}
-	reportStore(stdout, *dbPath, saved, counts)
+	reportStore(stdout, *dbPath, stored)
 
 	return verdict(sum)
 }
@@ -93,46 +94,81 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 // being cancelled. That is the first of the three guards in the
 // absence-means-cancelled contract, and it is enforced by this loop rather
 // than by anything in the store.
-func persist(ctx context.Context, dbPath string, reg *registry.Registry, results []fetch.Result, seenAt time.Time) (store.SaveResult, store.Counts, error) {
-	var (
-		saved  store.SaveResult
-		counts store.Counts
-	)
+// stored is what one write did, from records in to rows on disk.
+type stored struct {
+	records  int // RawEvents handed to normalize
+	events   int // what normalize concluded they were
+	problems []error
+	saved    store.SaveResult
+	counts   store.Counts
+}
+
+// persist normalizes what the successful sources returned and writes it.
+//
+// Sources that failed contribute nothing, which is not the same as
+// contributing an empty list: their events keep the last_seen they already
+// had, so a feed being down for a day cannot look like every one of its events
+// being cancelled. That is the first of the three guards in the
+// absence-means-cancelled contract, and it is enforced by this loop rather
+// than by anything downstream.
+func persist(ctx context.Context, dbPath string, reg *registry.Registry, results []fetch.Result, seenAt time.Time) (stored, error) {
+	var out stored
 
 	st, err := store.Open(dbPath)
 	if err != nil {
-		return saved, counts, err
+		return out, err
 	}
 	defer func() { _ = st.Close() }()
 
-	// Before the events, always. Event rows reference source rows, and a feed
-	// added to sources.yaml this morning has no source row until this runs.
+	// Before the events, always. Event rows reference source and group rows,
+	// and a feed added to sources.yaml this morning has neither until this
+	// runs.
 	if err := st.SyncRegistry(ctx, reg.Groups, reg.Venues, reg.Sources); err != nil {
-		return saved, counts, fmt.Errorf("sync registry into %s: %w", dbPath, err)
+		return out, fmt.Errorf("sync registry into %s: %w", dbPath, err)
 	}
 
-	var events []core.RawEvent
+	var raw []core.RawEvent
 	for _, r := range results {
 		if r.Err != nil {
 			continue
 		}
-		events = append(events, r.Events...)
+		raw = append(raw, r.Events...)
 	}
+	out.records = len(raw)
 
-	if saved, err = st.SaveEvents(ctx, events, seenAt); err != nil {
-		return saved, counts, fmt.Errorf("save events to %s: %w", dbPath, err)
+	events, problems := normalize.New(reg).Events(raw)
+	out.events, out.problems = len(events), problems
+
+	if out.saved, err = st.SaveEvents(ctx, events, seenAt); err != nil {
+		return out, fmt.Errorf("save events to %s: %w", dbPath, err)
 	}
-	counts, err = st.Counts(ctx)
-	return saved, counts, err
+	out.counts, err = st.Counts(ctx)
+	return out, err
 }
 
-func reportStore(w io.Writer, dbPath string, saved store.SaveResult, counts store.Counts) {
-	fmt.Fprintf(w, "\n%s: %d new, %d updated", dbPath, saved.Inserted, saved.Updated)
-	if saved.Promoted > 0 {
-		fmt.Fprintf(w, ", %d promoted out of pending", saved.Promoted)
+func reportStore(w io.Writer, dbPath string, st stored) {
+	// The collapse is the headline. It is the only visible evidence that
+	// dedupe did anything, and if it ever reads "76 records into 76 events"
+	// then resolution has silently stopped matching organizers to groups.
+	fmt.Fprintf(w, "\n%d records normalized into %d events", st.records, st.events)
+	if n := st.records - st.events; n > 0 {
+		fmt.Fprintf(w, " (%d merged)", n)
+	}
+	fmt.Fprintln(w, ".")
+
+	for _, p := range st.problems {
+		fmt.Fprintf(w, "  unattributable: %v\n", p)
+	}
+
+	fmt.Fprintf(w, "%s: %d new, %d updated", dbPath, st.saved.Inserted, st.saved.Updated)
+	if st.saved.Promoted > 0 {
+		fmt.Fprintf(w, ", %d promoted out of pending", st.saved.Promoted)
+	}
+	if st.saved.Merged > 0 {
+		fmt.Fprintf(w, ", %d rows joined", st.saved.Merged)
 	}
 	fmt.Fprintf(w, ".\n%d rows: %d published, %d pending, %d cancelled.\n",
-		counts.Total, counts.Published, counts.Pending, counts.Cancelled)
+		st.counts.Total, st.counts.Published, st.counts.Pending, st.counts.Cancelled)
 }
 
 // verdict decides the process exit status from what the run produced.

@@ -112,7 +112,7 @@ func (n *Normalizer) Events(raw []core.RawEvent) ([]core.Event, []error) {
 
 	out := make([]core.Event, 0, len(order))
 	for _, k := range order {
-		out = append(out, n.merge(clusters[k]))
+		out = append(out, n.collapse(clusters[k])...)
 	}
 	return out, problems
 }
@@ -153,6 +153,51 @@ func (n *Normalizer) groupFor(src core.Source, e core.RawEvent) (core.Group, boo
 	}
 	g, ok := n.groups[src.GroupSlug]
 	return g, ok
+}
+
+// collapse turns one cluster into events, which is usually one but not always.
+//
+// A merge needs one record per feed. Two records from the same feed at the
+// same instant are two events, because a calendar does not list one event
+// twice, and the live data is emphatic about this: Ion runs NASA Office Hours,
+// Mapping Houston's Innovation Ecosystem and SCORE Office Hours simultaneously
+// at 10am on Fridays. None of their organizers resolves to a group, so all
+// three fall back to the feed's owner and land in one cluster. Merging on
+// (group, instant) alone published them as a single event.
+//
+// That is the difference between the cluster key and the merge decision. The
+// key asks "could these be the same event"; this asks "is there evidence they
+// are". Two feeds independently publishing something at one instant for one
+// group is evidence. One feed listing three things is the opposite.
+//
+// An ambiguous cluster, two records from Ion and one from HLUG, is left
+// unmerged rather than guessed at: nothing says which Ion record the HLUG one
+// pairs with.
+func (n *Normalizer) collapse(rs []resolved) []core.Event {
+	if distinctSources(rs) {
+		return []core.Event{n.merge(rs)}
+	}
+
+	// Sorted so a split cluster comes out in the same order every run.
+	slices.SortStableFunc(rs, func(a, b resolved) int {
+		return cmp.Compare(a.raw.UpstreamID, b.raw.UpstreamID)
+	})
+	out := make([]core.Event, 0, len(rs))
+	for _, r := range rs {
+		out = append(out, n.merge([]resolved{r}))
+	}
+	return out
+}
+
+func distinctSources(rs []resolved) bool {
+	seen := make(map[string]bool, len(rs))
+	for _, r := range rs {
+		if seen[r.raw.SourceKey] {
+			return false
+		}
+		seen[r.raw.SourceKey] = true
+	}
+	return true
 }
 
 // merge collapses one cluster into the event htxdev publishes.
@@ -207,9 +252,10 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 	venueResolved := false
 
 	for _, r := range rs {
-		if !slices.Contains(ev.SourceKeys, r.raw.SourceKey) {
-			ev.SourceKeys = append(ev.SourceKeys, r.raw.SourceKey)
-		}
+		ev.Sources = append(ev.Sources, core.EventSource{
+			SourceKey:   r.raw.SourceKey,
+			Fingerprint: core.Fingerprint(r.src.Kind, r.raw.UpstreamID),
+		})
 
 		if name, room := n.resolveVenue(r.raw.Venues); name != "" {
 			_, curated := n.canonicalVenue(name)

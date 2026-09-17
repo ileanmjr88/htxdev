@@ -49,11 +49,33 @@ func seed(t *testing.T, st *Store, verifiedBy string) {
 	}
 }
 
-func ev(feed, id, title string, start time.Time) core.RawEvent {
-	return core.RawEvent{SourceKey: feed, UpstreamID: id, Title: title, Start: start}
+// ev builds what normalize would have concluded: one event, from one feed.
+func ev(feed, id, title string, start time.Time) core.Event {
+	kind := core.KindTribe
+	if feed == icsFeed {
+		kind = core.KindICS
+	}
+	fp := core.Fingerprint(kind, id)
+	return core.Event{
+		Fingerprint: fp,
+		GroupSlug:   "g1",
+		Title:       title,
+		Start:       start,
+		Sources:     []core.EventSource{{SourceKey: feed, Fingerprint: fp}},
+	}
 }
 
-func save(t *testing.T, st *Store, at time.Time, events ...core.RawEvent) SaveResult {
+// merged builds an event that two feeds both published, which is what dedupe
+// produces and what event_fingerprints exists to record.
+func merged(title string, start time.Time, a, b core.Event) core.Event {
+	e := a
+	e.Title = title
+	e.Start = start
+	e.Sources = append(append([]core.EventSource{}, a.Sources...), b.Sources...)
+	return e
+}
+
+func save(t *testing.T, st *Store, at time.Time, events ...core.Event) SaveResult {
 	t.Helper()
 	res, err := st.SaveEvents(t.Context(), events, at)
 	if err != nil {
@@ -113,10 +135,11 @@ func TestForeignKeysAreEnforced(t *testing.T) {
 	}
 
 	_, err := st.db.Exec(`INSERT INTO events
-		(fingerprint, source_id, title, starts_at, status, first_seen, last_seen)
-		VALUES ('x', 999, 't', '2026-01-01T00:00:00Z', 'pending', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`)
+		(fingerprint, group_slug, title, starts_at, status, first_seen, last_seen)
+		VALUES ('x', 'no-such-group', 't', '2026-01-01T00:00:00Z', 'pending',
+		        '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`)
 	if err == nil {
-		t.Error("inserting an event against a nonexistent source succeeded, want a constraint failure")
+		t.Error("inserting an event against a nonexistent group succeeded, want a constraint failure")
 	}
 }
 
@@ -128,8 +151,8 @@ func TestStatusIsConstrained(t *testing.T) {
 	seed(t, st, "")
 
 	_, err := st.db.Exec(`INSERT INTO events
-		(fingerprint, source_id, title, starts_at, status, first_seen, last_seen)
-		VALUES ('x', (SELECT id FROM sources LIMIT 1), 't', '2026-01-01T00:00:00Z',
+		(fingerprint, group_slug, title, starts_at, status, first_seen, last_seen)
+		VALUES ('x', 'g1', 't', '2026-01-01T00:00:00Z',
 		        'publshed', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`)
 	if err == nil {
 		t.Error("a misspelled status was accepted, want the CHECK constraint to reject it")
@@ -140,7 +163,7 @@ func TestSaveEventsInsertsThenUpdates(t *testing.T) {
 	st, _ := newStore(t)
 	seed(t, st, "")
 
-	events := []core.RawEvent{
+	events := []core.Event{
 		ev(tribeFeed, "a", "One", runOne.Add(48*time.Hour)),
 		ev(tribeFeed, "b", "Two", runOne.Add(72*time.Hour)),
 	}
@@ -279,7 +302,7 @@ func TestVerifyingAGroupPromotesItsExistingEvents(t *testing.T) {
 	st, _ := newStore(t)
 	seed(t, st, "")
 
-	events := []core.RawEvent{
+	events := []core.Event{
 		ev(tribeFeed, "a", "One", runOne.Add(48*time.Hour)),
 		ev(tribeFeed, "b", "Two", runOne.Add(72*time.Hour)),
 	}
@@ -410,65 +433,94 @@ func TestZeroEndTimeRoundTrips(t *testing.T) {
 	}
 }
 
-// Delete-then-insert, so an event whose venue list shrank does not keep the
-// old rows. Ion sends [room, building] and the order is the hierarchy, so
-// position has to be rewritten too.
-func TestChildRowsAreReplacedNotAppended(t *testing.T) {
+// Delete-then-insert, so an event whose category list shrank does not keep
+// the old rows.
+func TestCategoriesAreReplacedNotAppended(t *testing.T) {
 	st, _ := newStore(t)
 	seed(t, st, "")
 
 	e := ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour))
-	e.Venues = []core.RawVenue{{Name: "Room 028"}, {Name: "Ion"}}
-	e.Organizers = []core.RawOrganizer{{Name: "HLUG"}}
 	e.Categories = []string{"dev", "startup"}
 	save(t, st, runOne, e)
 
-	// Upstream trims the list.
-	e.Venues = []core.RawVenue{{Name: "Ion"}}
-	e.Organizers = nil
-	e.Categories = []string{"dev"}
+	e.Categories = []string{"hardware"}
 	save(t, st, runTwo, e)
 
-	var venues, organizers, categories int
-	if err := st.db.QueryRow(`
-		SELECT (SELECT COUNT(*) FROM event_venues),
-		       (SELECT COUNT(*) FROM event_organizers),
-		       (SELECT COUNT(*) FROM event_categories)`).Scan(&venues, &organizers, &categories); err != nil {
+	var n int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM event_categories`).Scan(&n); err != nil {
 		t.Fatal(err)
 	}
-	if venues != 1 || organizers != 0 || categories != 1 {
-		t.Errorf("venues=%d organizers=%d categories=%d; want 1, 0, 1", venues, organizers, categories)
+	if n != 1 {
+		t.Errorf("got %d category rows, want 1", n)
 	}
-
 	var name string
-	if err := st.db.QueryRow(`SELECT name FROM event_venues WHERE position = 0`).Scan(&name); err != nil {
+	if err := st.db.QueryRow(`SELECT name FROM event_categories WHERE position = 0`).Scan(&name); err != nil {
 		t.Fatal(err)
 	}
-	if name != "Ion" {
-		t.Errorf("venue at position 0 = %q, want the new list and not the old one", name)
+	if name != "hardware" {
+		t.Errorf("category = %q, want the new list and not the old one", name)
 	}
 }
 
-// Deleting a source takes its events with it, which is what ON DELETE CASCADE
-// is for and only works because foreign keys are on.
-func TestDeletingASourceCascades(t *testing.T) {
+// A venue nobody curated still gets a row, because the architecture expects
+// venues to be discovered from event data.
+func TestDiscoveredVenuesGetRows(t *testing.T) {
+	st, _ := newStore(t)
+	seed(t, st, "ileanmjr88")
+
+	a := ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour))
+	a.VenueName, a.Room = "Zion Lutheran Church", ""
+	b := ev(tribeFeed, "b", "Two", runOne.Add(48*time.Hour))
+	b.VenueName, b.Room = "Zion Lutheran Church", "Fellowship Hall"
+	save(t, st, runOne, a, b)
+
+	var n int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM venues WHERE name = ?`, "Zion Lutheran Church").Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("got %d venue rows, want 1: two events at one place is one venue", n)
+	}
+
+	up, err := st.Upcoming(t.Context(), runOne)
+	if err != nil {
+		t.Fatalf("Upcoming: %v", err)
+	}
+	if len(up) != 2 {
+		t.Fatalf("got %d events, want 2", len(up))
+	}
+	if up[0].VenueID == 0 || up[0].VenueID != up[1].VenueID {
+		t.Errorf("venue ids = %d and %d, want one shared non-zero id", up[0].VenueID, up[1].VenueID)
+	}
+	if up[1].Room != "Fellowship Hall" {
+		t.Errorf("room = %q, want it kept per event rather than on the venue", up[1].Room)
+	}
+}
+
+// Deleting a source takes its provenance rows with it, which is what
+// ON DELETE CASCADE is for and only works because foreign keys are on. The
+// event itself survives: a feed going away is not the event going away, and
+// another feed may still be publishing it.
+func TestDeletingASourceCascadesToProvenance(t *testing.T) {
 	st, _ := newStore(t)
 	seed(t, st, "")
-	e := ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour))
-	e.Venues = []core.RawVenue{{Name: "Ion"}}
-	save(t, st, runOne, e)
+	save(t, st, runOne, ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour)))
 
 	if _, err := st.db.Exec(`DELETE FROM sources WHERE url = ?`, tribeFeed); err != nil {
 		t.Fatal(err)
 	}
 
-	var events, venues int
-	if err := st.db.QueryRow(`SELECT (SELECT COUNT(*) FROM events), (SELECT COUNT(*) FROM event_venues)`).
-		Scan(&events, &venues); err != nil {
+	var events, provenance int
+	if err := st.db.QueryRow(
+		`SELECT (SELECT COUNT(*) FROM events), (SELECT COUNT(*) FROM event_fingerprints)`).
+		Scan(&events, &provenance); err != nil {
 		t.Fatal(err)
 	}
-	if events != 0 || venues != 0 {
-		t.Errorf("events=%d venues=%d after deleting the source; want both 0", events, venues)
+	if provenance != 0 {
+		t.Errorf("got %d provenance rows, want 0", provenance)
+	}
+	if events != 1 {
+		t.Errorf("got %d events, want the event to outlive the feed", events)
 	}
 }
 
@@ -477,7 +529,7 @@ func TestSaveEventsRejectsAnUnknownSource(t *testing.T) {
 	seed(t, st, "")
 
 	_, err := st.SaveEvents(t.Context(),
-		[]core.RawEvent{ev("https://never-registered.test/feed", "a", "One", runOne)}, runOne)
+		[]core.Event{ev("https://never-registered.test/feed", "a", "One", runOne)}, runOne)
 	if err == nil {
 		t.Fatal("want an error, got nil")
 	}
@@ -490,7 +542,7 @@ func TestSaveEventsRejectsAZeroTimestamp(t *testing.T) {
 	st, _ := newStore(t)
 	seed(t, st, "")
 
-	_, err := st.SaveEvents(t.Context(), []core.RawEvent{ev(tribeFeed, "a", "One", runOne)}, time.Time{})
+	_, err := st.SaveEvents(t.Context(), []core.Event{ev(tribeFeed, "a", "One", runOne)}, time.Time{})
 	if err == nil {
 		t.Fatal("want an error, got nil")
 	}
@@ -506,7 +558,7 @@ func TestSaveEventsIsAtomic(t *testing.T) {
 	seed(t, st, "")
 
 	// Good, good, then one referencing a source that does not exist.
-	_, err := st.SaveEvents(t.Context(), []core.RawEvent{
+	_, err := st.SaveEvents(t.Context(), []core.Event{
 		ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour)),
 		ev(tribeFeed, "b", "Two", runOne.Add(48*time.Hour)),
 		ev("https://never-registered.test/feed", "c", "Three", runOne.Add(72*time.Hour)),
@@ -663,7 +715,6 @@ func TestBooleanColumnsRoundTrip(t *testing.T) {
 	allDay := ev(tribeFeed, "a", "All day", runOne.Add(24*time.Hour))
 	allDay.AllDay = true
 	allDay.Virtual = true
-	allDay.VirtualURL = "https://meet.example.test/x"
 
 	plain := ev(tribeFeed, "b", "Ordinary", runOne.Add(48*time.Hour))
 
@@ -681,5 +732,156 @@ func TestBooleanColumnsRoundTrip(t *testing.T) {
 	}
 	if up[1].AllDay || up[1].Virtual {
 		t.Errorf("second event allDay=%v virtual=%v, want both false", up[1].AllDay, up[1].Virtual)
+	}
+}
+
+// An event is found by ANY of its fingerprints, which is what lets
+// events.fingerprint stay write-once while the merge winner is free to change.
+func TestEventIsFoundByAnyOfItsFingerprints(t *testing.T) {
+	st, _ := newStore(t)
+	seed(t, st, "")
+
+	start := runOne.Add(24 * time.Hour)
+	fromIon := ev(tribeFeed, "ion-copy", "Ion's wording", start)
+	fromHLUG := ev(icsFeed, "own-copy", "The organizer's wording", start)
+
+	// First sync: only Ion carries it.
+	save(t, st, runOne, fromIon)
+
+	// Second sync: HLUG starts publishing it too, and normalize now hands over
+	// one event built from both records, with HLUG's record winning.
+	both := merged("The organizer's wording", start, fromHLUG, fromIon)
+	res := save(t, st, runTwo, both)
+
+	if res.Inserted != 0 || res.Updated != 1 {
+		t.Fatalf("res = %+v, want the existing row matched through Ion's fingerprint", res)
+	}
+
+	var n int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM events`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("got %d event rows, want 1", n)
+	}
+
+	var fingerprint, title, firstSeen string
+	if err := st.db.QueryRow(`SELECT fingerprint, title, first_seen FROM events`).
+		Scan(&fingerprint, &title, &firstSeen); err != nil {
+		t.Fatal(err)
+	}
+	// D7: identity is whichever record was seen FIRST, not the current merge
+	// winner. Following the winner would churn a published ICS UID.
+	if want := core.Fingerprint(core.KindTribe, "ion-copy"); fingerprint != want {
+		t.Errorf("fingerprint = %q, want %q kept from the first sync", fingerprint, want)
+	}
+	if title != "The organizer's wording" {
+		t.Errorf("title = %q, want the new winner's", title)
+	}
+	if firstSeen != formatTime(runOne) {
+		t.Errorf("first_seen = %q, want it frozen at the first sync", firstSeen)
+	}
+
+	// Both records are now provenance for the one event.
+	var provenance int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM event_fingerprints`).Scan(&provenance); err != nil {
+		t.Fatal(err)
+	}
+	if provenance != 2 {
+		t.Errorf("got %d provenance rows, want 2", provenance)
+	}
+}
+
+// Two rows becoming one. A feed record can live as its own event for months
+// before a second feed starts publishing the same meeting, and that run is
+// where the rows join.
+func TestTwoExistingRowsMergeIntoOne(t *testing.T) {
+	st, _ := newStore(t)
+	seed(t, st, "")
+
+	start := runOne.Add(24 * time.Hour)
+	fromIon := ev(tribeFeed, "ion-copy", "Ion's wording", start)
+	fromHLUG := ev(icsFeed, "own-copy", "The organizer's wording", start)
+
+	// Both exist separately: normalize did not yet know they were the same,
+	// which is what an alias being missing from sources.yaml looks like.
+	save(t, st, runOne, fromIon)
+	save(t, st, runOne.Add(time.Hour), fromHLUG)
+
+	var before int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM events`).Scan(&before); err != nil {
+		t.Fatal(err)
+	}
+	if before != 2 {
+		t.Fatalf("got %d rows before the merge, want 2", before)
+	}
+
+	// The alias gets added, and now one event claims both fingerprints.
+	res := save(t, st, runTwo, merged("The organizer's wording", start, fromHLUG, fromIon))
+	if res.Merged != 1 {
+		t.Errorf("merged = %d, want 1", res.Merged)
+	}
+
+	var after int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM events`).Scan(&after); err != nil {
+		t.Fatal(err)
+	}
+	if after != 1 {
+		t.Fatalf("got %d rows after the merge, want 1", after)
+	}
+
+	// The survivor is the one with the earliest first_seen, because that is
+	// the fact the committed database exists to preserve.
+	var fingerprint, firstSeen string
+	if err := st.db.QueryRow(`SELECT fingerprint, first_seen FROM events`).Scan(&fingerprint, &firstSeen); err != nil {
+		t.Fatal(err)
+	}
+	if want := core.Fingerprint(core.KindTribe, "ion-copy"); fingerprint != want {
+		t.Errorf("survivor = %q, want the older row %q", fingerprint, want)
+	}
+	if firstSeen != formatTime(runOne) {
+		t.Errorf("first_seen = %q, want the earlier of the two", firstSeen)
+	}
+
+	// Nothing lost its provenance in the move.
+	var provenance int
+	if err := st.db.QueryRow(`SELECT COUNT(*) FROM event_fingerprints`).Scan(&provenance); err != nil {
+		t.Fatal(err)
+	}
+	if provenance != 2 {
+		t.Errorf("got %d provenance rows, want both repointed at the survivor", provenance)
+	}
+}
+
+// Upcoming returns provenance, because "which feeds say this is happening" is
+// a real question and the only evidence dedupe did anything.
+func TestUpcomingCarriesProvenanceAndCategories(t *testing.T) {
+	st, _ := newStore(t)
+	seed(t, st, "ileanmjr88")
+
+	start := runOne.Add(24 * time.Hour)
+	a := ev(icsFeed, "own", "Merged event", start)
+	b := ev(tribeFeed, "ion", "Ion's copy", start)
+	e := merged("Merged event", start, a, b)
+	e.Categories = []string{"dev"}
+	e.VenueName, e.Room = "Ion", "Conference Room 030"
+	save(t, st, runOne, e)
+
+	up, err := st.Upcoming(t.Context(), runOne)
+	if err != nil {
+		t.Fatalf("Upcoming: %v", err)
+	}
+	if len(up) != 1 {
+		t.Fatalf("got %d events, want 1", len(up))
+	}
+	got := up[0]
+	if len(got.Sources) != 2 {
+		t.Errorf("sources = %+v, want both feeds", got.Sources)
+	}
+	if len(got.Categories) != 1 || got.Categories[0] != "dev" {
+		t.Errorf("categories = %v, want [dev]", got.Categories)
+	}
+	if got.VenueName != "Ion" || got.Room != "Conference Room 030" || got.VenueID == 0 {
+		t.Errorf("venue = (%d, %q, %q), want a resolved id and the room", got.VenueID, got.VenueName, got.Room)
 	}
 }

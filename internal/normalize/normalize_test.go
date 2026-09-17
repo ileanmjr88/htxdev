@@ -102,8 +102,8 @@ func TestDeduplicatesTheRealCluster(t *testing.T) {
 	if !strings.HasPrefix(nasa.Title, "NASA Tech Talks") {
 		t.Errorf("ion-district event = %q, want the NASA talk", nasa.Title)
 	}
-	if len(nasa.SourceKeys) != 1 {
-		t.Errorf("NASA talk has %d sources, want 1: nothing else published it", len(nasa.SourceKeys))
+	if len(nasa.Sources) != 1 {
+		t.Errorf("NASA talk has %d sources, want 1: nothing else published it", len(nasa.Sources))
 	}
 
 	hlug, ok := byGroup["houston-linux-user-group"]
@@ -117,8 +117,14 @@ func TestDeduplicatesTheRealCluster(t *testing.T) {
 	if hlug.Fingerprint != core.Fingerprint(core.KindICS, "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com") {
 		t.Errorf("fingerprint = %q, want the winning record's", hlug.Fingerprint)
 	}
-	if len(hlug.SourceKeys) != 2 || hlug.SourceKeys[0] != hlugFeed || hlug.SourceKeys[1] != ionFeed {
-		t.Errorf("sourceKeys = %v, want the winner first then Ion", hlug.SourceKeys)
+	if len(hlug.Sources) != 2 || hlug.Sources[0].SourceKey != hlugFeed || hlug.Sources[1].SourceKey != ionFeed {
+		t.Errorf("sources = %+v, want the winner first then Ion", hlug.Sources)
+	}
+	// Each contributing record keeps its own fingerprint, which is what lets
+	// the store find this event by any of them and keep events.fingerprint
+	// write-once while the merge winner is free to change.
+	if hlug.Sources[1].Fingerprint != core.Fingerprint(core.KindTribe, "iondistrict.com?id=2") {
+		t.Errorf("Ion's provenance fingerprint = %q", hlug.Sources[1].Fingerprint)
 	}
 	// Gap-filled: HLUG's ICS has no URL, Ion's record does.
 	if hlug.URL != "https://iondistrict.com/event/hlug/" {
@@ -387,26 +393,54 @@ func TestSameGroupAtDifferentTimesStaysSeparate(t *testing.T) {
 	}
 }
 
-// Two records from the same feed can land in one cluster: a venue calendar can
-// list a group twice for the same slot, once per co-host. Provenance should say
-// that feed contributed, once, not twice.
-func TestOneFeedContributingTwiceIsRecordedOnce(t *testing.T) {
+// The bug the live data found, and the reason the cluster key is not the whole
+// story. Ion runs three different things at 10am on Fridays: NASA Office
+// Hours, Mapping Houston's Innovation Ecosystem and SCORE Office Hours. None
+// of their organizers resolves to a group, so all three fall back to the
+// feed's owner and land in one cluster, and merging on (group, instant) alone
+// published them as a single event.
+//
+// A merge needs one record per feed. A calendar does not list one event twice.
+func TestSameFeedAtTheSameInstantIsNotAMerge(t *testing.T) {
+	start := at("2026-09-25T15:00:00Z")
+	// Fed in upstream-id order 65740, 64682, 64738, so the assertion on
+	// output order below tests the sort rather than the input.
+	events, problems := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=65740", Title: "SCORE Office Hours", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "SCORE"}}},
+		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=64682", Title: "NASA Office Hours", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "NASA"}}},
+		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=64738", Title: "Mapping Houston's Innovation Ecosystem", Start: start},
+	})
+	if len(problems) != 0 {
+		t.Fatalf("problems = %v", problems)
+	}
+	if len(events) != 3 {
+		t.Fatalf("got %d events, want 3: one feed at one instant is three different events", len(events))
+	}
+	for _, e := range events {
+		if len(e.Sources) != 1 {
+			t.Errorf("event %q has %d sources, want 1", e.Title, len(e.Sources))
+		}
+	}
+	// Deterministic, so a split cluster does not shuffle between runs.
+	if events[0].Title != "NASA Office Hours" {
+		t.Errorf("first = %q, want the lowest upstream id", events[0].Title)
+	}
+}
+
+// An ambiguous cluster is left alone rather than guessed at: nothing says
+// which of Ion's two records the HLUG one pairs with.
+func TestAmbiguousClusterIsNotMerged(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
 	events, _ := New(testRegistry()).Events([]core.RawEvent{
-		{SourceKey: ionFeed, UpstreamID: "ion-a", Title: "Listing A", Start: start,
+		{SourceKey: ionFeed, UpstreamID: "ion-a", Title: "Ion A", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
-		{SourceKey: ionFeed, UpstreamID: "ion-b", Title: "Listing B", Start: start,
+		{SourceKey: ionFeed, UpstreamID: "ion-b", Title: "Ion B", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
+		{SourceKey: hlugFeed, UpstreamID: "own", Title: "HLUG's own", Start: start},
 	})
-	if len(events) != 1 {
-		t.Fatalf("got %d events, want 1", len(events))
-	}
-	if len(events[0].SourceKeys) != 1 || events[0].SourceKeys[0] != ionFeed {
-		t.Errorf("sourceKeys = %v, want the feed recorded exactly once", events[0].SourceKeys)
-	}
-	// The tie-break makes which record wins reproducible rather than dependent
-	// on the order the feed happened to list them.
-	if events[0].Title != "Listing A" {
-		t.Errorf("title = %q, want the lower upstream id to win the tie", events[0].Title)
+	if len(events) != 3 {
+		t.Fatalf("got %d events, want 3 left unmerged", len(events))
 	}
 }

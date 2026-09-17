@@ -126,12 +126,26 @@ type Event struct {
 	FirstSeen time.Time
 	LastSeen  time.Time
 
-	// SourceKeys holds the feed URLs that contributed, in the order they won:
-	// the first is the source whose record supplied identity and title.
-	// Plural because dedupe merges the same event from several feeds. Again
-	// URLs and not ids, and SourceIDs is what the store fills in on read.
-	SourceKeys []string
-	SourceIDs  []int64
+	// Sources holds every feed record that merged into this event, in the
+	// order they won: the first supplied the title and the links.
+	//
+	// Paired rather than two parallel slices, because the store needs to know
+	// which feed each fingerprint came from and index-aligned slices go wrong
+	// the first time one feed contributes two records to one event, which a
+	// venue calendar listing a co-hosted meeting twice really does.
+	Sources []EventSource
+}
+
+// EventSource is one feed record that merged into an Event.
+//
+// SourceKey is the feed URL rather than a database id, per D14: normalize runs
+// before anything is written. Fingerprint is that record's own identity, which
+// is not necessarily the Event's: an Event keeps the fingerprint of whichever
+// record was seen first, and D7 forbids recomputing it when a higher-priority
+// feed shows up later and wins the merge.
+type EventSource struct {
+	SourceKey   string
+	Fingerprint string
 }
 
 // Fingerprint is an event's permanent identity: the upstream stable ID,

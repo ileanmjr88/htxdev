@@ -61,79 +61,82 @@ CREATE TABLE IF NOT EXISTS sources (
     enabled    INTEGER NOT NULL DEFAULT 1
 ) STRICT;
 
--- One row per event per source. Two sources carrying the same real-world event
--- are two rows here on purpose: this table records what each feed said, and
--- deciding they are the same event is Phase 5's job. The Houston Linux meeting
--- at the Ion arrives from both Ion's calendar and HLUG's own, and today that
--- is two rows with different titles.
+-- One row per real-world event, after normalize has decided which feed records
+-- describe the same thing. The Houston Linux meeting at the Ion arrives from
+-- both Ion's calendar and HLUG's own; this holds one row for it, and
+-- event_fingerprints records that two feeds contributed.
 CREATE TABLE IF NOT EXISTS events (
-    id          INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
 
-    -- D7. Write-once: set on insert and never updated, because it becomes the
-    -- ICS UID in v1.1 and a UID that changes duplicates the event in every
-    -- subscriber's calendar.
+    -- D7, and the reason event_fingerprints exists below. This is the
+    -- fingerprint of whichever record was seen FIRST, assigned once and never
+    -- recomputed. Deliberately NOT the current merge winner: if a
+    -- higher-priority feed starts carrying an event later the winner changes,
+    -- and a fingerprint that followed it would churn. It becomes a published
+    -- ICS UID in v1.1, where churn duplicates the event in every subscriber's
+    -- calendar.
     fingerprint TEXT NOT NULL UNIQUE,
-    source_id   INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
 
-    title        TEXT NOT NULL,
-    description  TEXT NOT NULL DEFAULT '',
-    starts_at    TEXT NOT NULL,
-    ends_at      TEXT NOT NULL DEFAULT '',
-    all_day      INTEGER NOT NULL DEFAULT 0,
+    group_slug TEXT NOT NULL REFERENCES groups(slug) ON DELETE CASCADE,
+
+    title     TEXT NOT NULL,
+    excerpt   TEXT NOT NULL DEFAULT '',
+    starts_at TEXT NOT NULL,
+    ends_at   TEXT NOT NULL DEFAULT '',
+    all_day   INTEGER NOT NULL DEFAULT 0,
+
+    -- 0 means unresolved, which is normal rather than exceptional: venues are
+    -- discovered from event data and curated in sources.yaml only when a name
+    -- needs canonicalising. venue_name keeps what it resolved to either way.
+    venue_id   INTEGER NOT NULL DEFAULT 0,
+    venue_name TEXT NOT NULL DEFAULT '',
+    room       TEXT NOT NULL DEFAULT '',
+
     url          TEXT NOT NULL DEFAULT '',
     register_url TEXT NOT NULL DEFAULT '',
-    virtual_url  TEXT NOT NULL DEFAULT '',
     virtual      INTEGER NOT NULL DEFAULT 0,
 
-    -- pending  : the owning group is unverified. Never published.
-    -- published: a human reviewed the group's feed and signed for it.
-    -- cancelled: seen before, absent now, under the conditions in the
-    --            absence-means-cancelled contract. Phase 5 sets this; nothing
-    --            in Phase 4 does, because the guards live in normalize.
     status TEXT NOT NULL CHECK (status IN ('pending', 'published', 'cancelled')),
 
-    -- Write-once, and the reason this database is committed rather than
-    -- rebuilt: it is the only record of when htxdev first saw an event, and
-    -- rebuilding from feeds cannot recover it because feeds forget.
     first_seen TEXT NOT NULL,
-    -- Bumped on every sync that still sees the event. An event whose last_seen
-    -- falls behind the run is the input to cancellation.
     last_seen  TEXT NOT NULL
 ) STRICT;
 
 CREATE INDEX IF NOT EXISTS events_starts_at ON events(starts_at);
 CREATE INDEX IF NOT EXISTS events_status_starts_at ON events(status, starts_at);
-CREATE INDEX IF NOT EXISTS events_source_last_seen ON events(source_id, last_seen);
+CREATE INDEX IF NOT EXISTS events_group ON events(group_slug, starts_at);
 
--- Child tables rather than JSON columns, for the same reason the decoders use
--- narrow structs rather than map[string]any: a column you have to name is a
--- column somebody decided to keep. position preserves feed order, which is
--- load-bearing for venues, where Ion sends [room, building] and the order is
--- the hierarchy.
-CREATE TABLE IF NOT EXISTS event_venues (
+-- Every feed record that has ever merged into an event, and which source it
+-- came from. Two jobs.
+--
+-- First, identity. An event is found by ANY of its fingerprints, which is what
+-- lets events.fingerprint stay write-once while the merge winner is free to
+-- change. Without this, an event first seen only on Ion and later also
+-- published by HLUG would change identity the moment the higher-priority feed
+-- appeared, which is exactly what D7 forbids.
+--
+-- Second, provenance. "Which feeds say this is happening" is a real question
+-- for a discovery site, and it is the only evidence that dedupe did anything.
+CREATE TABLE IF NOT EXISTS event_fingerprints (
     event_id    INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    position    INTEGER NOT NULL,
-    upstream_id TEXT NOT NULL DEFAULT '',
-    name        TEXT NOT NULL,
-    address     TEXT NOT NULL DEFAULT '',
-    city        TEXT NOT NULL DEFAULT '',
-    state       TEXT NOT NULL DEFAULT '',
-    zip         TEXT NOT NULL DEFAULT '',
-    url         TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (event_id, position)
+    fingerprint TEXT NOT NULL UNIQUE,
+    source_id   INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+    PRIMARY KEY (event_id, fingerprint)
 ) STRICT;
 
--- No email column, deliberately. Ion sends one and it is PII; the decoder
--- already refuses to carry it, and leaving the column out means a later change
--- to that decoder has nowhere to put it.
-CREATE TABLE IF NOT EXISTS event_organizers (
-    event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-    position INTEGER NOT NULL,
-    name     TEXT NOT NULL,
-    url      TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (event_id, position)
-) STRICT;
+CREATE INDEX IF NOT EXISTS event_fingerprints_source ON event_fingerprints(source_id);
 
+-- One row per category. A list, because an event can carry several, and a
+-- table rather than a delimited string for the same reason the decoders use
+-- narrow structs: a column you have to name is a column somebody decided to
+-- keep, and a comma-joined text field is a parser waiting to be written.
+--
+-- Venues and organizers used to have tables like this one, holding whatever
+-- each feed called the place and whoever it named. Both are gone. normalize
+-- resolves the venue to one id and room before anything is written, and the
+-- only organizer that ever mattered was the one naming a group, which becomes
+-- group_slug. Keeping a table of organizer names with no reader is how an
+-- email column gets added to it one day.
 CREATE TABLE IF NOT EXISTS event_categories (
     event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     position INTEGER NOT NULL,

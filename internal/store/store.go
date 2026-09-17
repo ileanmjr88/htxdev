@@ -13,11 +13,14 @@
 package store
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	_ "embed"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/ileanmjr88/htxdev/internal/core"
@@ -149,21 +152,25 @@ type SaveResult struct {
 	// Promoted counts rows that were pending and are now published, which
 	// happens on the first sync after somebody fills in a group's verified_by.
 	Promoted int
+	// Merged counts rows that were separate events and have now been joined,
+	// which happens when a second feed starts publishing something a first
+	// feed already carried.
+	Merged int
 }
 
-// SaveEvents writes what a fetch produced.
+// SaveEvents writes what normalize concluded.
 //
 // Everything happens in one transaction. A sync that dies half way through
 // leaves the database exactly as it was, which matters more than usual here:
-// the file is committed, so a partial write is a partial write that gets
+// the file is a git artifact, so a partial write is a partial write that gets
 // pushed. It also means last_seen either advances for every event in the run
 // or for none of them, and cancellation reads last_seen.
 //
 // Nothing is deleted and nothing is cancelled. An event that has stopped
 // appearing simply stops having its last_seen bumped, and deciding what that
-// means is Phase 5's job, under guards that live in normalize and need
+// means needs the guards in the absence-means-cancelled contract, which need
 // information this function does not have.
-func (s *Store) SaveEvents(ctx context.Context, events []core.RawEvent, seenAt time.Time) (SaveResult, error) {
+func (s *Store) SaveEvents(ctx context.Context, events []core.Event, seenAt time.Time) (SaveResult, error) {
 	var res SaveResult
 	if len(events) == 0 {
 		return res, nil
@@ -186,48 +193,66 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.RawEvent, seenAt t
 	if err != nil {
 		return res, err
 	}
+	verified, err := loadVerifiedGroups(ctx, tx)
+	if err != nil {
+		return res, err
+	}
 
 	stamp := formatTime(seenAt)
 
 	for _, e := range events {
-		src, ok := sources[e.SourceKey]
-		if !ok {
-			// The registry has to be synced before events referencing it. A
-			// missing source means the caller skipped that step, and guessing
-			// would attribute real events to nothing.
-			return res, fmt.Errorf("event %q: no source row for %q; sync the registry first",
-				e.UpstreamID, e.SourceKey)
+		if len(e.Sources) == 0 {
+			return res, fmt.Errorf("event %q has no sources", e.Fingerprint)
 		}
 
-		fingerprint := core.Fingerprint(src.kind, e.UpstreamID)
-
 		// The pending gate. An event is publishable only because a human
-		// filled in verified_by for its group, and this is where that decision
-		// turns into a column.
+		// filled in verified_by for its group, and this is where that
+		// decision turns into a column.
 		status := StatusPending
-		if src.verified {
+		if verified[e.GroupSlug] {
 			status = StatusPublished
 		}
 
-		var (
-			id        int64
-			oldStatus string
-		)
-		err := tx.QueryRowContext(ctx,
-			`SELECT id, status FROM events WHERE fingerprint = ?`, fingerprint).Scan(&id, &oldStatus)
+		fingerprints := make([]string, 0, len(e.Sources))
+		for _, src := range e.Sources {
+			if _, ok := sources[src.SourceKey]; !ok {
+				return res, fmt.Errorf("event %q: no source row for %q; sync the registry first",
+					e.Fingerprint, src.SourceKey)
+			}
+			fingerprints = append(fingerprints, src.Fingerprint)
+		}
 
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			id, err = insertEvent(ctx, tx, src.id, fingerprint, status, stamp, e)
+		id, oldStatus, existed, merged, err := claim(ctx, tx, fingerprints)
+		if err != nil {
+			return res, fmt.Errorf("event %q: %w", e.Fingerprint, err)
+		}
+		res.Merged += merged
+
+		venueID, err := venueID(ctx, tx, e.VenueName)
+		if err != nil {
+			return res, fmt.Errorf("event %q: %w", e.Fingerprint, err)
+		}
+
+		if !existed {
+			// first_seen and last_seen are the same value on the first sync,
+			// and their being equal is exactly what "never seen before now"
+			// means.
+			r, err := tx.ExecContext(ctx, `
+				INSERT INTO events (fingerprint, group_slug, title, excerpt, starts_at, ends_at,
+					all_day, venue_id, venue_name, room, url, register_url, virtual,
+					status, first_seen, last_seen)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				e.Fingerprint, e.GroupSlug, e.Title, e.Excerpt, formatTime(e.Start), formatTime(e.End),
+				boolToInt(e.AllDay), venueID, e.VenueName, e.Room, e.URL, e.RegisterURL,
+				boolToInt(e.Virtual), status, stamp, stamp)
 			if err != nil {
-				return res, fmt.Errorf("insert %s: %w", fingerprint, err)
+				return res, fmt.Errorf("insert %s: %w", e.Fingerprint, err)
+			}
+			if id, err = r.LastInsertId(); err != nil {
+				return res, err
 			}
 			res.Inserted++
-
-		case err != nil:
-			return res, fmt.Errorf("look up %s: %w", fingerprint, err)
-
-		default:
+		} else {
 			// fingerprint and first_seen are absent from the SET list on
 			// purpose. Both are write-once per D7: the fingerprint becomes a
 			// published ICS UID, and first_seen is the one fact in this row
@@ -237,14 +262,14 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.RawEvent, seenAt t
 			// here, which is what a rescheduled event looks like from outside.
 			if _, err := tx.ExecContext(ctx, `
 				UPDATE events SET
-					source_id = ?, title = ?, description = ?, starts_at = ?, ends_at = ?,
-					all_day = ?, url = ?, register_url = ?, virtual_url = ?, virtual = ?,
-					status = ?, last_seen = ?
+					group_slug = ?, title = ?, excerpt = ?, starts_at = ?, ends_at = ?,
+					all_day = ?, venue_id = ?, venue_name = ?, room = ?, url = ?,
+					register_url = ?, virtual = ?, status = ?, last_seen = ?
 				WHERE id = ?`,
-				src.id, e.Title, e.Description, formatTime(e.Start), formatTime(e.End),
-				boolToInt(e.AllDay), e.URL, e.RegisterURL, e.VirtualURL, boolToInt(e.Virtual),
-				status, stamp, id); err != nil {
-				return res, fmt.Errorf("update %s: %w", fingerprint, err)
+				e.GroupSlug, e.Title, e.Excerpt, formatTime(e.Start), formatTime(e.End),
+				boolToInt(e.AllDay), venueID, e.VenueName, e.Room, e.URL, e.RegisterURL,
+				boolToInt(e.Virtual), status, stamp, id); err != nil {
+				return res, fmt.Errorf("update %s: %w", e.Fingerprint, err)
 			}
 			res.Updated++
 			if oldStatus == StatusPending && status == StatusPublished {
@@ -252,30 +277,177 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.RawEvent, seenAt t
 			}
 		}
 
-		if err := replaceChildren(ctx, tx, id, e); err != nil {
-			return res, fmt.Errorf("children of %s: %w", fingerprint, err)
+		if err := replaceProvenance(ctx, tx, id, e, sources); err != nil {
+			return res, fmt.Errorf("provenance of %s: %w", e.Fingerprint, err)
+		}
+		if err := replaceCategories(ctx, tx, id, e.Categories); err != nil {
+			return res, fmt.Errorf("categories of %s: %w", e.Fingerprint, err)
 		}
 	}
 
 	return res, tx.Commit()
 }
 
-// sourceRow is what SaveEvents needs to know about a source: its database
-// identity, the namespace its fingerprints live in, and whether a human has
-// signed for the group behind it.
+// claim finds the event these fingerprints belong to, merging rows if they
+// turn out to name more than one.
+//
+// More than one is a real state, not a corruption. A feed record can exist as
+// its own event for months before a second feed starts publishing the same
+// meeting, and the run where that happens is the run where two rows become
+// one. The survivor is the one with the earliest first_seen, because that is
+// the fact the whole committed database exists to preserve, and the losers'
+// fingerprints are repointed at it so nothing loses its provenance.
+func claim(ctx context.Context, tx *sql.Tx, fingerprints []string) (id int64, status string, existed bool, merged int, err error) {
+	type row struct {
+		id        int64
+		status    string
+		firstSeen string
+	}
+	var rows []row
+	seen := map[int64]bool{}
+
+	for _, fp := range fingerprints {
+		var r row
+		err := tx.QueryRowContext(ctx, `
+			SELECT e.id, e.status, e.first_seen
+			FROM events e JOIN event_fingerprints f ON f.event_id = e.id
+			WHERE f.fingerprint = ?`, fp).Scan(&r.id, &r.status, &r.firstSeen)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			continue
+		case err != nil:
+			return 0, "", false, 0, fmt.Errorf("look up %s: %w", fp, err)
+		}
+		if !seen[r.id] {
+			seen[r.id] = true
+			rows = append(rows, r)
+		}
+	}
+
+	if len(rows) == 0 {
+		return 0, "", false, 0, nil
+	}
+
+	// Earliest first_seen wins. RFC3339 in UTC sorts correctly as a string,
+	// which is one of the reasons the column is text.
+	slices.SortStableFunc(rows, func(a, b row) int { return cmp.Compare(a.firstSeen, b.firstSeen) })
+	survivor := rows[0]
+
+	// The losing rows go, and ON DELETE CASCADE takes their provenance with
+	// them. There was an UPDATE here first, repointing their fingerprints at
+	// the survivor, until mutation testing neutered it and nothing failed:
+	// replaceProvenance rewrites the survivor's fingerprints from e.Sources
+	// moments later, so the repoint was overwritten every time. Redundant
+	// rather than untested, so it is gone.
+	//
+	// Nothing is lost by that. A fingerprint on a losing row and absent from
+	// e.Sources is a record that has stopped merging into this event, and it
+	// should stop pointing at it.
+	for _, loser := range rows[1:] {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM events WHERE id = ?`, loser.id); err != nil {
+			return 0, "", false, 0, fmt.Errorf("delete merged row: %w", err)
+		}
+		merged++
+	}
+
+	return survivor.id, survivor.status, true, merged, nil
+}
+
+// venueID maps a resolved venue name onto a row, creating one for a venue
+// discovered from event data.
+//
+// Discovery is the normal case, not the exception: sources.yaml curates a
+// venue only when its name needs canonicalising or it appears under several
+// spellings. "Zion Lutheran Church" and "Sesh Coworking" arrive with no
+// curation behind them and still have to be somewhere.
+func venueID(ctx context.Context, tx *sql.Tx, name string) (int64, error) {
+	if name == "" {
+		return 0, nil
+	}
+	var id int64
+	err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE name = ?`, name).Scan(&id)
+	switch {
+	case err == nil:
+		return id, nil
+	case !errors.Is(err, sql.ErrNoRows):
+		return 0, fmt.Errorf("look up venue %q: %w", name, err)
+	}
+
+	r, err := tx.ExecContext(ctx,
+		`INSERT INTO venues (slug, name) VALUES (?, ?) ON CONFLICT(slug) DO UPDATE SET name = excluded.name`,
+		venueSlug(name), name)
+	if err != nil {
+		return 0, fmt.Errorf("create venue %q: %w", name, err)
+	}
+	if id, err = r.LastInsertId(); err != nil || id == 0 {
+		// ON CONFLICT DO UPDATE does not always report a useful last id, so
+		// read it back rather than trusting it.
+		if err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE slug = ?`, venueSlug(name)).Scan(&id); err != nil {
+			return 0, fmt.Errorf("read back venue %q: %w", name, err)
+		}
+	}
+	return id, nil
+}
+
+func venueSlug(name string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(name) {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+		default:
+			if b.Len() > 0 && !strings.HasSuffix(b.String(), "-") {
+				b.WriteByte('-')
+			}
+		}
+	}
+	return strings.Trim(b.String(), "-")
+}
+
+// replaceProvenance rewrites which feed records make up an event.
+//
+// Delete then insert, rather than a diff. The list is a handful of rows and
+// rewriting it handles the case a diff would have to special-case anyway: a
+// feed that stopped publishing an event another feed still carries.
+func replaceProvenance(ctx context.Context, tx *sql.Tx, eventID int64, e core.Event, sources map[string]sourceRow) error {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM event_fingerprints WHERE event_id = ?`, eventID); err != nil {
+		return err
+	}
+	for _, src := range e.Sources {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO event_fingerprints (event_id, fingerprint, source_id) VALUES (?, ?, ?)
+			 ON CONFLICT(fingerprint) DO UPDATE SET event_id = excluded.event_id, source_id = excluded.source_id`,
+			eventID, src.Fingerprint, sources[src.SourceKey].id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func replaceCategories(ctx context.Context, tx *sql.Tx, eventID int64, categories []string) error {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM event_categories WHERE event_id = ?`, eventID); err != nil {
+		return err
+	}
+	for i, c := range categories {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO event_categories (event_id, position, name) VALUES (?, ?, ?)`, eventID, i, c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// sourceRow is what SaveEvents needs to know about a source.
 type sourceRow struct {
-	id       int64
-	kind     core.SourceKind
-	verified bool
+	id   int64
+	kind core.SourceKind
 }
 
 // loadSources reads the whole table once per call rather than querying per
-// event. Seventy events across seven sources would otherwise be seventy
-// lookups of seven rows.
+// event. Seventy events across nine sources would otherwise be seventy
+// lookups of nine rows.
 func loadSources(ctx context.Context, tx *sql.Tx) (map[string]sourceRow, error) {
-	rows, err := tx.QueryContext(ctx, `
-		SELECT s.url, s.id, s.kind, g.verified_by <> ''
-		FROM sources s JOIN groups g ON g.slug = s.group_slug`)
+	rows, err := tx.QueryContext(ctx, `SELECT url, id, kind FROM sources`)
 	if err != nil {
 		return nil, fmt.Errorf("load sources: %w", err)
 	}
@@ -288,7 +460,7 @@ func loadSources(ctx context.Context, tx *sql.Tx) (map[string]sourceRow, error) 
 			r    sourceRow
 			kind string
 		)
-		if err := rows.Scan(&url, &r.id, &kind, &r.verified); err != nil {
+		if err := rows.Scan(&url, &r.id, &kind); err != nil {
 			return nil, fmt.Errorf("scan source: %w", err)
 		}
 		r.kind = core.SourceKind(kind)
@@ -297,59 +469,26 @@ func loadSources(ctx context.Context, tx *sql.Tx) (map[string]sourceRow, error) 
 	return out, rows.Err()
 }
 
-func insertEvent(ctx context.Context, tx *sql.Tx, sourceID int64, fingerprint, status, stamp string, e core.RawEvent) (int64, error) {
-	r, err := tx.ExecContext(ctx, `
-		INSERT INTO events (
-			fingerprint, source_id, title, description, starts_at, ends_at, all_day,
-			url, register_url, virtual_url, virtual, status, first_seen, last_seen)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		fingerprint, sourceID, e.Title, e.Description, formatTime(e.Start), formatTime(e.End),
-		boolToInt(e.AllDay), e.URL, e.RegisterURL, e.VirtualURL, boolToInt(e.Virtual),
-		// first_seen and last_seen are the same value on the first sync, and
-		// their being equal is exactly what "never seen before now" means.
-		status, stamp, stamp)
+// loadVerifiedGroups reads the gate: which groups a human has signed for.
+func loadVerifiedGroups(ctx context.Context, tx *sql.Tx) (map[string]bool, error) {
+	rows, err := tx.QueryContext(ctx, `SELECT slug, verified_by <> '' FROM groups`)
 	if err != nil {
-		return 0, err
+		return nil, fmt.Errorf("load groups: %w", err)
 	}
-	return r.LastInsertId()
-}
+	defer func() { _ = rows.Close() }()
 
-// replaceChildren rewrites an event's venues, organizers and categories.
-//
-// Delete-then-insert rather than a diff. These are ordered lists of at most a
-// handful of rows whose position is part of their meaning, so working out
-// which ones changed costs more code than rewriting them and would have to get
-// the reordering case right anyway.
-func replaceChildren(ctx context.Context, tx *sql.Tx, eventID int64, e core.RawEvent) error {
-	for _, table := range []string{"event_venues", "event_organizers", "event_categories"} {
-		if _, err := tx.ExecContext(ctx, `DELETE FROM `+table+` WHERE event_id = ?`, eventID); err != nil {
-			return fmt.Errorf("clear %s: %w", table, err)
+	out := map[string]bool{}
+	for rows.Next() {
+		var (
+			slug string
+			v    bool
+		)
+		if err := rows.Scan(&slug, &v); err != nil {
+			return nil, err
 		}
+		out[slug] = v
 	}
-
-	for i, v := range e.Venues {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO event_venues (event_id, position, upstream_id, name, address, city, state, zip, url)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			eventID, i, v.UpstreamID, v.Name, v.Address, v.City, v.State, v.Zip, v.URL); err != nil {
-			return err
-		}
-	}
-	for i, o := range e.Organizers {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO event_organizers (event_id, position, name, url) VALUES (?, ?, ?, ?)`,
-			eventID, i, o.Name, o.URL); err != nil {
-			return err
-		}
-	}
-	for i, c := range e.Categories {
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO event_categories (event_id, position, name) VALUES (?, ?, ?)`,
-			eventID, i, c); err != nil {
-			return err
-		}
-	}
-	return nil
+	return out, rows.Err()
 }
 
 // Counts is the per-status tally a sync prints.
@@ -396,55 +535,125 @@ func (s *Store) Counts(ctx context.Context) (Counts, error) {
 // has put their handle in verified_by, because this is the only way events
 // leave the database and it will not return a pending row.
 //
-// Several core.Event fields stay zero here: Excerpt, VenueID, Room and
-// Categories are all conclusions normalize has not drawn yet, and SourceIDs
-// holds exactly one entry because nothing has been merged. This is the read
-// that becomes Phase 8's EventStore, and the interface gets defined there with
-// its handler rather than here, per D3.
+// This is the read that becomes Phase 8's EventStore, and the interface gets
+// defined there with its handler rather than here, per D3.
 func (s *Store) Upcoming(ctx context.Context, from time.Time) ([]core.Event, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT e.id, e.fingerprint, s.group_slug, e.title, e.starts_at, e.ends_at,
-		       e.all_day, e.url, e.register_url, e.virtual, e.first_seen, e.last_seen, e.source_id
-		FROM events e JOIN sources s ON s.id = e.source_id
-		WHERE e.status = ? AND e.starts_at >= ?
-		ORDER BY e.starts_at`, StatusPublished, formatTime(from))
+		SELECT id, fingerprint, group_slug, title, excerpt, starts_at, ends_at,
+		       all_day, venue_id, venue_name, room, url, register_url, virtual,
+		       first_seen, last_seen
+		FROM events
+		WHERE status = ? AND starts_at >= ?
+		ORDER BY starts_at, id`, StatusPublished, formatTime(from))
 	if err != nil {
 		return nil, fmt.Errorf("query upcoming: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	var out []core.Event
+	var (
+		out []core.Event
+		ids []int64
+	)
 	for rows.Next() {
 		var (
 			e                                 core.Event
 			starts, ends, firstSeen, lastSeen string
 			allDay, virtual                   int
-			sourceID                          int64
 		)
-		if err := rows.Scan(&e.ID, &e.Fingerprint, &e.GroupSlug, &e.Title, &starts, &ends,
-			&allDay, &e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen, &sourceID); err != nil {
+		if err := rows.Scan(&e.ID, &e.Fingerprint, &e.GroupSlug, &e.Title, &e.Excerpt,
+			&starts, &ends, &allDay, &e.VenueID, &e.VenueName, &e.Room,
+			&e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen); err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)
 		}
-
-		if e.Start, err = parseTime(starts); err != nil {
-			return nil, fmt.Errorf("event %d start: %w", e.ID, err)
-		}
-		if e.End, err = parseTime(ends); err != nil {
-			return nil, fmt.Errorf("event %d end: %w", e.ID, err)
-		}
-		if e.FirstSeen, err = parseTime(firstSeen); err != nil {
-			return nil, fmt.Errorf("event %d first_seen: %w", e.ID, err)
-		}
-		if e.LastSeen, err = parseTime(lastSeen); err != nil {
-			return nil, fmt.Errorf("event %d last_seen: %w", e.ID, err)
+		for _, f := range []struct {
+			dst *time.Time
+			src string
+		}{{&e.Start, starts}, {&e.End, ends}, {&e.FirstSeen, firstSeen}, {&e.LastSeen, lastSeen}} {
+			if *f.dst, err = parseTime(f.src); err != nil {
+				return nil, fmt.Errorf("event %d: %w", e.ID, err)
+			}
 		}
 		e.AllDay = allDay != 0
 		e.Virtual = virtual != 0
-		e.SourceIDs = []int64{sourceID}
 
 		out = append(out, e)
+		ids = append(ids, e.ID)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if err := s.attachCategories(ctx, out, ids); err != nil {
+		return nil, err
+	}
+	return out, s.attachSources(ctx, out, ids)
+}
+
+// attachCategories and attachSources fill the child collections in one query
+// each rather than one per event, which is the difference between 3 queries
+// and 3 times the row count.
+func (s *Store) attachCategories(ctx context.Context, events []core.Event, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT event_id, name FROM event_categories ORDER BY event_id, position`)
+	if err != nil {
+		return fmt.Errorf("load categories: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	byID := indexByID(events)
+	for rows.Next() {
+		var (
+			id   int64
+			name string
+		)
+		if err := rows.Scan(&id, &name); err != nil {
+			return err
+		}
+		if e, ok := byID[id]; ok {
+			e.Categories = append(e.Categories, name)
+		}
+	}
+	return rows.Err()
+}
+
+func (s *Store) attachSources(ctx context.Context, events []core.Event, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT f.event_id, s.url, f.fingerprint
+		FROM event_fingerprints f JOIN sources s ON s.id = f.source_id
+		ORDER BY f.event_id, s.priority, f.fingerprint`)
+	if err != nil {
+		return fmt.Errorf("load provenance: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	byID := indexByID(events)
+	for rows.Next() {
+		var (
+			id      int64
+			url, fp string
+		)
+		if err := rows.Scan(&id, &url, &fp); err != nil {
+			return err
+		}
+		if e, ok := byID[id]; ok {
+			e.Sources = append(e.Sources, core.EventSource{SourceKey: url, Fingerprint: fp})
+		}
+	}
+	return rows.Err()
+}
+
+func indexByID(events []core.Event) map[int64]*core.Event {
+	m := make(map[int64]*core.Event, len(events))
+	for i := range events {
+		m[events[i].ID] = &events[i]
+	}
+	return m
 }
 
 // formatTime renders an instant for storage, and a zero time as the empty
