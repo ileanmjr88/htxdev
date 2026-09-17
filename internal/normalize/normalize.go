@@ -28,6 +28,10 @@ type Normalizer struct {
 	sources map[string]core.Source // feed URL, per D14
 	groups  map[string]core.Group  // slug
 	byName  map[string]string      // folded name or alias -> group slug
+
+	// Curated venues only. Everything else a feed names is discovered rather
+	// than declared, keeps its name and gets a row when it is first stored.
+	venuesByName map[string]core.Venue
 }
 
 func New(reg *registry.Registry) *Normalizer {
@@ -35,6 +39,17 @@ func New(reg *registry.Registry) *Normalizer {
 		sources: make(map[string]core.Source, len(reg.Sources)),
 		groups:  make(map[string]core.Group, len(reg.Groups)),
 		byName:  make(map[string]string),
+
+		venuesByName: make(map[string]core.Venue),
+	}
+	for _, v := range reg.Venues {
+		for _, name := range append([]string{v.Slug, v.Name}, v.Aliases...) {
+			if key := foldKey(name); key != "" {
+				if _, taken := n.venuesByName[key]; !taken {
+					n.venuesByName[key] = v
+				}
+			}
+		}
 	}
 	for _, s := range reg.Sources {
 		n.sources[s.URL] = s
@@ -97,7 +112,7 @@ func (n *Normalizer) Events(raw []core.RawEvent) ([]core.Event, []error) {
 
 	out := make([]core.Event, 0, len(order))
 	for _, k := range order {
-		out = append(out, merge(clusters[k]))
+		out = append(out, n.merge(clusters[k]))
 	}
 	return out, problems
 }
@@ -152,7 +167,7 @@ func (n *Normalizer) groupFor(src core.Source, e core.RawEvent) (core.Group, boo
 // and its record is the *worse* one, carrying a flat address string and no
 // organizer where Ion's names the room. Taking identity from the winner and
 // filling the blanks from everyone else keeps both.
-func merge(rs []resolved) core.Event {
+func (n *Normalizer) merge(rs []resolved) core.Event {
 	// Stable, so equal-priority events keep feed order, and tie-broken on the
 	// upstream id so a run is reproducible rather than dependent on which
 	// goroutine finished first.
@@ -176,9 +191,34 @@ func merge(rs []resolved) core.Event {
 		Virtual:     w.raw.Virtual,
 	}
 
+	// D9. The category comes from the group, not from the feed. Ion's own
+	// taxonomy is 20 marketing buckets ("Founders & Startups", "Start Here",
+	// "3rd Party Registration") with no technical signal anywhere in it, and
+	// 40 of 76 events carry none at all. htxdev's taxonomy already exists,
+	// curated one per group in sources.yaml, at 100% coverage. Ion's names are
+	// kept upstream as raw tags and deliberately do not become these.
+	if w.group.Category != "" {
+		ev.Categories = []string{w.group.Category}
+	}
+
+	// A resolved venue beats an unresolved one even from a lower-priority
+	// feed, because the whole reason to curate a venue is that the same
+	// building arrives under several spellings and has to end up as one.
+	venueResolved := false
+
 	for _, r := range rs {
 		if !slices.Contains(ev.SourceKeys, r.raw.SourceKey) {
 			ev.SourceKeys = append(ev.SourceKeys, r.raw.SourceKey)
+		}
+
+		if name, room := n.resolveVenue(r.raw.Venues); name != "" {
+			_, curated := n.canonicalVenue(name)
+			if ev.VenueName == "" || (!venueResolved && curated) {
+				ev.VenueName, ev.Room, venueResolved = name, room, curated
+			}
+		}
+		if ev.Excerpt == "" {
+			ev.Excerpt = excerpt(r.raw.Description)
 		}
 
 		// Gap-filling proper. The winner is in this loop too and simply has
