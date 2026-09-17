@@ -2,6 +2,22 @@ version: "2"
 
 linters:
   default: standard
+
+  settings:
+    errcheck:
+      # Unchecked writes to an io.Writer, which is how every CLI in Go prints.
+      # The report in cmd/htxdev writes about fifteen consecutive lines; checking
+      # each one adds fifteen branches that can only ever be true together. For
+      # stdout the error never arrives at all, because Go turns EPIPE on fd 1
+      # into a SIGPIPE that kills the process before Fprintf returns.
+      #
+      # Scoped by function rather than by path on purpose: a dropped error from
+      # anything else in cmd/ is still a real bug and still gets flagged.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+
   exclusions:
     rules:
       - path: _test\.go
