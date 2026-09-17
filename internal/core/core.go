@@ -109,8 +109,14 @@ type Event struct {
 	End       time.Time
 	AllDay    bool
 
-	VenueID     int64  // 0 means unresolved; 7 of 110 HLUG events have no LOCATION
-	Room        string // "Conference Room 028"
+	// VenueName is the canonical venue this resolved to, and VenueID is that
+	// venue's row once the database has one. Both, for the reason D14 gives
+	// for RawEvent.SourceKey: normalize runs before anything is written, so
+	// int64 ids do not exist yet, and a venue discovered from event data may
+	// have no row at all until this event creates it. 0 means unresolved.
+	VenueName   string
+	VenueID     int64
+	Room        string // "Conference Room 028", split off the venue name
 	URL         string
 	RegisterURL string
 
@@ -119,7 +125,13 @@ type Event struct {
 
 	FirstSeen time.Time
 	LastSeen  time.Time
-	SourceIDs []int64 // plural: dedupe merges the same event from several feeds
+
+	// SourceKeys holds the feed URLs that contributed, in the order they won:
+	// the first is the source whose record supplied identity and title.
+	// Plural because dedupe merges the same event from several feeds. Again
+	// URLs and not ids, and SourceIDs is what the store fills in on read.
+	SourceKeys []string
+	SourceIDs  []int64
 }
 
 // Fingerprint is an event's permanent identity: the upstream stable ID,

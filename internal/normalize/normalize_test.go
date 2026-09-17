@@ -1,0 +1,412 @@
+package normalize
+
+import (
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/ileanmjr88/htxdev/internal/core"
+	"github.com/ileanmjr88/htxdev/internal/registry"
+)
+
+// The three feeds involved in every interesting case, with the priorities
+// sources.yaml actually assigns: a group's own calendar is 10, a venue's
+// listing of it is 50.
+const (
+	ionFeed  = "https://iondistrict.com/wp-json/tribe/events/v1/events"
+	hlugFeed = "https://calendar.google.com/calendar/ical/houstonlinuxusergroup%40gmail.com/public/basic.ics"
+	hossFeed = "https://houstonopensourcesociety.com/meetings/"
+)
+
+func testRegistry() *registry.Registry {
+	return &registry.Registry{
+		Groups: []core.Group{
+			{Slug: "ion-district", Name: "Ion District", Category: "startup"},
+			{
+				Slug: "houston-linux-user-group",
+				Name: "Houston Linux User Group",
+				// Verbatim from data/sources.yaml, curly apostrophe included.
+				Aliases:  []string{"Houston Linux User’s Group", "Houston Linux", "HLUG"},
+				Category: "dev",
+			},
+			{Slug: "houston-open-source-society", Name: "Houston Open Source Society",
+				Aliases: []string{"HOSS", "Houston OSS"}, Category: "dev"},
+		},
+		Sources: []core.Source{
+			{GroupSlug: "ion-district", Kind: core.KindTribe, URL: ionFeed, Priority: 50, Enabled: true},
+			{GroupSlug: "houston-linux-user-group", Kind: core.KindICS, URL: hlugFeed, Priority: 10, Enabled: true},
+			{GroupSlug: "houston-open-source-society", Kind: core.KindHTML, URL: hossFeed, Priority: 10, Enabled: true},
+		},
+	}
+}
+
+func at(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+// The exact cluster in the live database on 2026-09-17. Three events at one
+// instant, from two feeds, of which exactly two are the same meeting.
+func realCluster() []core.RawEvent {
+	start := at("2026-09-24T23:00:00Z")
+	return []core.RawEvent{
+		{
+			SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=1",
+			Title: "NASA Tech Talks: Enhancing Autonomous Onboard Navigation Systems",
+			Start: start,
+			// Ion's own programming: the organizer is the venue itself.
+			Organizers: []core.RawOrganizer{{Name: "Ion"}},
+			Venues:     []core.RawVenue{{Name: "Ion"}},
+		},
+		{
+			SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=2",
+			Title: "Houston Linux User Group",
+			Start: start,
+			// The only thing that says whose event this is.
+			Organizers: []core.RawOrganizer{{Name: "Houston Linux User’s Group"}},
+			Venues:     []core.RawVenue{{Name: "Ion – Conference Room 030"}},
+			URL:        "https://iondistrict.com/event/hlug/",
+		},
+		{
+			SourceKey: hlugFeed, UpstreamID: "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com",
+			Title: "Houston Linux - Ion User Meeting",
+			Start: start,
+			// ICS carries no organizer at all, and HLUG's flat LOCATION string
+			// is the worse venue record even though this feed wins on priority.
+			Venues: []core.RawVenue{{Name: "The Ion, Room 30, 4201 Main St, Houston, TX 77002, USA"}},
+		},
+	}
+}
+
+func TestDeduplicatesTheRealCluster(t *testing.T) {
+	events, problems := New(testRegistry()).Events(realCluster())
+	if len(problems) != 0 {
+		t.Fatalf("problems = %v, want none", problems)
+	}
+	if len(events) != 2 {
+		t.Fatalf("got %d events, want 2: three records, two of them one meeting", len(events))
+	}
+
+	byGroup := map[string]core.Event{}
+	for _, e := range events {
+		byGroup[e.GroupSlug] = e
+	}
+
+	nasa, ok := byGroup["ion-district"]
+	if !ok {
+		t.Fatal("no event attributed to ion-district")
+	}
+	if !strings.HasPrefix(nasa.Title, "NASA Tech Talks") {
+		t.Errorf("ion-district event = %q, want the NASA talk", nasa.Title)
+	}
+	if len(nasa.SourceKeys) != 1 {
+		t.Errorf("NASA talk has %d sources, want 1: nothing else published it", len(nasa.SourceKeys))
+	}
+
+	hlug, ok := byGroup["houston-linux-user-group"]
+	if !ok {
+		t.Fatal("no event attributed to houston-linux-user-group")
+	}
+	// HLUG's own feed is priority 10 and supplies identity.
+	if hlug.Title != "Houston Linux - Ion User Meeting" {
+		t.Errorf("title = %q, want the organizer's own wording", hlug.Title)
+	}
+	if hlug.Fingerprint != core.Fingerprint(core.KindICS, "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com") {
+		t.Errorf("fingerprint = %q, want the winning record's", hlug.Fingerprint)
+	}
+	if len(hlug.SourceKeys) != 2 || hlug.SourceKeys[0] != hlugFeed || hlug.SourceKeys[1] != ionFeed {
+		t.Errorf("sourceKeys = %v, want the winner first then Ion", hlug.SourceKeys)
+	}
+	// Gap-filled: HLUG's ICS has no URL, Ion's record does.
+	if hlug.URL != "https://iondistrict.com/event/hlug/" {
+		t.Errorf("url = %q, want it filled from the losing record", hlug.URL)
+	}
+}
+
+// The case that makes start-time-alone wrong. HLUG and HOSS both meet
+// Wednesdays at 6pm Central, so they collide on three separate instants in one
+// live window and are never the same meeting.
+func TestSameInstantDifferentGroupsStaySeparate(t *testing.T) {
+	start := at("2026-10-21T23:00:00Z")
+	events, problems := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: hlugFeed, UpstreamID: "hlug-oct21", Title: "Houston Linux - User Meeting", Start: start},
+		{SourceKey: hossFeed, UpstreamID: "third-wednesday_20261021T230000Z",
+			Title: "Houston Open Source Society, Third Wednesday", Start: start},
+	})
+	if len(problems) != 0 {
+		t.Fatalf("problems = %v", problems)
+	}
+	if len(events) != 2 {
+		t.Fatalf("got %d events, want 2: two groups meeting at the same hour", len(events))
+	}
+	if events[0].GroupSlug == events[1].GroupSlug {
+		t.Errorf("both events landed on %q", events[0].GroupSlug)
+	}
+}
+
+func TestGroupResolution(t *testing.T) {
+	start := at("2026-10-01T18:00:00Z")
+	cases := []struct {
+		name      string
+		feed      string
+		organizer string
+		want      string
+	}{
+		{"organizer names a known group", ionFeed, "Houston Linux User’s Group", "houston-linux-user-group"},
+		{"straight apostrophe matches too", ionFeed, "Houston Linux User's Group", "houston-linux-user-group"},
+		{"case does not matter", ionFeed, "houston linux user's group", "houston-linux-user-group"},
+		{"an alias is enough", ionFeed, "HLUG", "houston-linux-user-group"},
+		{"extra whitespace folded", ionFeed, "  Houston   Linux  ", "houston-linux-user-group"},
+		{"the group's own slug", ionFeed, "houston-open-source-society", "houston-open-source-society"},
+		// "Ion" is the venue's name; the group is "Ion District". No match, so
+		// the feed's owner is used, which is Ion District anyway.
+		{"ion's own programming falls back to the feed owner", ionFeed, "Ion", "ion-district"},
+		{"an unknown organizer falls back", ionFeed, "Some Company LLC", "ion-district"},
+		{"no organizer at all falls back", hlugFeed, "", "houston-linux-user-group"},
+		{"a group's own feed is unaffected by a stray organizer", hlugFeed, "Some Company LLC", "houston-linux-user-group"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := core.RawEvent{SourceKey: tc.feed, UpstreamID: "x", Title: "T", Start: start}
+			if tc.organizer != "" {
+				e.Organizers = []core.RawOrganizer{{Name: tc.organizer}}
+			}
+			events, problems := New(testRegistry()).Events([]core.RawEvent{e})
+			if len(problems) != 0 {
+				t.Fatalf("problems = %v", problems)
+			}
+			if len(events) != 1 {
+				t.Fatalf("got %d events, want 1", len(events))
+			}
+			if events[0].GroupSlug != tc.want {
+				t.Errorf("group = %q, want %q", events[0].GroupSlug, tc.want)
+			}
+		})
+	}
+}
+
+// The first organizer that resolves wins. Ion sends one or two per event.
+func TestFirstResolvableOrganizerWins(t *testing.T) {
+	events, _ := New(testRegistry()).Events([]core.RawEvent{{
+		SourceKey: ionFeed, UpstreamID: "x", Title: "T", Start: at("2026-10-01T18:00:00Z"),
+		Organizers: []core.RawOrganizer{{Name: "Some Company LLC"}, {Name: "HOSS"}},
+	}})
+	if len(events) != 1 || events[0].GroupSlug != "houston-open-source-society" {
+		t.Fatalf("group = %+v, want the second organizer to have resolved", events)
+	}
+}
+
+func TestMergePrefersTheLowerPriorityNumber(t *testing.T) {
+	start := at("2026-10-01T18:00:00Z")
+	// Deliberately listed venue-first, so a merge that just took the first
+	// record would pick the wrong one.
+	events, _ := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: ionFeed, UpstreamID: "ion-copy", Title: "Ion's wording", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
+		{SourceKey: hlugFeed, UpstreamID: "own-copy", Title: "The organizer's wording", Start: start},
+	})
+	if len(events) != 1 {
+		t.Fatalf("got %d events, want 1", len(events))
+	}
+	if events[0].Title != "The organizer's wording" {
+		t.Errorf("title = %q, want the group's own feed to win", events[0].Title)
+	}
+}
+
+// Gap-filling is the half of merge worth arguing about: the winner is not
+// always the richer record.
+func TestMergeGapFillsFromLosers(t *testing.T) {
+	start := at("2026-10-01T18:00:00Z")
+	events, _ := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: hlugFeed, UpstreamID: "own", Title: "Winner", Start: start},
+		{SourceKey: ionFeed, UpstreamID: "ion", Title: "Loser", Start: start,
+			Organizers:  []core.RawOrganizer{{Name: "HLUG"}},
+			End:         start.Add(2 * time.Hour),
+			URL:         "https://iondistrict.com/event/x/",
+			RegisterURL: "https://luma.com/x",
+			Virtual:     true},
+	})
+	if len(events) != 1 {
+		t.Fatalf("got %d events, want 1", len(events))
+	}
+	got := events[0]
+	if got.Title != "Winner" {
+		t.Errorf("title = %q, want the winner's", got.Title)
+	}
+	if !got.End.Equal(start.Add(2 * time.Hour)) {
+		t.Errorf("end = %s, want it filled from the loser", got.End)
+	}
+	if got.URL == "" || got.RegisterURL == "" {
+		t.Errorf("url = %q, registerURL = %q; want both filled", got.URL, got.RegisterURL)
+	}
+	// Virtual is a claim, not a gap: one feed saying so is enough, and a
+	// silent feed is not a contradiction.
+	if !got.Virtual {
+		t.Error("virtual = false, want one feed's claim to carry")
+	}
+}
+
+func TestUnregisteredSourceIsReportedNotDropped(t *testing.T) {
+	start := at("2026-10-01T18:00:00Z")
+	events, problems := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: "https://nowhere.test/feed", UpstreamID: "orphan", Title: "Orphan", Start: start},
+		{SourceKey: hlugFeed, UpstreamID: "fine", Title: "Fine", Start: start},
+	})
+	if len(events) != 1 || events[0].Title != "Fine" {
+		t.Fatalf("events = %+v, want only the attributable one", events)
+	}
+	if len(problems) != 1 || !strings.Contains(problems[0].Error(), "nowhere.test") {
+		t.Fatalf("problems = %v, want one naming the unregistered feed", problems)
+	}
+}
+
+// Same input, same output, every run. Fetch returns sources in registry order
+// but events within a cluster arrive in whatever order the feeds listed them.
+func TestOutputIsDeterministic(t *testing.T) {
+	raw := realCluster()
+	first, _ := New(testRegistry()).Events(raw)
+
+	// Reverse the input; the clustering must not care.
+	reversed := make([]core.RawEvent, len(raw))
+	for i, e := range raw {
+		reversed[len(raw)-1-i] = e
+	}
+	second, _ := New(testRegistry()).Events(reversed)
+
+	if len(first) != len(second) {
+		t.Fatalf("got %d then %d events", len(first), len(second))
+	}
+	byGroup := func(evs []core.Event) map[string]string {
+		m := map[string]string{}
+		for _, e := range evs {
+			m[e.GroupSlug] = e.Fingerprint
+		}
+		return m
+	}
+	a, b := byGroup(first), byGroup(second)
+	for g, fp := range a {
+		if b[g] != fp {
+			t.Errorf("group %s resolved to %q then %q", g, fp, b[g])
+		}
+	}
+}
+
+func TestFoldKey(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"Houston Linux User’s Group", "houston linux user's group"},
+		{"Houston Linux User's Group", "houston linux user's group"},
+		{"  HOUSTON   linux  ", "houston linux"},
+		{"Ion – Conference Room 030", "ion - conference room 030"},
+		{"Ion — Lobby", "ion - lobby"},
+		{"“Quoted”", "\"quoted\""},
+		{"non breaking", "non breaking"},
+		{"", ""},
+		{"   ", ""},
+	}
+	for _, tc := range cases {
+		if got := foldKey(tc.in); got != tc.want {
+			t.Errorf("foldKey(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+// The registry is human-edited by pull request, so two groups can end up
+// claiming one name. First claim wins, and the point is that it wins the same
+// way on every run rather than depending on map iteration order.
+func TestAmbiguousAliasResolvesConsistently(t *testing.T) {
+	reg := &registry.Registry{
+		Groups: []core.Group{
+			{Slug: "first-claim", Name: "First", Aliases: []string{"Shared Name"}},
+			{Slug: "second-claim", Name: "Second", Aliases: []string{"Shared Name"}},
+		},
+		Sources: []core.Source{{GroupSlug: "first-claim", Kind: core.KindTribe, URL: ionFeed, Priority: 50}},
+	}
+	raw := []core.RawEvent{{SourceKey: ionFeed, UpstreamID: "x", Title: "T",
+		Start: at("2026-10-01T18:00:00Z"), Organizers: []core.RawOrganizer{{Name: "Shared Name"}}}}
+
+	for range 20 {
+		events, _ := New(reg).Events(raw)
+		if len(events) != 1 || events[0].GroupSlug != "first-claim" {
+			t.Fatalf("resolved to %+v, want first-claim every time", events)
+		}
+	}
+}
+
+// The real registry has to keep working with this code, and the alias that
+// makes the live dedupe possible has to still be in it.
+func TestAgainstTheRealRegistry(t *testing.T) {
+	reg, err := registry.LoadFile("../../data/sources.yaml")
+	if err != nil {
+		t.Fatalf("load registry: %v", err)
+	}
+	n := New(reg)
+
+	start := at("2026-09-24T23:00:00Z")
+	events, problems := n.Events([]core.RawEvent{
+		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=2", Title: "Houston Linux User Group", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "Houston Linux User’s Group"}}},
+		{SourceKey: hlugFeed, UpstreamID: "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com",
+			Title: "Houston Linux - Ion User Meeting", Start: start},
+	})
+	if len(problems) != 0 {
+		t.Fatalf("problems = %v", problems)
+	}
+	if len(events) != 1 {
+		t.Fatalf("got %d events, want 1: the alias in sources.yaml is what merges these", len(events))
+	}
+	if events[0].GroupSlug != "houston-linux-user-group" {
+		t.Errorf("group = %q", events[0].GroupSlug)
+	}
+}
+
+// The other half of the cluster key. Grouping on the group alone would
+// collapse every meeting a group has ever held into one event, which is the
+// mirror image of grouping on the instant alone.
+func TestSameGroupAtDifferentTimesStaysSeparate(t *testing.T) {
+	events, problems := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: hlugFeed, UpstreamID: "sep30", Title: "September meeting", Start: at("2026-09-30T23:00:00Z")},
+		{SourceKey: hlugFeed, UpstreamID: "oct07", Title: "October meeting", Start: at("2026-10-07T23:00:00Z")},
+		{SourceKey: hlugFeed, UpstreamID: "oct21", Title: "Another October meeting", Start: at("2026-10-21T23:00:00Z")},
+	})
+	if len(problems) != 0 {
+		t.Fatalf("problems = %v", problems)
+	}
+	if len(events) != 3 {
+		t.Fatalf("got %d events, want 3: one group, three different nights", len(events))
+	}
+	seen := map[time.Time]bool{}
+	for _, e := range events {
+		if seen[e.Start] {
+			t.Errorf("duplicate start %s", e.Start)
+		}
+		seen[e.Start] = true
+	}
+}
+
+// Two records from the same feed can land in one cluster: a venue calendar can
+// list a group twice for the same slot, once per co-host. Provenance should say
+// that feed contributed, once, not twice.
+func TestOneFeedContributingTwiceIsRecordedOnce(t *testing.T) {
+	start := at("2026-10-01T18:00:00Z")
+	events, _ := New(testRegistry()).Events([]core.RawEvent{
+		{SourceKey: ionFeed, UpstreamID: "ion-a", Title: "Listing A", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
+		{SourceKey: ionFeed, UpstreamID: "ion-b", Title: "Listing B", Start: start,
+			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
+	})
+	if len(events) != 1 {
+		t.Fatalf("got %d events, want 1", len(events))
+	}
+	if len(events[0].SourceKeys) != 1 || events[0].SourceKeys[0] != ionFeed {
+		t.Errorf("sourceKeys = %v, want the feed recorded exactly once", events[0].SourceKeys)
+	}
+	// The tie-break makes which record wins reproducible rather than dependent
+	// on the order the feed happened to list them.
+	if events[0].Title != "Listing A" {
+		t.Errorf("title = %q, want the lower upstream id to win the tie", events[0].Title)
+	}
+}
