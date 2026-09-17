@@ -142,6 +142,7 @@ type Fetcher interface {
 var fetchers = map[core.SourceKind]Fetcher{
 	core.KindTribe: tribeFetcher{},
 	core.KindICS:   icsFetcher{},
+	core.KindHTML:  hossFetcher{},
 }
 
 func get(ctx context.Context, s core.Source, now time.Time) Result {
@@ -159,6 +160,8 @@ func get(ctx context.Context, s core.Source, now time.Time) Result {
 type tribeFetcher struct{}
 
 type icsFetcher struct{}
+
+type hossFetcher struct{}
 
 // window is the span every source in a run is asked for, derived once from the
 // run's shared now so that a tribe query string and an ICS filter cannot
@@ -415,14 +418,48 @@ func (icsFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result 
 	// something from last year still counts here. That is the behaviour worth
 	// having. A date this decoder cannot read is a format change whichever year
 	// it is in, and the ratio existing at all is to make a format change loud.
-	if tooManySkips(len(feed.Events), len(feed.Skipped)) {
+	return finish(s, feed.Events, feed.Skipped, now, windowEnd)
+}
+
+// Get fetches HOSS's meetings page.
+//
+// Structurally identical to the ICS fetcher, because both are one request over
+// one document. The only thing that differs is which decoder runs, which is
+// exactly what the Fetcher interface is for, and the shared tail is in finish.
+//
+// This one reads HTML, which is the worst kind of source to depend on. See the
+// comment on ParseHOSS for why it is defensible here and why the goal is to
+// delete it.
+func (hossFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result {
+	windowStart, windowEnd := window(now)
+
+	body, err := getBody(ctx, s.URL)
+	if err != nil {
+		return Result{Source: s, Err: err}
+	}
+	page, err := source.ParseHOSS(bytes.NewReader(body), windowStart, windowEnd)
+	if err != nil {
+		return Result{Source: s, Err: fmt.Errorf("parse %s: %w", s.URL, err)}
+	}
+	return finish(s, page.Events, page.Skipped, now, windowEnd)
+}
+
+// finish applies the ratio and the attribution stamp that every non-paginated
+// fetcher does identically, and builds the Result.
+//
+// Shared rather than copied because these are the steps that have to stay in
+// agreement across kinds: a source whose events are mostly unusable fails the
+// same way whatever format it arrived in, and SourceKey is always the
+// registry's URL. The tribe fetcher does not use this, because pagination
+// means it applies the ratio per page and can fail part way through a walk.
+func finish(s core.Source, events []core.RawEvent, skipped []error, now, windowEnd time.Time) Result {
+	if tooManySkips(len(events), len(skipped)) {
 		return Result{Source: s, Err: fmt.Errorf("%s: %d of %d events unusable",
-			s.URL, len(feed.Skipped), len(feed.Events)+len(feed.Skipped))}
+			s.URL, len(skipped), len(events)+len(skipped))}
 	}
 
 	// Indexed rather than ranged, for the reason the tribe fetcher gives:
 	// range yields a copy of each RawEvent.
-	events := feed.Events
 	for i := range events {
 		events[i].SourceKey = s.URL
 	}
@@ -430,7 +467,7 @@ func (icsFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result 
 	return Result{
 		Source:    s,
 		Events:    events,
-		Skipped:   feed.Skipped,
+		Skipped:   skipped,
 		FetchedAt: now,
 		WindowEnd: windowEnd,
 	}

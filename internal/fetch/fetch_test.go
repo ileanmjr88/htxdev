@@ -812,10 +812,94 @@ func TestGetDispatchesOnKind(t *testing.T) {
 		// The table and core's kind list are edited separately, and a kind
 		// that loads from sources.yaml but has no entry here would fail every
 		// source of that kind at runtime with nothing catching it earlier.
-		for _, k := range []core.SourceKind{core.KindTribe, core.KindICS} {
+		for _, k := range []core.SourceKind{core.KindTribe, core.KindICS, core.KindHTML} {
 			if _, ok := fetchers[k]; !ok {
 				t.Errorf("kind %q has no Fetcher", k)
 			}
 		}
 	})
+}
+
+const hossFixturePath = "../source/testdata/hoss-meetings.html"
+
+// The third Fetcher implementation, which is what makes the interface a
+// conclusion rather than a guess. Same window as the ICS tests, so all five of
+// the fixture's meetings fall inside it.
+func TestHOSSFetcherDecodesFixture(t *testing.T) {
+	body, err := os.ReadFile(hossFixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	srv := serve(t, http.StatusOK, string(body))
+
+	src := core.Source{GroupSlug: "houston-open-source-society", Kind: core.KindHTML, URL: srv.URL, Enabled: true}
+	res := hossFetcher{}.Get(t.Context(), src, icsNow)
+
+	if res.Err != nil {
+		t.Fatalf("Err = %v, want nil", res.Err)
+	}
+	if len(res.Events) != 5 {
+		t.Fatalf("got %d events, want 5 weekly slots", len(res.Events))
+	}
+	for i, e := range res.Events {
+		if e.SourceKey != srv.URL {
+			t.Errorf("event %d SourceKey = %q, want %q", i, e.SourceKey, srv.URL)
+		}
+	}
+	if !res.FetchedAt.Equal(icsNow) {
+		t.Errorf("FetchedAt = %s, want %s", res.FetchedAt, icsNow)
+	}
+	if want := icsNow.AddDate(0, 0, fetchWindowDays); !res.WindowEnd.Equal(want) {
+		t.Errorf("WindowEnd = %s, want %s", res.WindowEnd, want)
+	}
+}
+
+func TestHOSSFetcherSourceLevelFailures(t *testing.T) {
+	cases := []struct {
+		name    string
+		status  int
+		body    string
+		wantErr string
+	}{
+		{"server error", http.StatusInternalServerError, "", "unexpected status"},
+		{"a redesigned page", http.StatusOK, "<html><body><h1>Meetings</h1></body></html>", "structure has changed"},
+		{"empty body", http.StatusOK, "", "structure has changed"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := serve(t, tc.status, tc.body)
+			src := core.Source{GroupSlug: "hoss", Kind: core.KindHTML, URL: srv.URL}
+			res := hossFetcher{}.Get(t.Context(), src, icsNow)
+
+			if res.Err == nil {
+				t.Fatalf("Err = nil, want an error (got %d events)", len(res.Events))
+			}
+			if !strings.Contains(res.Err.Error(), tc.wantErr) {
+				t.Errorf("Err = %v, want it to mention %q", res.Err, tc.wantErr)
+			}
+			if len(res.Events) != 0 {
+				t.Errorf("got %d events alongside an Err, want none", len(res.Events))
+			}
+		})
+	}
+}
+
+// html has to reach the HTML decoder and nothing else. Serving an HTML page and
+// asking for it as ics proves the dispatch is real and not accidental.
+func TestGetDispatchesHTMLKind(t *testing.T) {
+	body, err := os.ReadFile(hossFixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	srv := serve(t, http.StatusOK, string(body))
+
+	res := get(t.Context(), core.Source{GroupSlug: "hoss", Kind: core.KindHTML, URL: srv.URL}, icsNow)
+	if res.Err != nil || len(res.Events) != 5 {
+		t.Fatalf("html kind: got %d events, Err = %v; want 5", len(res.Events), res.Err)
+	}
+
+	res = get(t.Context(), icsSource(srv.URL), icsNow)
+	if res.Err == nil || !strings.Contains(res.Err.Error(), "iCalendar") {
+		t.Errorf("ics kind over an HTML body: Err = %v, want the ICS decoder's complaint", res.Err)
+	}
 }

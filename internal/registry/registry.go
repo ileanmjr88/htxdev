@@ -173,10 +173,10 @@ func Load(r io.Reader) (*Registry, error) {
 			swhere := fmt.Sprintf("%s source %d", where, j)
 
 			switch core.SourceKind(ws.Kind) {
-			case core.KindTribe, core.KindICS:
+			case core.KindTribe, core.KindICS, core.KindHTML:
 			default:
-				problems = append(problems, fmt.Sprintf("%s: unknown kind %q, want %q or %q",
-					swhere, ws.Kind, core.KindTribe, core.KindICS))
+				problems = append(problems, fmt.Sprintf("%s: unknown kind %q, want one of %q, %q, %q",
+					swhere, ws.Kind, core.KindTribe, core.KindICS, core.KindHTML))
 				continue
 			}
 

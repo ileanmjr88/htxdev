@@ -16,28 +16,37 @@ func TestRealSourcesYAMLIsValid(t *testing.T) {
 		t.Fatalf("committed sources.yaml does not load:\n%v", err)
 	}
 
-	if len(reg.Groups) != 8 {
-		t.Errorf("got %d groups, want 8", len(reg.Groups))
+	if len(reg.Groups) != 9 {
+		t.Errorf("got %d groups, want 9", len(reg.Groups))
 	}
 	if len(reg.Venues) != 3 {
 		t.Errorf("got %d venues, want 3", len(reg.Venues))
 	}
-	if len(reg.Sources) != 7 {
-		t.Errorf("got %d sources, want 7", len(reg.Sources))
+	if len(reg.Sources) != 9 {
+		t.Errorf("got %d sources, want 9", len(reg.Sources))
 	}
-	if got := len(reg.EnabledSources()); got != 7 {
-		t.Errorf("got %d enabled sources, want 7", got)
+	if got := len(reg.EnabledSources()); got != 9 {
+		t.Errorf("got %d enabled sources, want 9", got)
 	}
 
-	// HOSS publishes no feed at all; it is in the registry so its absence is
-	// recorded rather than forgotten.
+	// HOSS publishes no calendar, so it is the one source read as HTML. This
+	// asserted "no sources at all" until 2026-09-17, when the decoder for
+	// their meetings page landed. If this ever goes back to ics, that is them
+	// having shipped a feed and this file getting simpler.
 	if _, ok := reg.Group("houston-open-source-society"); !ok {
 		t.Error("HOSS missing from the registry")
 	}
+	var hoss []core.Source
 	for _, s := range reg.Sources {
 		if s.GroupSlug == "houston-open-source-society" {
-			t.Error("HOSS should have no sources")
+			hoss = append(hoss, s)
 		}
+	}
+	if len(hoss) != 1 {
+		t.Fatalf("HOSS has %d sources, want 1", len(hoss))
+	}
+	if hoss[0].Kind != core.KindHTML {
+		t.Errorf("HOSS source kind = %q, want %q", hoss[0].Kind, core.KindHTML)
 	}
 
 	// The alias that lets HLUG's "The Ion, Rooms 29 and 30, ..." resolve to

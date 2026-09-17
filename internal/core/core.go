@@ -10,6 +10,17 @@ type SourceKind string
 const (
 	KindTribe SourceKind = "tribe"
 	KindICS   SourceKind = "ics"
+
+	// KindHTML is a page scraped for its semantic markup rather than a feed.
+	// It exists for exactly one source, Houston Open Source Society, who
+	// publish no calendar but do publish <time datetime="..."> on their
+	// meetings page. That is machine-readable markup with a spec behind it,
+	// not a regex over prose, which is the line between this being reasonable
+	// and being a scraper to maintain forever.
+	//
+	// Still the worst kind of source to have, and the standing preference is
+	// to ask a group for an ICS feed first. Retire this the day HOSS ships one.
+	KindHTML SourceKind = "html"
 )
 
 type Group struct {

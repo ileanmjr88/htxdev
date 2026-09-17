@@ -114,15 +114,31 @@ groups:
     aliases:
       - HOSS
       - "Houston OSS"
-    # Meets weekly on Wednesdays, mostly at Improving Houston. Publishes NO
-    # machine-readable feed — atom.xml is talk announcements, not events. Their
-    # /meetings/ pages do carry proper <time datetime="…"> markup, so an html
-    # fetcher is possible.
+    # Meets weekly on Wednesdays. Publishes NO calendar: atom.xml is talk
+    # write-ups and member bios, re-checked 2026-09-17 and still true.
     #
-    # Better first move: ask them to publish an ICS feed. They're an open source
-    # group on Codeberg with a Discord; it's a small favor and it turns them
-    # into a permanent source instead of a scraper to maintain.
-    sources: []
+    # What /meetings/ does publish is five meeting cards, one per weekly slot,
+    # each carrying <time datetime="2026-10-07T18:00:00-05:00">. That is
+    # semantic HTML with a spec behind it and a real UTC offset, so reading it
+    # is not the same act as pattern matching over prose. kind: html exists for
+    # this one source and nothing else.
+    #
+    # What you get is a schedule, not a calendar: the next date for each slot,
+    # roughly five events covering about a month, refreshed every sync. Less
+    # than the other sources give and it is all there is.
+    #
+    # STILL ASK THEM FOR AN ICS FEED. They're an open source group with a
+    # Discord; it's a small favor, and the day they ship one this source
+    # becomes `kind: ics` and internal/source/hoss.go gets deleted. That is the
+    # goal, not this.
+    #
+    # Venues rotate by week and one of them is already curated here: the Third
+    # Wednesday is at "The Ion", which is the alias on the `ion` venue above.
+    sources:
+      - kind: html
+        url: https://houstonopensourcesociety.com/meetings/
+        priority: 10
+        enabled: true
 
   - slug: houston-code-and-coffee
     name: Houston Code and Coffee
@@ -188,6 +204,31 @@ groups:
     sources:
       - kind: ics
         url: https://www.meetup.com/meetup-group-btoomzkr/events/ical/
+        priority: 10
+        enabled: true
+
+  - slug: side-project-society
+    name: Side Project Society
+    url: https://www.meetup.com/side-project-society/
+    category: dev
+    verified_by:
+    verified_at:
+    aliases:
+      - SPS
+    # Monthly-ish, Thursdays 6-8pm at Improving Houston, which is already a
+    # curated venue above. Organized by Danyal Mahmud, who runs it as a Meetup
+    # Pro group; 4+ years running. Confirmed 2026-09-17 by search AND by the
+    # feed answering 200, which is a higher bar than houston-ai-meetup cleared.
+    #
+    # Category is a judgement call: the group is explicitly for side projects
+    # "both technical and non-technical", so `dev` overstates it slightly.
+    # Kept as dev because that is who attends and what gets demoed.
+    #
+    # Feed currently empty — Meetup only lists scheduled events, same as
+    # code4yall and houston-robotics-group.
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/side-project-society/events/ical/
         priority: 10
         enabled: true
 
