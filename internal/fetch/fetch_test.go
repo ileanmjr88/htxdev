@@ -196,7 +196,7 @@ func TestGetTribeBuildsWindowQuery(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if res.Err != nil {
 		t.Fatalf("unexpected error: %v", res.Err)
 	}
@@ -227,7 +227,7 @@ func TestGetTribeFollowsNextURL(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if res.Err != nil {
 		t.Fatalf("unexpected error: %v", res.Err)
 	}
@@ -256,7 +256,7 @@ func TestGetTribeStampsSourceKey(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if res.Err != nil {
 		t.Fatalf("unexpected error: %v", res.Err)
 	}
@@ -286,7 +286,7 @@ func TestGetTribeDeclinesOffOriginNextURL(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if res.Err != nil {
 		t.Fatalf("unexpected error: %v", res.Err)
 	}
@@ -318,7 +318,7 @@ func TestGetTribeOriginCheckIncludesPort(t *testing.T) {
 		t.Skip("servers are not both on 127.0.0.1; nothing to distinguish")
 	}
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if len(res.Skipped) != 1 {
 		t.Fatalf("skipped = %v, want the port mismatch refused", res.Skipped)
 	}
@@ -338,7 +338,7 @@ func TestGetTribeTruncatesAtMaxPages(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 	if res.Err != nil {
 		t.Fatalf("truncation must not fail the source: %v", res.Err)
 	}
@@ -379,7 +379,7 @@ func TestGetTribeSkipRatio(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			res := getTribe(t.Context(), tribeSource(srv.URL), testNow)
+			res := tribeFetcher{}.Get(t.Context(), tribeSource(srv.URL), testNow)
 			if tc.wantErr {
 				if res.Err == nil {
 					t.Fatal("want error, got nil")
@@ -415,7 +415,7 @@ func TestGetTribeTransportFailureKeepsSource(t *testing.T) {
 	defer srv.Close()
 
 	s := tribeSource(srv.URL)
-	res := getTribe(t.Context(), s, testNow)
+	res := tribeFetcher{}.Get(t.Context(), s, testNow)
 	if res.Err == nil {
 		t.Fatal("want error, got nil")
 	}
@@ -440,7 +440,7 @@ func TestGetTribeCancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	res := getTribe(ctx, tribeSource(srv.URL), testNow)
+	res := tribeFetcher{}.Get(ctx, tribeSource(srv.URL), testNow)
 	if !errors.Is(res.Err, context.Canceled) {
 		t.Fatalf("Err = %v, want context.Canceled", res.Err)
 	}
@@ -557,4 +557,265 @@ func TestFetchCapsConcurrency(t *testing.T) {
 	if got := peak.Load(); got < 2 {
 		t.Errorf("peak concurrency = %d; nothing overlapped, so the cap was never exercised", got)
 	}
+}
+
+// The HLUG export, read across packages for the same reason as the tribe
+// fixture: it is 52KB and a second copy would drift.
+const icsFixturePath = "../source/testdata/hlug-gcal.ics"
+
+// Chosen so window(icsNow) is exactly 2026-09-15 to 2026-11-16, the span
+// internal/source's fixture test uses. Both suites then agree on the number
+// 19, and a disagreement means the window arithmetic moved rather than the
+// decoder.
+var icsNow = time.Date(2026, 9, 17, 0, 0, 0, 0, time.UTC)
+
+func icsSource(u string) core.Source {
+	return core.Source{GroupSlug: "hlug", Kind: core.KindICS, URL: u, Enabled: true}
+}
+
+func icsBody(events ...string) string {
+	return "BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" + strings.Join(events, "") + "END:VCALENDAR\r\n"
+}
+
+func icsEventLines(lines ...string) string {
+	return "BEGIN:VEVENT\r\n" + strings.Join(lines, "\r\n") + "\r\nEND:VEVENT\r\n"
+}
+
+func serve(t *testing.T, status int, body string) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("User-Agent"); got != userAgent {
+			t.Errorf("user-agent = %q, want %q", got, userAgent)
+		}
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+// The whole ICS chain end to end against the real Google export: request,
+// body read inside the cap, ParseICS over it with the run's window, ratio,
+// stamping.
+func TestICSFetcherDecodesFixture(t *testing.T) {
+	body, err := os.ReadFile(icsFixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	srv := serve(t, http.StatusOK, string(body))
+
+	res := icsFetcher{}.Get(t.Context(), icsSource(srv.URL), icsNow)
+
+	if res.Err != nil {
+		t.Fatalf("Err = %v, want nil", res.Err)
+	}
+	if len(res.Events) != 19 {
+		t.Fatalf("got %d events, want 19 (10 concrete plus 9 expanded)", len(res.Events))
+	}
+	if len(res.Skipped) != 0 {
+		t.Errorf("skipped = %v, want none", res.Skipped)
+	}
+
+	// Attribution is the source's URL, set by this layer and not the decoder,
+	// because the decoder is handed a reader and has no idea where it came
+	// from.
+	for i, e := range res.Events {
+		if e.SourceKey != srv.URL {
+			t.Fatalf("event %d SourceKey = %q, want %q", i, e.SourceKey, srv.URL)
+		}
+	}
+
+	if !res.FetchedAt.Equal(icsNow) {
+		t.Errorf("FetchedAt = %s, want the run's shared now %s", res.FetchedAt, icsNow)
+	}
+	// Normalize needs this to know how far absence can be trusted, and it has
+	// to be the window actually asked for rather than one recomputed later.
+	if want := icsNow.AddDate(0, 0, fetchWindowDays); !res.WindowEnd.Equal(want) {
+		t.Errorf("WindowEnd = %s, want %s", res.WindowEnd, want)
+	}
+	for i, e := range res.Events {
+		if e.Start.Before(icsNow.AddDate(0, 0, -lookbackDays)) || e.Start.After(res.WindowEnd) {
+			t.Errorf("event %d at %s is outside the window the Result advertises", i, e.Start)
+		}
+	}
+}
+
+func TestICSFetcherSourceLevelFailures(t *testing.T) {
+	cases := []struct {
+		name    string
+		status  int
+		body    string
+		wantErr string
+	}{
+		{"server error", http.StatusInternalServerError, "", "unexpected status"},
+		{"not found", http.StatusNotFound, "", "unexpected status"},
+		{"html error page served as 200", http.StatusOK, "<html>Not Found</html>", "iCalendar"},
+		{"empty body", http.StatusOK, "", "iCalendar"},
+		{"json", http.StatusOK, `{"events":[]}`, "iCalendar"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := serve(t, tc.status, tc.body)
+			res := icsFetcher{}.Get(t.Context(), icsSource(srv.URL), icsNow)
+
+			if res.Err == nil {
+				t.Fatalf("Err = nil, want an error (got %d events)", len(res.Events))
+			}
+			if !strings.Contains(res.Err.Error(), tc.wantErr) {
+				t.Errorf("Err = %v, want it to mention %q", res.Err, tc.wantErr)
+			}
+			if len(res.Events) != 0 {
+				t.Errorf("got %d events alongside an Err, want none", len(res.Events))
+			}
+		})
+	}
+}
+
+// A calendar with nothing in the window is a quiet group, not a broken feed.
+// Two of the six live ICS sources are in this state today, and reporting them
+// as failures would train whoever reads the sync log to ignore it.
+func TestICSFetcherTreatsAnEmptyWindowAsSuccess(t *testing.T) {
+	cases := []struct {
+		name string
+		body string
+	}{
+		{"no events at all", icsBody()},
+		{"every event outside the window", icsBody(
+			icsEventLines("UID:old@test", "DTSTART:20200101T170000Z"),
+			icsEventLines("UID:far@test", "DTSTART:20301231T170000Z"),
+		)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := serve(t, http.StatusOK, tc.body)
+			res := icsFetcher{}.Get(t.Context(), icsSource(srv.URL), icsNow)
+
+			if res.Err != nil {
+				t.Fatalf("Err = %v, want nil", res.Err)
+			}
+			if len(res.Events) != 0 {
+				t.Errorf("got %d events, want none", len(res.Events))
+			}
+			// The important half. A non-empty Skipped defers cancellation for
+			// the whole source, so an out-of-window event must not land there
+			// or this group would defer on every run forever.
+			if len(res.Skipped) != 0 {
+				t.Errorf("skipped = %v, want none", res.Skipped)
+			}
+		})
+	}
+}
+
+// D6's ratio, applied to a whole ICS feed rather than to a page, because an
+// ICS feed has no pages.
+func TestICSFetcherRatio(t *testing.T) {
+	good := func(n int) []string {
+		out := make([]string, 0, n)
+		for i := range n {
+			out = append(out, icsEventLines(
+				fmt.Sprintf("UID:good%d@test", i),
+				fmt.Sprintf("DTSTART:202610%02dT170000Z", i+1),
+			))
+		}
+		return out
+	}
+	// No UID is how a real format change reaches the skip path, and it is the
+	// same shape the tribe helper induces by dropping global_id.
+	bad := func(n int) []string {
+		out := make([]string, 0, n)
+		for i := range n {
+			out = append(out, icsEventLines("SUMMARY:No UID", fmt.Sprintf("DTSTART:202610%02dT170000Z", i+1)))
+		}
+		return out
+	}
+
+	cases := []struct {
+		name       string
+		good, bad  int
+		wantFailed bool
+	}{
+		{"one bad in four is tolerated", 3, 1, false},
+		{"three bad in four fails the source", 1, 3, true},
+		{"two bad in four is over one in three", 2, 2, true},
+		// The boundary itself. The rule is "more than one in three", so
+		// exactly one in three is tolerated. Nothing else in either ratio
+		// table lands on the equality, which is what let a > silently become
+		// a >= when this was mutation-tested.
+		{"exactly one bad in three is tolerated", 4, 2, false},
+		{"just over one in three fails", 3, 2, true},
+		// Below minPageForRatio no ratio is meaningful, so a small feed keeps
+		// its good event rather than blanking a legitimate group.
+		{"one bad in three is below the floor", 2, 1, false},
+		{"one bad and nothing else", 0, 1, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := serve(t, http.StatusOK, icsBody(append(good(tc.good), bad(tc.bad)...)...))
+			res := icsFetcher{}.Get(t.Context(), icsSource(srv.URL), icsNow)
+
+			if tc.wantFailed {
+				if res.Err == nil {
+					t.Fatalf("Err = nil, want the source to fail (%d events, %d skips)", len(res.Events), len(res.Skipped))
+				}
+				// Err set means Events is empty, per the type's contract.
+				if len(res.Events) != 0 {
+					t.Errorf("got %d events alongside an Err, want none", len(res.Events))
+				}
+				return
+			}
+			if res.Err != nil {
+				t.Fatalf("Err = %v, want the good events kept", res.Err)
+			}
+			if len(res.Events) != tc.good {
+				t.Errorf("got %d events, want %d", len(res.Events), tc.good)
+			}
+			if len(res.Skipped) != tc.bad {
+				t.Errorf("got %d skips, want %d: a tolerated skip still has to be counted", len(res.Skipped), tc.bad)
+			}
+		})
+	}
+}
+
+// The dispatch table. Phase 1 had one decoder and a switch; this is what D3
+// said to extract once the second one existed.
+func TestGetDispatchesOnKind(t *testing.T) {
+	srv := serve(t, http.StatusOK, icsBody(icsEventLines("UID:d@test", "DTSTART:20261001T170000Z")))
+
+	t.Run("ics reaches the ics fetcher", func(t *testing.T) {
+		res := get(t.Context(), icsSource(srv.URL), icsNow)
+		if res.Err != nil || len(res.Events) != 1 {
+			t.Fatalf("got %d events, Err = %v; want the ICS decoder to have run", len(res.Events), res.Err)
+		}
+	})
+
+	t.Run("tribe reaches the tribe fetcher", func(t *testing.T) {
+		// Served ICS, asked for as tribe. The failure has to come from the
+		// JSON decoder, which is how we know which fetcher ran.
+		res := get(t.Context(), tribeSource(srv.URL), icsNow)
+		if res.Err == nil {
+			t.Fatal("Err = nil, want a decode failure")
+		}
+		if strings.Contains(res.Err.Error(), "iCalendar") {
+			t.Errorf("Err = %v, want the tribe decoder's complaint and not the ICS one", res.Err)
+		}
+	})
+
+	t.Run("an unknown kind is reported, not panicked on", func(t *testing.T) {
+		res := get(t.Context(), core.Source{Kind: "gopher", URL: srv.URL}, icsNow)
+		if res.Err == nil || !strings.Contains(res.Err.Error(), "gopher") {
+			t.Fatalf("Err = %v, want it to name the unknown kind", res.Err)
+		}
+	})
+
+	t.Run("every kind the registry accepts has a fetcher", func(t *testing.T) {
+		// The table and core's kind list are edited separately, and a kind
+		// that loads from sources.yaml but has no entry here would fail every
+		// source of that kind at runtime with nothing catching it earlier.
+		for _, k := range []core.SourceKind{core.KindTribe, core.KindICS} {
+			if _, ok := fetchers[k]; !ok {
+				t.Errorf("kind %q has no Fetcher", k)
+			}
+		}
+	})
 }

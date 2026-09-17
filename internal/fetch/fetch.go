@@ -113,18 +113,75 @@ func Fetch(ctx context.Context, sources []core.Source) []Result {
 	return results
 }
 
-func get(ctx context.Context, s core.Source, now time.Time) Result {
-	switch s.Kind {
-	case core.KindTribe:
-		return getTribe(ctx, s, now)
-	case core.KindICS:
-		return Result{Source: s, Err: fmt.Errorf("kind %q: no decoder yet", s.Kind)}
-	default:
-		return Result{Source: s, Err: fmt.Errorf("unknown kind %q", s.Kind)}
-	}
+// Fetcher retrieves and decodes one source. Its implementations are the
+// per-kind strategies: one request shape, one decoder and one set of format
+// quirks each.
+//
+// D3 said to extract this once a second implementation existed rather than
+// guessing at it in Phase 1, and the shape the two of them turned out to share
+// is narrower than one designed up front would have been. No Close, no
+// separate Validate step, and no error return: a source that fails records
+// that on its own Result, for the same reason Fetch returns no error.
+//
+// It lives in this package and not in internal/source because the consumer is
+// what defines the interface it needs. internal/source could not declare this
+// type even if it wanted to, since Result belongs here, and the whole property
+// that makes that package worth keeping separate is that it cannot reach the
+// network.
+//
+// Worth being straight about what it buys today, given it has one method and
+// both implementations sit in this file: it is a name for the extension point
+// and a seam for a fake, not decoupling. The table below is the part that pays
+// for itself, because adding a kind stops meaning editing a switch.
+type Fetcher interface {
+	Get(ctx context.Context, s core.Source, now time.Time) Result
 }
 
-// getTribe fetches one tribe source across the rolling window and returns
+// fetchers maps a source kind to its implementation. Adding a kind is a line
+// here plus a decoder in internal/source.
+var fetchers = map[core.SourceKind]Fetcher{
+	core.KindTribe: tribeFetcher{},
+	core.KindICS:   icsFetcher{},
+}
+
+func get(ctx context.Context, s core.Source, now time.Time) Result {
+	f, ok := fetchers[s.Kind]
+	if !ok {
+		// Unreachable by way of internal/registry, which rejects an unknown
+		// kind when sources.yaml loads. Kept because this package does not
+		// depend on having been called through the registry, and a Result with
+		// Err set is a cheaper answer than a panic.
+		return Result{Source: s, Err: fmt.Errorf("unknown kind %q", s.Kind)}
+	}
+	return f.Get(ctx, s, now)
+}
+
+type tribeFetcher struct{}
+
+type icsFetcher struct{}
+
+// window is the span every source in a run is asked for, derived once from the
+// run's shared now so that a tribe query string and an ICS filter cannot
+// disagree about where the horizon is.
+func window(now time.Time) (start, end time.Time) {
+	return now.AddDate(0, 0, -lookbackDays), now.AddDate(0, 0, fetchWindowDays)
+}
+
+// tooManySkips applies D6's ratio: a decoded unit fails its source when more
+// than one record in skipTolerance was unusable. Units below minPageForRatio
+// are too small for a ratio to mean anything and tolerate any skip.
+//
+// Shared by both fetchers, which is the reason it is a function rather than
+// two copies of the arithmetic. What "a unit" means differs: for tribe it is
+// one page, because that is where a format change shows up; for ICS it is the
+// whole feed, because an ICS feed is a single document with nothing to
+// paginate.
+func tooManySkips(events, skipped int) bool {
+	total := events + skipped
+	return total >= minPageForRatio && skipped*skipTolerance > total
+}
+
+// Get fetches one tribe source across the rolling window and returns
 // everything it saw as a single Result. Pagination is internal: callers get one
 // Result per source, never one per page.
 //
@@ -133,13 +190,12 @@ func get(ctx context.Context, s core.Source, now time.Time) Result {
 // explicit end rather than something inferred from a short page. Inferring it
 // would mean guessing, and a wrong guess silently drops events that normalize
 // then reads as cancellations.
-func getTribe(ctx context.Context, s core.Source, now time.Time) Result {
+func (tribeFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result {
 	parsedURL, err := url.Parse(s.URL)
 	if err != nil {
 		return Result{Source: s, Err: fmt.Errorf("parse source url %q: %w", s.URL, err)}
 	}
-	windowStartDate := now.AddDate(0, 0, -1*lookbackDays)
-	windowEndDate := now.AddDate(0, 0, fetchWindowDays)
+	windowStartDate, windowEndDate := window(now)
 
 	params := url.Values{}
 	params.Set("start_date", windowStartDate.Format("2006-01-02 15:04:05"))
@@ -167,11 +223,12 @@ func getTribe(ctx context.Context, s core.Source, now time.Time) Result {
 			return Result{Source: s, Err: err}
 		}
 
-		// Integer math rather than floats: fail when skips exceed one event in
-		// skipTolerance. Pages under minPageForRatio are too small for a ratio
-		// to mean anything, so they tolerate any skip.
+		// Integer math rather than floats; see tooManySkips. Applied per page
+		// rather than per source, which is the stricter reading: a format
+		// change takes out one page completely, and averaging it across a
+		// healthy page would hide it.
 		pageTotal := len(page.Events) + len(page.Skipped)
-		if pageTotal >= minPageForRatio && len(page.Skipped)*skipTolerance > pageTotal {
+		if tooManySkips(len(page.Events), len(page.Skipped)) {
 			return Result{Source: s, Err: fmt.Errorf(
 				"%s: %d of %d events unusable", pageURL, len(page.Skipped), pageTotal)}
 		}
@@ -246,28 +303,32 @@ func getTribe(ctx context.Context, s core.Source, now time.Time) Result {
 // up to ten hops, including off-host.
 var client = &http.Client{}
 
-// fetchPage performs one GET and decodes the result. It knows nothing about
-// sources, windows or pagination: hand it a URL, get back one page or an
-// error.
+// getBody performs one GET and returns the whole response body.
 //
-// The decode happens here rather than in the caller because this function owns
-// the request deadline. Returning resp.Body upward would let the deferred
-// cancel() fire while the caller was still reading, surfacing as a
-// context.Canceled part-way through a JSON document and looking for all the
-// world like a flaky network.
-func fetchPage(ctx context.Context, rawURL string) (source.TribePage, error) {
+// It returns bytes rather than an io.ReadCloser, which is the point. This
+// function owns the request deadline, so handing the body upward would let the
+// deferred cancel() fire while the caller was still reading, surfacing as a
+// context.Canceled part-way through a document and looking for all the world
+// like a flaky network. Reading to completion inside the deadline means the
+// caller gets either a whole body or an error, never a live stream on a dead
+// context.
+//
+// Split out of fetchPage when the ICS fetcher arrived and needed the same
+// request policy with a different decoder. Everything kind-specific, the
+// decode included, stays with the caller.
+func getBody(ctx context.Context, rawURL string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
-		return source.TribePage{}, fmt.Errorf("new request %s: %w", rawURL, err)
+		return nil, fmt.Errorf("new request %s: %w", rawURL, err)
 	}
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return source.TribePage{}, fmt.Errorf("get %s: %w", rawURL, err)
+		return nil, fmt.Errorf("get %s: %w", rawURL, err)
 	}
 	// Discarded explicitly, matching LoadFile in internal/registry: this body
 	// is read to completion or abandoned on an error that has already been
@@ -279,24 +340,98 @@ func fetchPage(ctx context.Context, rawURL string) (source.TribePage, error) {
 	// a fragment; both would fail later as an opaque decode error instead of
 	// as the thing that actually happened.
 	if resp.StatusCode != http.StatusOK {
-		return source.TribePage{}, fmt.Errorf("get %s: unexpected status %s", rawURL, resp.Status)
+		return nil, fmt.Errorf("get %s: unexpected status %s", rawURL, resp.Status)
 	}
 
 	// One byte past the ceiling, so an oversized body stays distinguishable
 	// from a complete one. Reading exactly maxBodyBytes would truncate in
 	// silence and surface as "unexpected EOF" from the decoder, sending
-	// whoever reads that log into ParseTribe to debug a problem about size.
+	// whoever reads that log into the decoder to debug a problem about size.
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes+1))
 	if err != nil {
-		return source.TribePage{}, fmt.Errorf("read %s: %w", rawURL, err)
+		return nil, fmt.Errorf("read %s: %w", rawURL, err)
 	}
 	if len(body) > maxBodyBytes {
-		return source.TribePage{}, fmt.Errorf("read %s: body exceeds %d bytes", rawURL, maxBodyBytes)
+		return nil, fmt.Errorf("read %s: body exceeds %d bytes", rawURL, maxBodyBytes)
 	}
 
+	return body, nil
+}
+
+// fetchPage performs one request and decodes one page of a tribe feed. It
+// knows nothing about sources, windows or pagination: hand it a URL, get back
+// one page or an error.
+func fetchPage(ctx context.Context, rawURL string) (source.TribePage, error) {
+	body, err := getBody(ctx, rawURL)
+	if err != nil {
+		return source.TribePage{}, err
+	}
 	page, err := source.ParseTribe(bytes.NewReader(body))
 	if err != nil {
 		return source.TribePage{}, fmt.Errorf("parse %s: %w", rawURL, err)
 	}
 	return page, nil
+}
+
+// fetchICS performs one request and decodes an iCalendar feed.
+//
+// The window reaches the decoder rather than being applied afterwards because
+// an ICS feed is unbounded in both directions and a recurrence rule with no
+// UNTIL is infinite. Ion does this filtering server-side from getTribe's
+// start_date and end_date query parameters; an ICS server will not, so somebody
+// has to, and doing it inside the decode is what keeps an infinite rule from
+// having to be materialised first and trimmed second.
+func fetchICS(ctx context.Context, rawURL string, from, until time.Time) (source.ICSFeed, error) {
+	body, err := getBody(ctx, rawURL)
+	if err != nil {
+		return source.ICSFeed{}, err
+	}
+	feed, err := source.ParseICS(bytes.NewReader(body), from, until)
+	if err != nil {
+		return source.ICSFeed{}, fmt.Errorf("parse %s: %w", rawURL, err)
+	}
+	return feed, nil
+}
+
+// Get fetches one iCalendar source and returns everything inside the window as
+// a single Result.
+//
+// Much shorter than the tribe fetcher, and the difference is where the work
+// sits rather than how much there is. There is no pagination because an ICS
+// feed is one document, and no query string because the server offers no way
+// to ask for less, so the whole calendar arrives and the decoder filters it.
+// HLUG sends 110 events to answer a question about 19.
+func (icsFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result {
+	windowStart, windowEnd := window(now)
+
+	feed, err := fetchICS(ctx, s.URL, windowStart, windowEnd)
+	if err != nil {
+		return Result{Source: s, Err: err}
+	}
+
+	// One caveat this shares with nothing else in the pipeline: a skip can come
+	// from an event outside the window, because an event's date has to be
+	// parsed before it can be compared to the window, so a malformed DTSTART on
+	// something from last year still counts here. That is the behaviour worth
+	// having. A date this decoder cannot read is a format change whichever year
+	// it is in, and the ratio existing at all is to make a format change loud.
+	if tooManySkips(len(feed.Events), len(feed.Skipped)) {
+		return Result{Source: s, Err: fmt.Errorf("%s: %d of %d events unusable",
+			s.URL, len(feed.Skipped), len(feed.Events)+len(feed.Skipped))}
+	}
+
+	// Indexed rather than ranged, for the reason the tribe fetcher gives:
+	// range yields a copy of each RawEvent.
+	events := feed.Events
+	for i := range events {
+		events[i].SourceKey = s.URL
+	}
+
+	return Result{
+		Source:    s,
+		Events:    events,
+		Skipped:   feed.Skipped,
+		FetchedAt: now,
+		WindowEnd: windowEnd,
+	}
 }

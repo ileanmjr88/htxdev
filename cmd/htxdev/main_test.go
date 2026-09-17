@@ -129,7 +129,7 @@ groups:
     name: Quiet
     sources:
       - kind: ics
-        url: https://example.invalid/feed.ics
+        url: https://127.0.0.1:1/feed.ics
         enabled: false
 `)
 	var stdout, stderr bytes.Buffer
@@ -141,8 +141,11 @@ groups:
 
 // The exit-code policy. One dead feed must not fail a run, because Phase 7's
 // cron would go red on somebody else's outage. A run where nothing came back
-// is different and must exit non-zero. Until Phase 3 an ics source fails
-// without touching the network, which makes it a free way to prove it.
+// is different and must exit non-zero.
+//
+// The source points at port 1 on loopback, which refuses the connection
+// immediately. That keeps the test offline and fast, and it stopped being
+// possible to lean on "ics has no decoder yet" when Phase 3 gave it one.
 func TestSyncFailsWhenEverySourceFails(t *testing.T) {
 	path := writeRegistry(t, `
 groups:
@@ -150,7 +153,7 @@ groups:
     name: Only ICS
     sources:
       - kind: ics
-        url: https://example.invalid/feed.ics
+        url: https://127.0.0.1:1/feed.ics
         enabled: true
 `)
 	var stdout, stderr bytes.Buffer
@@ -158,9 +161,11 @@ groups:
 	if err == nil || !strings.Contains(err.Error(), "all 1 sources failed") {
 		t.Fatalf("runSync() = %v, want an all-sources-failed error", err)
 	}
-	// The report is still the useful output. Failing must not swallow it.
-	if !strings.Contains(stdout.String(), "no decoder yet") {
-		t.Errorf("stdout = %q, want the per-source reason", stdout.String())
+	// The report is still the useful output. Failing must not swallow it, and
+	// the row has to name the feed that failed rather than just saying one did.
+	out := stdout.String()
+	if !strings.Contains(out, "fail") || !strings.Contains(out, "127.0.0.1:1") {
+		t.Errorf("stdout = %q, want a failing row naming the feed", out)
 	}
 }
 
@@ -171,7 +176,7 @@ groups:
     name: Only ICS
     sources:
       - kind: ics
-        url: https://example.invalid/feed.ics
+        url: https://127.0.0.1:1/feed.ics
         enabled: true
 `)
 	ctx, cancel := context.WithCancel(t.Context())
