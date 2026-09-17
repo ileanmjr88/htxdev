@@ -29,8 +29,24 @@ bin/
 build/
 dist/
 
-# NOT ignored, deliberately: htxdev.db
-# It is the permanent record of every event ever seen, committed on purpose.
-# Measured at roughly 30 MB/year at ten sources. See the Architecture page.
-# Two rules that keep that cheap: never VACUUM in CI, and set a concurrency
-# group on the sync workflow so two runs cannot both commit the binary.
+# htxdev.db is TEMPORARILY ignored, as of 2026-09-17.
+#
+# It is meant to be committed, and the architecture depends on that: it is the
+# permanent record of every event ever seen, first_seen cannot be rebuilt from
+# feeds because feeds only publish what is current, and Phase 7's GitHub
+# Actions cron has no persistent state, so from that phase onward the file has
+# to be in git for a sync to build on the last one. Measured at roughly 30 MB
+# per year at ten sources, which is the reason that is affordable.
+#
+# Held back for now because it contains HLUG's private calendar entries. Their
+# public Google Calendar carries "Family visit" and "Dental" alongside real
+# group events, and while the pending gate keeps those off the website, it does
+# nothing about a git object: `strings htxdev.db` prints them. Nothing needs
+# this file committed before Phase 7, so the decision waits until the repo's
+# public/private status is settled. Committing it and going public later means
+# rewriting every SHA to undo, which has already been declined once here.
+#
+# Two rules that keep it cheap once it does land: never VACUUM in CI, because
+# rewriting the whole file defeats git's delta compression, and set a
+# concurrency group on the sync workflow so two runs cannot both commit it.
+htxdev.db
