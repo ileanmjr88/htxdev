@@ -1,20 +1,22 @@
 ---
-/* func htxdev() {}
+/* htxdev()
  *
- * A wordmark rather than an image: it is text, so it scales, re-themes, reads
- * aloud to a screen reader and costs no request. The syntax is the point. This
- * is a Go project about Houston developers, and the declaration says both
- * without a tagline.
+ * Text, not an image: it scales, re-themes, reads aloud to a screen reader and
+ * costs no request.
  *
- * The punctuation is dimmed and the name carries the accent, which is the same
- * thing an editor would do to it.
+ * It was func htxdev() {} first. The declaration was a better joke and a worse
+ * mark. Two thirds of it was dimmed punctuation, and `func` only lands for Go
+ * developers, which is the wrong audience to optimise for at the top of a
+ * community utility whose registry has hardware, data and startup groups in it
+ * alongside dev. The parens survive because they carry the same signal in an
+ * eighth of the width, and because they happen to be true: this is a thing
+ * that runs, twice a day.
  */
 const { as: Tag = 'span', class: cls = '' } = Astro.props;
 // An <a> needs somewhere to go; anything else must not have an href.
 const href = Tag === 'a' ? '/' : undefined;
 ---
 
-<Tag href={href} class:list={['font-mono whitespace-nowrap no-underline', cls]}>
-  <span class="text-muted">func</span>
-  <span class="text-accent font-semibold">&nbsp;htxdev</span><span class="text-muted">() {'{}'}</span>
-</Tag>
+<Tag href={href} class:list={['font-mono whitespace-nowrap no-underline', cls]}
+  ><span class="text-accent font-semibold">htxdev</span><span class="text-muted">()</span></Tag
+>
