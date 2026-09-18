@@ -373,6 +373,34 @@ groups:
     #
     # Second, unrelated and worth more to him: rss.xml is publishing Astro
     # starter-template posts, and he almost certainly does not know.
+    #
+    # UPDATE 2026-09-18, from re-reading the live pages. Three corrections:
+    #
+    #   1. The datetime is not merely timeless, it is WRONG. 00:00:00.000Z is
+    #      an instant, and instants convert: in Houston that is Wednesday
+    #      30 September at 7:00 PM. Listing "the date" from that markup would
+    #      put the October meetup in September. This is the argument that
+    #      lands, and it is D10 seen from the other side.
+    #
+    #      The smallest correct fix is not the one suggested above. A bare
+    #      date is valid HTML, carries no timezone and cannot be converted
+    #      into the wrong day:
+    #
+    #          <time datetime="2026-10-01">
+    #
+    #      The likely cause is .toISOString() on a date-only value, which
+    #      always emits UTC. That is where the Z comes from.
+    #
+    #   2. It is <link rel="canonical">, not only og:url, that points at
+    #      example.com on every event page. That is the one with teeth: a
+    #      canonical pointing off-domain tells Google the real page is
+    #      somewhere else, so his event pages may not be indexing at all.
+    #
+    #   3. DO NOT BUILD A DECODER FOR THIS YET. This markup is not settled,
+    #      and one written against the current shape would be built for
+    #      something that may stop existing, which is this project's oldest
+    #      mistake. Re-read the pages first; either a bare date or any
+    #      offset-bearing timestamp is straightforward to decode when it lands.
     # Monthly-ish, Thursdays 6-8pm at Improving Houston, which is already a
     # curated venue above. Organized by Danyal Mahmud, who runs it as a Meetup
     # Pro group; 4+ years running. Confirmed 2026-09-17 by search AND by the
