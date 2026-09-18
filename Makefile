@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run sync-dry db events events-preview site site-dev site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db events events-preview site site-preview site-dev site-dev-preview site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -50,12 +50,25 @@ events-preview:
 site-install:
 	npm --prefix site install
 
-site: events-preview
+# Published events only. Flipped on 2026-09-17, when the first group was
+# verified and there was finally a real site to build; before that this had to
+# be the preview, because the alternative was an empty page.
+site: events
+	npm --prefix site run build
+
+# The same, including groups nobody has verified. The page marks itself as a
+# preview and emits a noindex.
+site-preview: events-preview
 	npm --prefix site run build
 
 # Depends on the export, so the dev server always has something to read. A
 # first run also needs `make site-install` once.
-site-dev: events-preview
+site-dev: events
+	npm --prefix site run dev
+
+# The dev server over unverified data, for reviewing a group before verifying
+# it. This is the one that makes the gate reviewable rather than a wall.
+site-dev-preview: events-preview
 	npm --prefix site run dev
 
 # Astro 7 daemonizes the dev server, so `make site-dev` returns rather than
@@ -119,7 +132,8 @@ help:
 	@echo "  make sync-dry  - Fetch and list everything, writing nothing"
 	@echo "  make db        - Open htxdev.db in sqlite3, read-only"
 	@echo "  make events    - Write data/events.json (published events only)"
-	@echo "  make site      - Export a preview and build the Astro site"
+	@echo "  make site      - Build the Astro site from published events"
+	@echo "  make site-preview - The same, including unverified groups"
 	@echo "  make site-dev  - Run the Astro dev server on localhost:4321"
 	@echo "  make site-stop - Stop it (Astro 7 runs it as a daemon)"
 	@echo "  make test      - Run tests"

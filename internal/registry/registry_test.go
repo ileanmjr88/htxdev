@@ -64,12 +64,35 @@ func TestRealSourcesYAMLIsValid(t *testing.T) {
 		t.Errorf("ion aliases = %v, want [The Ion]", ion.Aliases)
 	}
 
-	// Nothing is verified yet, so nothing may publish. If this ever starts
-	// failing it means a verification landed, which is a deliberate act.
-	for _, s := range reg.Sources {
-		if reg.IsVerified(s) {
-			t.Errorf("source %s is verified; every group should still be pending", s.URL)
+	// Verification state. This asserted that NOTHING was verified until
+	// 2026-09-17, which was true when it was written and stopped being true
+	// the moment somebody did the thing the whole project is waiting for. The
+	// useful assertions are about which groups, not how many.
+	verified := map[string]bool{}
+	for _, g := range reg.Groups {
+		if g.VerifiedBy != "" {
+			verified[g.Slug] = true
+			// The loader already rejects a verified_by with no verified_at.
+			// This says the same thing from the other side, because a
+			// verification with no date is a decision with no provenance.
+			if g.VerifiedAt.IsZero() {
+				t.Errorf("group %s is verified by %q with no date", g.Slug, g.VerifiedBy)
+			}
 		}
+	}
+
+	if !verified["ion-district"] {
+		t.Error("ion-district is not verified; it was on 2026-09-17, so this is a revert")
+	}
+
+	// HLUG must stay unverified until its private entries are handled.
+	// Its public calendar runs off an account that is also somebody's personal
+	// one, so it carries appointments beside real meetings. data/rejects.yaml
+	// covers the one in the current window; verifying the group is a separate
+	// decision that needs a look at what else is in there.
+	if verified["houston-linux-user-group"] {
+		t.Error("houston-linux-user-group is verified, but its feed carries personal entries; " +
+			"see data/rejects.yaml and the note in sources.yaml before doing this")
 	}
 }
 
