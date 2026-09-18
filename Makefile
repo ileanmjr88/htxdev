@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run sync-dry db events events-preview site site-preview site-dev site-dev-preview site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db events events-preview serve serve-check site site-preview site-dev site-dev-preview site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -40,6 +40,22 @@ events:
 # somewhere public.
 events-preview:
 	go run ./cmd/htxdev export -preview
+
+# Serve the database over HTTP, on :8080 by default.
+#
+# The same JSON `make events` writes to a file, served live instead. The site
+# reads the file, so this is not on its critical path: it is for anyone who
+# wants the data without scraping the page, and for checking a change against
+# a real client before the file is regenerated.
+#
+# Ctrl-C shuts down gracefully, so in-flight requests finish.
+serve:
+	go run ./cmd/htxdev serve
+
+# Hit the running server. Reads the same endpoint the site's data comes from.
+serve-check:
+	curl -sS -D- -o /dev/null http://localhost:8080/api/v1/events.json
+	curl -sS http://localhost:8080/api/v1/events.json | head -c 400; echo
 
 # The site. Every npm target runs from THIS directory, never from site/,
 # because `compendium activate` reads compendium.toml from the working
@@ -132,6 +148,7 @@ help:
 	@echo "  make sync-dry  - Fetch and list everything, writing nothing"
 	@echo "  make db        - Open htxdev.db in sqlite3, read-only"
 	@echo "  make events    - Write data/events.json (published events only)"
+	@echo "  make serve     - Serve the API on localhost:8080 (Ctrl-C to stop)"
 	@echo "  make site      - Build the Astro site from published events"
 	@echo "  make site-preview - The same, including unverified groups"
 	@echo "  make site-dev  - Run the Astro dev server on localhost:4321"

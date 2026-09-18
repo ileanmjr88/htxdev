@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/ileanmjr88/htxdev/internal/api"
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/fetch"
 	"github.com/ileanmjr88/htxdev/internal/registry"
@@ -609,7 +610,10 @@ func TestExportWritesOnlyPublishedEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read export: %v", err)
 	}
-	var file exportFile
+	// api.Feed, not a type declared here. The file this command writes and the
+	// body the server returns are one contract with one owner, so a change to
+	// either has to pass this test and the API's.
+	var file api.Feed
 	if err := json.Unmarshal(body, &file); err != nil {
 		t.Fatalf("decode export: %v", err)
 	}
@@ -643,7 +647,7 @@ func TestExportPreviewIncludesPendingAndSaysSo(t *testing.T) {
 		t.Fatalf("runExport: %v", err)
 	}
 
-	var file exportFile
+	var file api.Feed
 	body, err := os.ReadFile(outPath)
 	if err != nil {
 		t.Fatal(err)

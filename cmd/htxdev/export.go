@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ileanmjr88/htxdev/internal/api"
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/store"
 )
@@ -50,6 +51,18 @@ func runExport(ctx context.Context, args []string, stdout, stderr io.Writer) err
 	// different questions asked of the same rows.
 	now := time.Now().UTC()
 
+	// generated_at is when the data was last current rather than when this
+	// file was written, matching what the API serves. Exporting twice without
+	// syncing in between now produces an identical file, which keeps the
+	// committed copy out of a diff it has nothing to say in.
+	generated, err := st.LastSynced(ctx)
+	if err != nil {
+		return err
+	}
+	if generated.IsZero() {
+		generated = now
+	}
+
 	read := st.Upcoming
 	if *preview {
 		read = st.UpcomingPreview
@@ -59,23 +72,16 @@ func runExport(ctx context.Context, args []string, stdout, stderr io.Writer) err
 		return err
 	}
 
-	file := exportFile{
-		GeneratedAt: now,
-		Preview:     *preview,
-		Events:      make([]exportEvent, 0, len(events)),
-	}
-	for _, e := range events {
-		file.Events = append(file.Events, toExportEvent(e, groups[e.GroupSlug]))
-	}
+	feed := api.NewFeed(events, groups, generated, *preview)
 
-	if err := writeJSON(*outPath, file); err != nil {
+	if err := writeJSON(*outPath, feed); err != nil {
 		return err
 	}
 
-	fmt.Fprintf(stdout, "%s: %d events", *outPath, len(file.Events))
+	fmt.Fprintf(stdout, "%s: %d events", *outPath, len(feed.Events))
 	if *preview {
 		var pending int
-		for _, e := range file.Events {
+		for _, e := range feed.Events {
 			if e.Pending {
 				pending++
 			}
@@ -84,7 +90,7 @@ func runExport(ctx context.Context, args []string, stdout, stderr io.Writer) err
 	}
 	fmt.Fprintln(stdout, ".")
 
-	if len(file.Events) == 0 && !*preview {
+	if len(feed.Events) == 0 && !*preview {
 		// The likeliest reason by far, and a silent empty file is how somebody
 		// spends an afternoon debugging the site instead.
 		fmt.Fprintf(stdout,
@@ -95,92 +101,10 @@ func runExport(ctx context.Context, args []string, stdout, stderr io.Writer) err
 	return nil
 }
 
-// The export types are separate from core.Event on purpose, and it is the same
-// argument as the narrow wire structs in the decoders, pointed the other way.
-// This JSON is a published contract that a site and later an API read;
-// core.Event is an internal domain type. Marshalling the domain type directly
-// would mean every field added to it becomes public the moment it is added,
-// including whatever the next decoder needs to carry around internally.
-type exportFile struct {
-	GeneratedAt time.Time `json:"generated_at"`
-	// True when unpublished events are included. The site reads this and says
-	// so on the page, because a preview that looks like the real thing is how
-	// a screenshot of unverified data ends up somewhere public.
-	Preview bool          `json:"preview,omitempty"`
-	Events  []exportEvent `json:"events"`
-}
-
-type exportEvent struct {
-	ID          string       `json:"id"`
-	Title       string       `json:"title"`
-	Excerpt     string       `json:"excerpt,omitempty"`
-	Start       time.Time    `json:"start"`
-	End         *time.Time   `json:"end,omitempty"`
-	AllDay      bool         `json:"all_day,omitempty"`
-	Group       exportGroup  `json:"group"`
-	Venue       *exportVenue `json:"venue,omitempty"`
-	Room        string       `json:"room,omitempty"`
-	URL         string       `json:"url,omitempty"`
-	RegisterURL string       `json:"register_url,omitempty"`
-	Categories  []string     `json:"categories,omitempty"`
-	Virtual     bool         `json:"virtual,omitempty"`
-	// How many feeds carried this event. Two means dedupe did something, and
-	// it is the only place that fact is visible outside the database.
-	Sources int `json:"sources,omitempty"`
-	// Only ever set in a preview.
-	Pending bool `json:"pending,omitempty"`
-}
-
-type exportGroup struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-	URL  string `json:"url,omitempty"`
-}
-
-type exportVenue struct {
-	Name    string `json:"name"`
-	Address string `json:"address,omitempty"`
-	City    string `json:"city,omitempty"`
-	State   string `json:"state,omitempty"`
-	Zip     string `json:"zip,omitempty"`
-	URL     string `json:"url,omitempty"`
-}
-
-func toExportEvent(e core.Event, g core.Group) exportEvent {
-	out := exportEvent{
-		ID:          e.Fingerprint,
-		Title:       e.Title,
-		Excerpt:     e.Excerpt,
-		Start:       e.Start,
-		AllDay:      e.AllDay,
-		Group:       exportGroup{Slug: e.GroupSlug, Name: g.Name, URL: g.URL},
-		Room:        e.Room,
-		URL:         e.URL,
-		RegisterURL: e.RegisterURL,
-		Categories:  e.Categories,
-		Virtual:     e.Virtual,
-		Sources:     len(e.Sources),
-		Pending:     e.Status == store.StatusPending,
-	}
-	// A pointer, so an event with no end time is absent from the JSON rather
-	// than present as year 1. The site can then treat "no end" as a state.
-	if !e.End.IsZero() {
-		end := e.End
-		out.End = &end
-	}
-	if e.Venue.Name != "" {
-		out.Venue = &exportVenue{
-			Name: e.Venue.Name, Address: e.Venue.Address, City: e.Venue.City,
-			State: e.Venue.State, Zip: e.Venue.Zip, URL: e.Venue.URL,
-		}
-	}
-	// A group the registry no longer carries still has events in the database,
-	// and a blank name renders as an empty line rather than as a clue.
-	if out.Group.Name == "" {
-		out.Group.Name = e.GroupSlug
-	}
-	return out
-}
+// The wire types live in internal/api, which owns the JSON contract for both
+// consumers. This file is the API's response precomputed: the site reads a
+// static copy, a caller reads it live, and neither can drift from the other
+// because there is only one definition of the shape.
 
 // writeJSON writes the file atomically, via a temporary file in the same
 // directory and a rename.

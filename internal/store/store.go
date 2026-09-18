@@ -546,6 +546,24 @@ func (s *Store) Groups(ctx context.Context) (map[string]core.Group, error) {
 	return out, rows.Err()
 }
 
+// LastSynced is when the most recent sync ran, taken from the newest last_seen.
+//
+// It answers "how current is this data", which is a different question from
+// "what time is it" and the right one for a feed's generated_at. Using the
+// clock there instead made the payload differ on every request, which quietly
+// made the ETag useless: two identical responses got two tags and no
+// conditional request ever matched. A zero time means the database is empty.
+func (s *Store) LastSynced(ctx context.Context) (time.Time, error) {
+	var newest sql.NullString
+	if err := s.db.QueryRowContext(ctx, `SELECT MAX(last_seen) FROM events`).Scan(&newest); err != nil {
+		return time.Time{}, fmt.Errorf("last synced: %w", err)
+	}
+	if !newest.Valid {
+		return time.Time{}, nil
+	}
+	return parseTime(newest.String)
+}
+
 // Counts is the per-status tally a sync prints.
 type Counts struct {
 	Total     int

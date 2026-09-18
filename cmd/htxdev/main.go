@@ -5,10 +5,11 @@
 //
 //	htxdev sync [flags]
 //	htxdev export [flags]
+//	htxdev serve [flags]
 //
 // sync fetches every enabled source, normalizes what came back and writes it
 // to SQLite. export turns the current window of that database into the JSON
-// the site reads. A serve subcommand arrives in Phase 8.
+// the site reads. serve hands the same JSON to anybody who asks over HTTP.
 package main
 
 import (
@@ -67,6 +68,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		return runSync(ctx, args[1:], stdout, stderr)
 	case "export":
 		return runExport(ctx, args[1:], stdout, stderr)
+	case "serve":
+		return runServe(ctx, args[1:], stdout, stderr)
 	case "help", "-h", "--help":
 		usage(stdout)
 		return nil
@@ -82,9 +85,10 @@ func usage(w io.Writer) {
 usage:
   htxdev sync [flags]     fetch every enabled source and write the database
   htxdev export [flags]   write data/events.json for the site
+  htxdev serve [flags]    serve the events over HTTP
   htxdev help             this message
 
-run "htxdev sync -h" or "htxdev export -h" for their flags.
+run "htxdev <command> -h" for a command's flags.
 `)
 }
 
