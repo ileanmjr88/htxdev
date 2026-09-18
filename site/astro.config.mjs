@@ -8,9 +8,9 @@ export default defineConfig({
   // data/events.json, and this renders it. Nothing here runs per request.
   output: 'static',
 
-  // htxdev.ilean.me is named in the architecture and D12 has not settled
-  // where it is hosted. site is only used for absolute URLs in the sitemap
-  // and feeds, so being wrong here costs nothing until one of those exists.
+  // Settled by D12 on 2026-09-18: this is a Cloudflare Worker custom domain,
+  // declared in wrangler.jsonc so Cloudflare owns the DNS record. Used here
+  // for absolute URLs in a sitemap or feed, neither of which exists yet.
   site: 'https://htxdev.ilean.me',
 
   build: { format: 'directory' },
