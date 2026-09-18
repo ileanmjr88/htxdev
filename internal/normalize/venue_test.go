@@ -61,10 +61,25 @@ func TestResolveVenueAgainstLiveStrings(t *testing.T) {
 		{"discovered", []string{"Second Draught"}, "Second Draught", ""},
 		{"discovered, another", []string{"Greentown Labs"}, "Greentown Labs", ""},
 
-		// Ion's [room, building] array, where the order IS the hierarchy.
+		// Ion's two-element array. The order is the hierarchy, but the inner
+		// element is only a room when it names the outer one.
+		//
+		// A bare inner name that does not repeat the building is ambiguous:
+		// "Forum Stairs" would be a room and "Greentown Labs" is a venue, and
+		// nothing in the string distinguishes them. It resolves to a venue,
+		// because the two ways of being wrong are not equal. A room filed as
+		// its own venue is cosmetic and keeps its name. A separate building
+		// filed as a room of another sends somebody to the wrong address. The
+		// live data has no bare-room arrays and does have Greentown Labs, so
+		// the cost is hypothetical and the benefit is not.
 		{"array", []string{"Ion – Lobby", "Ion"}, "Ion", "Lobby"},
 		{"array, room repeats the building", []string{"Ion – Conference Room 030", "Ion"}, "Ion", "Conference Room 030"},
-		{"array, bare room", []string{"Forum Stairs", "Ion"}, "Ion", "Forum Stairs"},
+		{"array, no dash but still the building", []string{"Ion Plaza", "Ion"}, "Ion", "Plaza"},
+		// The case that changed the rule. Ion sends [Greentown Labs, Ion], and
+		// Greentown Labs is its own building a couple of streets away, not a
+		// room. Filing it as a room of the Ion sends people to the wrong door.
+		{"array, a different building in the same district", []string{"Greentown Labs", "Ion"}, "Greentown Labs", ""},
+		{"array, both elements the same place", []string{"Ion", "Ion"}, "Ion", ""},
 
 		{"nothing", nil, "", ""},
 		{"empty name", []string{""}, "", ""},

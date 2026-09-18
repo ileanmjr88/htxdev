@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/fetch"
@@ -489,5 +490,62 @@ func TestReportStore(t *testing.T) {
 				t.Errorf("output mentions %q, want it left out:\n%s", tc.omit, got)
 			}
 		})
+	}
+}
+
+// The -v listing shows what each feed said about where an event is, which is
+// the point of looking at it: the unresolved strings side by side are how you
+// tell that "The Ion, Room 30, 4201 Main St…" and "Ion – Conference Room 030"
+// are the same building before trusting normalize to say so.
+func TestRawVenue(t *testing.T) {
+	cases := []struct {
+		name string
+		in   []core.RawVenue
+		want string
+	}{
+		{"none", nil, ""},
+		{"one", []core.RawVenue{{Name: "Ion"}}, "Ion"},
+		{
+			// Ion's array, where the order is the hierarchy: building last.
+			name: "building and room",
+			in:   []core.RawVenue{{Name: "Ion – Lobby"}, {Name: "Ion"}},
+			want: "Ion / Ion – Lobby",
+		},
+		{
+			name: "a separate building in the same district",
+			in:   []core.RawVenue{{Name: "Greentown Labs"}, {Name: "Ion"}},
+			want: "Ion / Greentown Labs",
+		},
+		{
+			name: "a long ics location string is cut",
+			in:   []core.RawVenue{{Name: "Finn MacCool’s Irish Bar, 1127 Eldridge Pkwy Suite 600, Houston, TX 77077, USA"}},
+			want: "Finn MacCool’s Irish Bar, 1127 Eldridge Pkwy …",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := rawVenue(core.RawEvent{Venues: tc.in}); got != tc.want {
+				t.Errorf("rawVenue() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// Truncation counts runes, not bytes. Every Ion venue name contains an en dash
+// and several contain a curly apostrophe, so a byte-wise cut would split one
+// of those in half and emit an invalid rune.
+func TestTruncateCountsRunes(t *testing.T) {
+	const s = "Finn MacCool’s Irish Bar – Back Room"
+	for _, n := range []int{5, 13, 14, 20, 100} {
+		got := truncate(s, n)
+		if r := []rune(got); len(r) > n {
+			t.Errorf("truncate(%d) returned %d runes", n, len(r))
+		}
+		if !utf8.ValidString(got) {
+			t.Errorf("truncate(%d) = %q, which is not valid UTF-8", n, got)
+		}
+	}
+	if got := truncate("short", 20); got != "short" {
+		t.Errorf("truncate() = %q, want the string untouched", got)
 	}
 }

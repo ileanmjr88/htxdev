@@ -35,17 +35,30 @@ func (n *Normalizer) resolveVenue(vs []core.RawVenue) (name, room string) {
 	// last element rather than the second means a three-level array would
 	// still name the building.
 	if len(vs) > 1 {
-		building := strings.TrimSpace(vs[len(vs)-1].Name)
-		room := strings.TrimSpace(vs[0].Name)
-		// The room element usually repeats the building: "Ion – Lobby" beside
-		// "Ion". Strip the prefix so the room is just the room.
-		if _, stripped, ok := splitOnDash(room); ok {
-			room = stripped
+		outer := strings.TrimSpace(vs[len(vs)-1].Name)
+		inner := strings.TrimSpace(vs[0].Name)
+
+		// The inner element is only a room when it names the outer one:
+		// "Ion – Lobby" and "Ion Plaza" beside "Ion". Strip that prefix and
+		// what is left is the room.
+		if room, ok := stripVenuePrefix(inner, outer); ok {
+			if canonical, matched := n.canonicalVenue(outer); matched {
+				return canonical, room
+			}
+			return outer, room
 		}
-		if canonical, ok := n.canonicalVenue(building); ok {
-			return canonical, room
+
+		// It does not, so it is somewhere else that happens to sit inside the
+		// outer one's district, and the event is at the inner place rather
+		// than the outer one. Ion sends [Greentown Labs, Ion]; Greentown Labs
+		// is its own building a couple of streets away, and filing it as a
+		// room of the Ion sends people to the wrong door. sources.yaml already
+		// records the same trap for Industrious and Second Draught, which
+		// share an address with the Ion and are separate venues.
+		if canonical, matched := n.canonicalVenue(inner); matched {
+			return canonical, ""
 		}
-		return building, room
+		return inner, ""
 	}
 
 	raw := strings.TrimSpace(vs[0].Name)
@@ -82,6 +95,34 @@ func (n *Normalizer) resolveVenue(vs []core.RawVenue) (name, room string) {
 	}
 
 	return raw, ""
+}
+
+// stripVenuePrefix reports whether inner begins with outer, and returns what
+// is left once the name and any separator are removed.
+//
+// Folded, so an en dash and a hyphen compare equal and case does not matter.
+// "Ion – Lobby" against "Ion" gives "Lobby"; "Ion Plaza" gives "Plaza";
+// "Greentown Labs" gives nothing, which is the whole point.
+func stripVenuePrefix(inner, outer string) (room string, ok bool) {
+	fi, fo := foldKey(inner), foldKey(outer)
+	if fo == "" || !strings.HasPrefix(fi, fo) {
+		return "", false
+	}
+	if fi == fo {
+		// The two elements are the same place, so there is no room.
+		return "", true
+	}
+	rest := strings.TrimLeft(fi[len(fo):], " -")
+	if rest == "" {
+		return "", true
+	}
+	// Recover the original casing by taking the same number of trailing runes
+	// from inner, since folding only replaces runes one for one.
+	ir := []rune(inner)
+	if n := len([]rune(rest)); n <= len(ir) {
+		return strings.TrimSpace(string(ir[len(ir)-n:])), true
+	}
+	return rest, true
 }
 
 // canonicalVenue matches a name against the curated list, by name or alias,

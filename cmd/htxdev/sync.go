@@ -299,6 +299,32 @@ func report(w io.Writer, reg *registry.Registry, results []fetch.Result, verbose
 // sync by hand at this phase. The summary says a feed answered; the listing is
 // the only thing that says whether what it returned is Houston tech
 // programming or a recurring placeholder.
+// rawVenue renders what the feed said about where an event is, which is not
+// what will be stored: normalize resolves "The Ion, Room 30, 4201 Main St…"
+// and "Ion – Conference Room 030" to the same building. This listing is the
+// "what did each feed actually send" view, and seeing the unresolved strings
+// side by side is most of the reason to look at it.
+func rawVenue(e core.RawEvent) string {
+	switch len(e.Venues) {
+	case 0:
+		return ""
+	case 1:
+		return truncate(e.Venues[0].Name, 46)
+	default:
+		// Ion sends [room, building] and the order is the hierarchy, so the
+		// last element is the building.
+		return truncate(e.Venues[len(e.Venues)-1].Name+" / "+e.Venues[0].Name, 46)
+	}
+}
+
+func truncate(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n-1]) + "\u2026"
+}
+
 func reportEvents(w io.Writer, results []fetch.Result) {
 	for _, r := range results {
 		if len(r.Events) == 0 && len(r.Skipped) == 0 {
@@ -310,7 +336,7 @@ func reportEvents(w io.Writer, results []fetch.Result) {
 			if e.AllDay {
 				when = e.Start.In(houston).Format("Mon 2006-01-02") + " all day"
 			}
-			fmt.Fprintf(w, "  %-26s  %s\n", when, e.Title)
+			fmt.Fprintf(w, "  %-26s  %-52s  %s\n", when, truncate(e.Title, 52), rawVenue(e))
 		}
 		for _, err := range r.Skipped {
 			fmt.Fprintf(w, "  skipped: %v\n", err)
