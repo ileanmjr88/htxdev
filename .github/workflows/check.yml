@@ -82,6 +82,12 @@ jobs:
       # with no sync step and no network.
       - run: npm --prefix site run build
 
+      # The front page ships one inline script that decides which events a
+      # reader sees. It runs against the BUILT page, so it goes after the
+      # build, and it is the only user-facing behaviour here that a Go test
+      # cannot reach.
+      - run: npm --prefix site test
+
       # The static API and the page come out of one build. If the endpoint
       # stops emitting, the site still looks fine and the API quietly 404s.
       - name: the API asset was emitted

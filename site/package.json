@@ -8,7 +8,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "stop": "astro dev stop",
-    "status": "astro dev status"
+    "status": "astro dev status",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "4.3.3",

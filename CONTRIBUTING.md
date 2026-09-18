@@ -163,6 +163,19 @@ make check                      # fmt + vet + test under -race
 make lint                       # needs the activated shell
 ```
 
+For the site:
+
+```bash
+npm --prefix site install     # once
+npm --prefix site run build   # the tests read the built page
+npm --prefix site test
+```
+
+The front page ships one inline script that decides which events a reader sees,
+and `site/test/` runs it against the built HTML with a small DOM stub. It reads
+the real `data/events.json`, so it fails if the fixture stops describing the
+page rather than passing on stale assumptions.
+
 Both must be clean. The same thing runs on your pull request: `.github/workflows/check.yml`
 does the Go build, `gofmt`, `vet`, the race detector and lint, plus the site
 build and a check that `/api/v1/events.json` still matches `data/events.json`

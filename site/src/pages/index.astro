@@ -33,6 +33,54 @@ for (const event of events) {
   else days.push({ key, label: dayHeading.format(new Date(event.start)), events: [event] });
 }
 
+// Jump targets. Computed here, not in the browser, so they are real anchors
+// that work with JS off and with the page half-loaded.
+//
+// All the arithmetic runs on the YYYY-MM-DD keys through Date.UTC rather than
+// on the event instants. The keys are already Chicago calendar dates, so
+// treating them as UTC calendar dates keeps the maths in one timezone instead
+// of converting twice and landing a day out. Same trap as D10, one layer up.
+const asUTC = (key) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+};
+// Monday of the week a key falls in. getUTCDay is 0 for Sunday, so shift it.
+const weekStart = (key) => {
+  const t = asUTC(key);
+  const dow = (t.getUTCDay() + 6) % 7;
+  t.setUTCDate(t.getUTCDate() - dow);
+  return t.toISOString().slice(0, 10);
+};
+const todayKey = dayKey.format(new Date());
+const thisWeek = weekStart(todayKey);
+const nextWeekDate = asUTC(thisWeek);
+nextWeekDate.setUTCDate(nextWeekDate.getUTCDate() + 7);
+const nextWeek = nextWeekDate.toISOString().slice(0, 10);
+
+const monthName = new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' });
+
+const jumps = [];
+{
+  // Only from today forward. A link to a week that has already happened is a
+  // link to the top of the page wearing a date.
+  const upcoming = days.filter((d) => d.key >= todayKey);
+  const firstIn = (pred) => upcoming.find(pred)?.key;
+
+  const tw = firstIn((d) => weekStart(d.key) === thisWeek);
+  if (tw) jumps.push({ key: tw, label: 'This week' });
+  const nw = firstIn((d) => weekStart(d.key) === nextWeek);
+  if (nw) jumps.push({ key: nw, label: 'Next week' });
+
+  // One per month that still has something in it, skipping any month whose
+  // first remaining day is already a week link above, so the bar does not
+  // carry two buttons that scroll to the same heading.
+  const taken = new Set(jumps.map((j) => j.key));
+  for (const m of [...new Set(upcoming.map((d) => d.key.slice(0, 7)))]) {
+    const k = firstIn((d) => d.key.startsWith(m));
+    if (k && !taken.has(k)) jumps.push({ key: k, label: monthName.format(asUTC(k)) });
+  }
+}
+
 // Groups present in this build, most events first, for the filter chips. Built
 // here rather than in the browser so the buttons and their counts are in the
 // HTML: without JS you get the full list and no controls, which is the right
@@ -101,6 +149,28 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </div>
       )}
 
+      {/* Jump links. Real anchors, so they work with JS off and before the
+          filter script runs. scroll-mt-20 on each section keeps the heading
+          clear of the sticky bar instead of under it.
+
+          sticky rather than fixed: it takes part in the layout, so it never
+          covers the footer on a short list, and on a filtered page that has
+          collapsed to three events it simply scrolls away. */}
+      {jumps.length > 1 && (
+        <nav
+          id="jumps"
+          aria-label="Jump to a date"
+          class="sticky top-0 z-10 -mx-5 mt-7 border-b border-line bg-bg/90 px-5 py-2 backdrop-blur"
+        >
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[.8rem]">
+            <span class="text-muted">Jump to</span>
+            {jumps.map((j) => (
+              <a href={`#day-${j.key}`} data-jump={j.key} class="text-accent hover:underline">{j.label}</a>
+            ))}
+          </div>
+        </nav>
+      )}
+
       {/* Filter by group rather than by category, deliberately. The category
           tags do no filtering work today: `startup` is 40 events and the Ion
           District feed is 40 events, so the tag is the feed wearing a
@@ -144,7 +214,7 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </div>
       ) : (
         days.map((day) => (
-          <section class="mt-9" data-day={day.key}>
+          <section class="mt-9 scroll-mt-20" id={`day-${day.key}`} data-day={day.key}>
             <h2 class="mb-2 border-b border-line pb-1.5 text-xs font-semibold tracking-[.08em] text-muted uppercase">
               {day.label}
             </h2>
@@ -202,14 +272,41 @@ const generated = new Intl.DateTimeFormat('en-US', {
           if (raw) hidden = new Set(JSON.parse(raw));
         } catch {}
 
-        // A stored slug for a group that has since left the registry would
-        // hide nothing and confuse the counts, so drop it on load.
-        const known = new Set(all.map((b) => b.dataset.filter));
-        for (const slug of [...hidden]) if (!known.has(slug)) hidden.delete(slug);
-
         const save = () => {
           try { localStorage.setItem(KEY, JSON.stringify([...hidden])); } catch {}
         };
+
+        // A stored slug for a group that has since left the registry would
+        // hide nothing and confuse the counts, so drop it on load, and write
+        // the pruned list back so dead slugs do not accumulate across years of
+        // registry churn.
+        const known = new Set(all.map((b) => b.dataset.filter));
+        let pruned = false;
+        for (const slug of [...hidden]) {
+          if (!known.has(slug)) { hidden.delete(slug); pruned = true; }
+        }
+        if (pruned) save();
+
+        // Jump links point at a specific date heading. A filter can hide that
+        // heading, and an anchor to a display:none element scrolls nowhere,
+        // which reads as a dead link. So: land on the first visible day at or
+        // after the target instead, and dim a link with nothing left after it.
+        const jumpLinks = [...document.querySelectorAll('a[data-jump]')];
+        const firstVisibleFrom = (key) =>
+          days.find((d) => !d.hidden && (d.dataset.day ?? '') >= key) ?? null;
+
+        for (const link of jumpLinks) {
+          link.addEventListener('click', (ev) => {
+            const target = firstVisibleFrom(link.dataset.jump);
+            if (!target) { ev.preventDefault(); return; }
+            // Only intercept when the anchor would not do the right thing on
+            // its own, so normal clicks keep native behaviour and history.
+            if (target.id !== `day-${link.dataset.jump}`) {
+              ev.preventDefault();
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          });
+        }
 
         const apply = () => {
           let shown = 0;
@@ -227,6 +324,13 @@ const generated = new Intl.DateTimeFormat('en-US', {
           }
           const allBtn = buttons.find((b) => b.dataset.filter === 'all');
           if (allBtn) allBtn.setAttribute('aria-pressed', String(hidden.size === 0));
+
+          for (const link of jumpLinks) {
+            const dead = !firstVisibleFrom(link.dataset.jump);
+            link.setAttribute('aria-disabled', String(dead));
+            link.classList.toggle('opacity-40', dead);
+            link.classList.toggle('pointer-events-none', dead);
+          }
 
           if (status) {
             status.textContent = hidden.size === 0
