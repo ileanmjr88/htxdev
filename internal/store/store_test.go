@@ -892,3 +892,61 @@ func TestUpcomingCarriesProvenanceAndCategories(t *testing.T) {
 			got.Venue.ID, got.Venue.Name, got.Room)
 	}
 }
+
+// The two reads differ in exactly one way, and it is the one that matters.
+func TestUpcomingVersusUpcomingPreview(t *testing.T) {
+	st, _ := newStore(t)
+
+	// Two groups, one verified and one not, so a single save produces one
+	// published event and one pending.
+	verified := core.Group{Slug: "g1", Name: "Verified", VerifiedBy: "ileanmjr88",
+		VerifiedAt: time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)}
+	unverified := core.Group{Slug: "g2", Name: "Unverified"}
+	srcs := []core.Source{
+		{GroupSlug: "g1", Kind: core.KindTribe, URL: tribeFeed, Enabled: true},
+		{GroupSlug: "g2", Kind: core.KindICS, URL: icsFeed, Enabled: true},
+	}
+	if err := st.SyncRegistry(t.Context(), []core.Group{verified, unverified}, nil, srcs); err != nil {
+		t.Fatalf("SyncRegistry: %v", err)
+	}
+
+	live := ev(tribeFeed, "a", "Published", runOne.Add(24*time.Hour))
+	hidden := ev(icsFeed, "b", "Pending", runOne.Add(48*time.Hour))
+	hidden.GroupSlug = "g2"
+	save(t, st, runOne, live, hidden)
+
+	published, err := st.Upcoming(t.Context(), runOne)
+	if err != nil {
+		t.Fatalf("Upcoming: %v", err)
+	}
+	if len(published) != 1 || published[0].Title != "Published" {
+		t.Fatalf("Upcoming returned %+v, want only the published event", published)
+	}
+	if published[0].Status != StatusPublished {
+		t.Errorf("status = %q, want it carried on the domain type", published[0].Status)
+	}
+
+	preview, err := st.UpcomingPreview(t.Context(), runOne)
+	if err != nil {
+		t.Fatalf("UpcomingPreview: %v", err)
+	}
+	if len(preview) != 2 {
+		t.Fatalf("UpcomingPreview returned %d events, want both", len(preview))
+	}
+	// Order is still by start time, so the pending one is second.
+	if preview[1].Title != "Pending" || preview[1].Status != StatusPending {
+		t.Errorf("second event = %q/%q, want the pending one", preview[1].Title, preview[1].Status)
+	}
+
+	// Cancelled is in neither. It is not pending, it is gone.
+	if _, err := st.db.Exec(`UPDATE events SET status = ? WHERE title = 'Pending'`, StatusCancelled); err != nil {
+		t.Fatal(err)
+	}
+	preview, err = st.UpcomingPreview(t.Context(), runOne)
+	if err != nil {
+		t.Fatalf("UpcomingPreview: %v", err)
+	}
+	if len(preview) != 1 {
+		t.Errorf("UpcomingPreview returned %d events after a cancellation, want 1", len(preview))
+	}
+}

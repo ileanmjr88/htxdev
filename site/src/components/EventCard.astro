@@ -1,0 +1,62 @@
+---
+const { event, tz } = Astro.props;
+
+const time = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric', minute: '2-digit', timeZone: tz,
+});
+
+// An all-day event has no meaningful clock time, and printing midnight for one
+// is worse than printing nothing: it reads as an event that starts at 12am.
+const when = event.all_day
+  ? 'All day'
+  : event.end
+    ? `${time.format(new Date(event.start))} – ${time.format(new Date(event.end))}`
+    : time.format(new Date(event.start));
+
+// The room is an addon to the venue rather than a field of its own, because it
+// is only ever the Ion that has one.
+const place = event.venue
+  ? event.room ? `${event.venue.name} — ${event.room}` : event.venue.name
+  : null;
+
+const mapQuery = event.venue?.address
+  ? [event.venue.name, event.venue.address, event.venue.city, event.venue.state, event.venue.zip]
+      .filter(Boolean).join(', ')
+  : null;
+---
+
+<article class:list={['event', { 'is-pending': event.pending }]}>
+  <div class="time">{when}</div>
+
+  <h3>
+    {event.url ? <a href={event.url}>{event.title}</a> : event.title}
+  </h3>
+
+  <div class="meta">
+    <span>
+      {event.group.url
+        ? <a href={event.group.url}>{event.group.name}</a>
+        : event.group.name}
+    </span>
+
+    {place && (
+      <span>
+        {mapQuery
+          ? <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}>{place}</a>
+          : place}
+      </span>
+    )}
+
+    {event.register_url && <span><a href={event.register_url}>Register</a></span>}
+  </div>
+
+  {event.excerpt && <p class="excerpt">{event.excerpt}</p>}
+
+  <div class="tags">
+    {event.virtual && <span class="tag">Online</span>}
+    {(event.categories ?? []).map((c) => <span class="tag">{c}</span>)}
+    {/* Two feeds carrying one event is the only visible evidence dedupe ran. */}
+    {event.sources > 1 && <span class="tag">{event.sources} feeds</span>}
+    {event.pending && <span class="tag pending">pending</span>}
+  </div>
+</article>

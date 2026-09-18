@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -547,5 +548,156 @@ func TestTruncateCountsRunes(t *testing.T) {
 	}
 	if got := truncate("short", 20); got != "short" {
 		t.Errorf("truncate() = %q, want the string untouched", got)
+	}
+}
+
+// seedDB builds a database with one published and one pending event, without
+// going near the network.
+func seedDB(t *testing.T) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "htxdev.db")
+	st, err := store.Open(path)
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer func() { _ = st.Close() }()
+
+	const feed = "https://example.test/feed"
+	groups := []core.Group{
+		{Slug: "verified", Name: "Verified Group", URL: "https://example.test",
+			VerifiedBy: "ileanmjr88", VerifiedAt: time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)},
+		{Slug: "unverified", Name: "Unverified Group"},
+	}
+	srcs := []core.Source{
+		{GroupSlug: "verified", Kind: core.KindTribe, URL: feed, Enabled: true},
+		{GroupSlug: "unverified", Kind: core.KindICS, URL: feed + "2", Enabled: true},
+	}
+	if err := st.SyncRegistry(t.Context(), groups, nil, srcs); err != nil {
+		t.Fatalf("SyncRegistry: %v", err)
+	}
+
+	soon := time.Now().UTC().Add(48 * time.Hour)
+	mk := func(slug, feed, id, title string) core.Event {
+		fp := core.Fingerprint(core.KindTribe, id)
+		return core.Event{
+			Fingerprint: fp, GroupSlug: slug, Title: title, Start: soon,
+			Venue:   core.Venue{Name: "Ion", Address: "4201 Main St"},
+			Sources: []core.EventSource{{SourceKey: feed, Fingerprint: fp}},
+		}
+	}
+	if _, err := st.SaveEvents(t.Context(),
+		[]core.Event{mk("verified", feed, "a", "Live event"), mk("unverified", feed+"2", "b", "Hidden event")},
+		time.Now().UTC()); err != nil {
+		t.Fatalf("SaveEvents: %v", err)
+	}
+	return path
+}
+
+// The gate, enforced at the point where events leave the database as a file.
+// Everything upstream can work and nothing reaches a reader until a human puts
+// their handle in verified_by.
+func TestExportWritesOnlyPublishedEvents(t *testing.T) {
+	dbPath := seedDB(t)
+	outPath := filepath.Join(t.TempDir(), "events.json")
+
+	var stdout, stderr bytes.Buffer
+	if err := runExport(t.Context(), []string{"-db", dbPath, "-out", outPath}, &stdout, &stderr); err != nil {
+		t.Fatalf("runExport: %v", err)
+	}
+
+	body, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("read export: %v", err)
+	}
+	var file exportFile
+	if err := json.Unmarshal(body, &file); err != nil {
+		t.Fatalf("decode export: %v", err)
+	}
+
+	if len(file.Events) != 1 || file.Events[0].Title != "Live event" {
+		t.Fatalf("exported %+v, want only the published event", file.Events)
+	}
+	if file.Preview {
+		t.Error("preview = true on a normal export")
+	}
+	if file.Events[0].Pending {
+		t.Error("a published event is marked pending")
+	}
+	if strings.Contains(string(body), "Hidden event") {
+		t.Error("an unpublished title reached the file")
+	}
+	// The venue comes through whole, because a site that cannot say where an
+	// event is has not solved the problem.
+	if file.Events[0].Venue == nil || file.Events[0].Venue.Address != "4201 Main St" {
+		t.Errorf("venue = %+v, want the address", file.Events[0].Venue)
+	}
+}
+
+func TestExportPreviewIncludesPendingAndSaysSo(t *testing.T) {
+	dbPath := seedDB(t)
+	outPath := filepath.Join(t.TempDir(), "events.json")
+
+	var stdout, stderr bytes.Buffer
+	if err := runExport(t.Context(),
+		[]string{"-db", dbPath, "-out", outPath, "-preview"}, &stdout, &stderr); err != nil {
+		t.Fatalf("runExport: %v", err)
+	}
+
+	var file exportFile
+	body, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(body, &file); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(file.Events) != 2 {
+		t.Fatalf("exported %d events, want both", len(file.Events))
+	}
+	// The flag has to be in the file, not just in the terminal. The site reads
+	// it and says so on the page, because a preview that looks like the real
+	// thing is how a screenshot of unverified data ends up somewhere public.
+	if !file.Preview {
+		t.Error("preview = false on a preview export")
+	}
+	var pending int
+	for _, e := range file.Events {
+		if e.Pending {
+			pending++
+		}
+	}
+	if pending != 1 {
+		t.Errorf("%d events marked pending, want 1", pending)
+	}
+	if !strings.Contains(stdout.String(), "PENDING") {
+		t.Errorf("stdout = %q, want it to say the export is not publishable", stdout.String())
+	}
+}
+
+// An empty export is almost always the gate, not a broken pipeline, and a
+// silent empty file is how somebody spends an afternoon debugging the site.
+func TestExportExplainsAnEmptyResult(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "htxdev.db")
+	st, err := store.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := st.SyncRegistry(t.Context(),
+		[]core.Group{{Slug: "a", Name: "A"}, {Slug: "b", Name: "B"}}, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	_ = st.Close()
+
+	var stdout, stderr bytes.Buffer
+	if err := runExport(t.Context(),
+		[]string{"-db", path, "-out", filepath.Join(t.TempDir(), "events.json")}, &stdout, &stderr); err != nil {
+		t.Fatalf("runExport: %v", err)
+	}
+	out := stdout.String()
+	for _, want := range []string{"0 events", "0 of 2 groups are verified", "-preview"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stdout = %q, want it to contain %q", out, want)
+		}
 	}
 }

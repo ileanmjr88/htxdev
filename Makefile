@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run sync-dry db test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db events events-preview site site-dev site-install test test-v test-race coverage fmt vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -26,6 +26,35 @@ sync-dry:
 # that is about to be committed.
 db:
 	sqlite3 -readonly -header -column htxdev.db
+
+# Write data/events.json from the database. Published events only, which today
+# means none: see `make events-preview`.
+#
+# Not called `export`, which is a Make directive.
+events:
+	go run ./cmd/htxdev export
+
+# The same, including events from groups nobody has verified. For looking at
+# locally. The site marks the page as a preview and adds a noindex, because a
+# preview that looks like the real thing is how unverified data ends up
+# somewhere public.
+events-preview:
+	go run ./cmd/htxdev export -preview
+
+# The site. Every npm target runs from THIS directory, never from site/,
+# because `compendium activate` reads compendium.toml from the working
+# directory: run npm inside site/ and activation silently fails, PATH keeps
+# whatever node is already on it, and the pinned toolchain is bypassed with no
+# error anybody would notice. That is the exact failure Compendium exists to
+# prevent, and it takes one cd to cause.
+site-install:
+	npm --prefix site install
+
+site: events-preview
+	npm --prefix site run build
+
+site-dev:
+	npm --prefix site run dev
 
 # Run tests
 test:
@@ -79,6 +108,9 @@ help:
 	@echo "  make run       - Fetch every enabled source into htxdev.db"
 	@echo "  make sync-dry  - Fetch and list everything, writing nothing"
 	@echo "  make db        - Open htxdev.db in sqlite3, read-only"
+	@echo "  make events    - Write data/events.json (published events only)"
+	@echo "  make site      - Export a preview and build the Astro site"
+	@echo "  make site-dev  - Run the Astro dev server"
 	@echo "  make test      - Run tests"
 	@echo "  make test-v    - Run tests with per-test output"
 	@echo "  make test-race - Run tests under the race detector"

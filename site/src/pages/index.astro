@@ -1,0 +1,125 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import '../styles/global.css';
+import EventCard from '../components/EventCard.astro';
+
+// Read at build time with fs rather than importing the JSON, because the file
+// lives outside this Astro project and Vite's filesystem allow-list would
+// otherwise have to be widened to reach it. It is also honest about when this
+// happens: the site is static, so build time is the only time there is.
+//
+// Resolved against the working directory rather than import.meta.url, which
+// points at the bundled chunk in dist/ once Astro has built it and sends the
+// relative path somewhere that does not exist. Both candidates are here
+// because `npm run build` inside site/ and `npm --prefix site run build` from
+// the repo root are both reasonable and have different working directories.
+const candidates = [
+  process.env.HTXDEV_EVENTS,
+  'data/events.json',
+  '../data/events.json',
+].filter(Boolean).map((p) => resolve(p));
+
+const file = candidates.find((p) => existsSync(p));
+if (!file) {
+  throw new Error(
+    `no events file found. Looked in:\n  ${candidates.join('\n  ')}\n` +
+    `Run "htxdev export" first, or "htxdev export -preview" to include ` +
+    `events from groups nobody has verified yet.`,
+  );
+}
+
+const data = JSON.parse(readFileSync(file, 'utf8'));
+
+const events = data.events ?? [];
+
+// Every date and time on this page is rendered in America/Chicago, explicitly.
+// The JSON carries UTC instants and a build machine is in whatever zone it
+// feels like, so relying on the default would make the site show different
+// days depending on where it was built. This is the same trap D10 describes on
+// the Go side: an all-day event stored as midnight Chicago shows the previous
+// date if it is ever rendered in UTC.
+const TZ = 'America/Chicago';
+const dayHeading = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long', month: 'long', day: 'numeric', timeZone: TZ,
+});
+// en-CA gives YYYY-MM-DD, which is what makes these sortable and groupable.
+const dayKey = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TZ,
+});
+
+const days = [];
+for (const event of events) {
+  const key = dayKey.format(new Date(event.start));
+  const last = days.at(-1);
+  if (last?.key === key) last.events.push(event);
+  else days.push({ key, label: dayHeading.format(new Date(event.start)), events: [event] });
+}
+
+const generated = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium', timeStyle: 'short', timeZone: TZ,
+}).format(new Date(data.generated_at));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>htxdev — Houston tech events</title>
+    <meta
+      name="description"
+      content="Houston tech meetups and events, collected from the groups that run them."
+    />
+    {/* A preview build carries unverified data and must never be indexed if it
+        somehow gets deployed. */}
+    {data.preview && <meta name="robots" content="noindex, nofollow" />}
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Houston tech events</h1>
+        <p>Collected from the groups that run them, so you only have to look in one place.</p>
+      </header>
+
+      {data.preview && (
+        <div class="banner">
+          <strong>Preview build — not for publishing.</strong>
+          This page includes events from groups nobody has verified yet. A group is verified
+          by a human reading its feed once and putting their name in <code>sources.yaml</code>,
+          and until that happens these events are not publishable.
+        </div>
+      )}
+
+      {days.length === 0 ? (
+        <div class="empty">
+          <p>Nothing upcoming.</p>
+          <p>
+            If that is a surprise, no group has been verified yet, so every event is still
+            pending. Run <code>htxdev export -preview</code> to see what verifying them
+            would publish.
+          </p>
+        </div>
+      ) : (
+        days.map((day) => (
+          <section class="day">
+            <h2>{day.label}</h2>
+            {day.events.map((event) => <EventCard event={event} tz={TZ} />)}
+          </section>
+        ))
+      )}
+
+      <footer>
+        <p>
+          {events.length} event{events.length === 1 ? '' : 's'}, generated {generated} Houston time.
+        </p>
+        <p>
+          Events belong to the groups that run them. htxdev reads their public calendars and
+          links back. If you organise a Houston tech group and want to be listed, or want to
+          not be, <a href="https://github.com/ileanmjr88/htxdev">say so here</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

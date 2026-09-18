@@ -129,6 +129,12 @@ type Event struct {
 	Categories []string
 	Virtual    bool
 
+	// Status is pending, published or cancelled. Carried on the domain type
+	// because a preview needs to say which events are not live yet, and
+	// because an Event read back from the store without it would look
+	// publishable when it is not.
+	Status string
+
 	FirstSeen time.Time
 	LastSeen  time.Time
 

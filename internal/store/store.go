@@ -512,6 +512,40 @@ func loadVerifiedGroups(ctx context.Context, tx *sql.Tx) (map[string]bool, error
 	return out, rows.Err()
 }
 
+// Groups returns the mirrored registry, keyed by slug.
+//
+// Read from the database rather than from sources.yaml so a caller needs only
+// -db, which is what lets export run against a database somebody handed them
+// without also needing the registry that produced it.
+func (s *Store) Groups(ctx context.Context) (map[string]core.Group, error) {
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT slug, name, url, category, verified_by, verified_at FROM groups`)
+	if err != nil {
+		return nil, fmt.Errorf("load groups: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := map[string]core.Group{}
+	for rows.Next() {
+		var (
+			g          core.Group
+			verifiedAt string
+		)
+		if err := rows.Scan(&g.Slug, &g.Name, &g.URL, &g.Category, &g.VerifiedBy, &verifiedAt); err != nil {
+			return nil, err
+		}
+		if g.VerifiedAt, err = parseTime(verifiedAt); err != nil {
+			// Stored as a date, not an instant, so it does not parse as one.
+			if t, derr := time.Parse(time.DateOnly, verifiedAt); derr == nil {
+				g.VerifiedAt = t
+			}
+		}
+		g.Active = true
+		out[g.Slug] = g
+	}
+	return out, rows.Err()
+}
+
 // Counts is the per-status tally a sync prints.
 type Counts struct {
 	Total     int
@@ -551,23 +585,48 @@ func (s *Store) Counts(ctx context.Context) (Counts, error) {
 
 // Upcoming returns published events starting at or after from, soonest first.
 //
-// The status filter in this query is the publishing gate. Everything else in
-// the pipeline can work perfectly and nothing reaches a reader until a human
-// has put their handle in verified_by, because this is the only way events
-// leave the database and it will not return a pending row.
+// The status filter is the publishing gate. Everything else in the pipeline
+// can work perfectly and nothing reaches a reader until a human has put their
+// handle in verified_by, because this is the only way events leave the
+// database for anything that serves.
 //
 // This is the read that becomes Phase 8's EventStore, and the interface gets
 // defined there with its handler rather than here, per D3.
 func (s *Store) Upcoming(ctx context.Context, from time.Time) ([]core.Event, error) {
+	return s.upcoming(ctx, from, StatusPublished)
+}
+
+// UpcomingPreview returns pending events as well, for looking at what
+// verifying a group would publish before verifying it.
+//
+// Named so that a call site which should not be using it is obvious on sight.
+// Nothing that serves may call this: reviewing a feed is the one legitimate
+// reason to read an unpublished event, and it is the reason the gate is
+// reviewable at all rather than a wall.
+func (s *Store) UpcomingPreview(ctx context.Context, from time.Time) ([]core.Event, error) {
+	return s.upcoming(ctx, from, StatusPublished, StatusPending)
+}
+
+func (s *Store) upcoming(ctx context.Context, from time.Time, statuses ...string) ([]core.Event, error) {
+	// Built rather than interpolated: the values are package constants today,
+	// and a query that concatenates anything is one refactor away from
+	// concatenating something a feed supplied.
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(statuses)), ",")
+	args := make([]any, 0, len(statuses)+1)
+	for _, st := range statuses {
+		args = append(args, st)
+	}
+	args = append(args, formatTime(from))
+
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT e.id, e.fingerprint, e.group_slug, e.title, e.excerpt, e.starts_at, e.ends_at,
 		       e.all_day, e.venue_id, e.venue_name, e.room, e.url, e.register_url, e.virtual,
-		       e.first_seen, e.last_seen,
+		       e.first_seen, e.last_seen, e.status,
 		       COALESCE(v.address, ''), COALESCE(v.city, ''), COALESCE(v.state, ''),
 		       COALESCE(v.zip, ''), COALESCE(v.url, '')
 		FROM events e LEFT JOIN venues v ON v.id = e.venue_id
-		WHERE e.status = ? AND e.starts_at >= ?
-		ORDER BY e.starts_at, e.id`, StatusPublished, formatTime(from))
+		WHERE e.status IN (`+placeholders+`) AND e.starts_at >= ?
+		ORDER BY e.starts_at, e.id`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query upcoming: %w", err)
 	}
@@ -582,13 +641,15 @@ func (s *Store) Upcoming(ctx context.Context, from time.Time) ([]core.Event, err
 			e                                 core.Event
 			starts, ends, firstSeen, lastSeen string
 			allDay, virtual                   int
+			status                            string
 		)
 		if err := rows.Scan(&e.ID, &e.Fingerprint, &e.GroupSlug, &e.Title, &e.Excerpt,
 			&starts, &ends, &allDay, &e.Venue.ID, &e.Venue.Name, &e.Room,
-			&e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen,
+			&e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen, &status,
 			&e.Venue.Address, &e.Venue.City, &e.Venue.State, &e.Venue.Zip, &e.Venue.URL); err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)
 		}
+		e.Status = status
 		for _, f := range []struct {
 			dst *time.Time
 			src string

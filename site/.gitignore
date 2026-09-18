@@ -1,0 +1,5 @@
+# Astro build output and caches. The site is generated from data/events.json
+# and the source in this directory; nothing here is worth committing.
+dist/
+.astro/
+node_modules/

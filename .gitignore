@@ -50,3 +50,20 @@ dist/
 # rewriting the whole file defeats git's delta compression, and set a
 # concurrency group on the sync workflow so two runs cannot both commit it.
 htxdev.db
+
+# data/events.json is TEMPORARILY ignored, for the same reasons as htxdev.db
+# and settled at the same time.
+#
+# It is meant to be committed: it is the rolling upcoming-only window the site
+# reads, Phase 7's cron regenerates it on every sync, and a static site built
+# from a file that is not in the repo cannot be built by CI at all.
+#
+# Held back because `make site` writes a PREVIEW of it, containing events from
+# groups nobody has verified. A published-only export is safe by definition,
+# since the gate is what makes it published, but today that export is empty and
+# the preview is the one people will actually generate. Committing it would put
+# unverified data in git by accident rather than on purpose.
+#
+# Revisit with D18. Both files stop being ignored on the same day: when a group
+# has been verified and the repo's public/private status is settled.
+data/events.json

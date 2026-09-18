@@ -8,6 +8,11 @@ source = "public"
 
 [languages]
 go = "1.26.1"
+# Phase 6's Astro site. Pinned for the same reason Go is: half a build with a
+# pinned toolchain and half without is not a reproducible build, and a site
+# that renders differently on a GitHub Actions runner than on this laptop is
+# exactly the failure Compendium exists to prevent. 22.x is the LTS line.
+node = "22.23.2"
 
 [tools]
 golangci-lint = "2.11.4"
