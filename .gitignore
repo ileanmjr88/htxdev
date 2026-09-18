@@ -44,10 +44,11 @@ dist/
 # the only record of when an event was first seen, which cannot be rebuilt
 # because feeds only publish what is current.
 #
-# Two rules that keep it cheap, both still outstanding and both belonging to
-# Phase 7: never VACUUM in CI, because rewriting the whole file defeats git's
-# delta compression, and set a concurrency group on the sync workflow, because
-# two overlapping runs produce a binary merge conflict nobody can resolve.
+# Two rules keep it cheap, both now in place as of Phase 7 (2026-09-18). The
+# sync workflow never VACUUMs, because rewriting the whole file defeats git's
+# delta compression, and it carries one repository-wide concurrency group,
+# because two overlapping runs produce a binary merge conflict nobody can
+# resolve. If you add a step to .github/workflows/sync.yml, keep both true.
 #
 # ONE THING THIS DOES NOT SETTLE. The repo is private today, so committing is
 # safe. If it ever goes public, every historical commit goes with it, and the

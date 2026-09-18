@@ -163,7 +163,18 @@ make check                      # fmt + vet + test under -race
 make lint                       # needs the activated shell
 ```
 
-Both must be clean. A few things about this codebase that will save you time:
+Both must be clean. The same thing runs on your pull request: `.github/workflows/check.yml`
+does the Go build, `gofmt`, `vet`, the race detector and lint, plus the site
+build and a check that `/api/v1/events.json` still matches `data/events.json`
+byte for byte.
+
+You do not need to run a sync or regenerate anything. `data/events.json` and
+`htxdev.db` are committed, so the site and the API build from the repository
+with no network. The sync job updates them twice a day on its own; if your pull
+request changes them, that is a merge conflict waiting to happen and probably
+not what you meant.
+
+A few things about this codebase that will save you time:
 
 - **Decoders take an `io.Reader` and cannot reach the network.** Everything is
   fixture-driven and offline. Keep it that way; the fixtures are real payloads
