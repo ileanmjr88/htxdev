@@ -9,6 +9,21 @@
   "name": "htxdev",
   "compatibility_date": "2026-09-18",
 
+  // The custom domain, declared here rather than clicked into the dashboard,
+  // so it is in git and every deploy reasserts it. Cloudflare creates the DNS
+  // record and issues the certificate itself, and the record points straight
+  // at this Worker.
+  //
+  // This is NOT the same as a CNAME to htxdev.ileanmjr.workers.dev. A proxied
+  // CNAME makes Cloudflare treat workers.dev as an origin server, try to
+  // connect to it, and time out with a 522. That was the first attempt.
+  //
+  // A Custom Domain cannot be created while a CNAME for the same hostname
+  // exists, so if a deploy ever fails here, that record came back.
+  "routes": [
+    { "pattern": "htxdev.ilean.me", "custom_domain": true }
+  ],
+
   "assets": {
     // Relative to this file, so the root directory in Workers Builds is site/.
     "directory": "./dist/",
