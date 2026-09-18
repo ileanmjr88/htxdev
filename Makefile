@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run sync-dry db events events-preview site site-dev site-install test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db events events-preview site site-dev site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -53,8 +53,18 @@ site-install:
 site: events-preview
 	npm --prefix site run build
 
-site-dev:
+# Depends on the export, so the dev server always has something to read. A
+# first run also needs `make site-install` once.
+site-dev: events-preview
 	npm --prefix site run dev
+
+# Astro 7 daemonizes the dev server, so `make site-dev` returns rather than
+# blocking and the process outlives the terminal that started it.
+site-stop:
+	npm --prefix site run stop
+
+site-status:
+	npm --prefix site run status
 
 # Run tests
 test:
@@ -110,7 +120,8 @@ help:
 	@echo "  make db        - Open htxdev.db in sqlite3, read-only"
 	@echo "  make events    - Write data/events.json (published events only)"
 	@echo "  make site      - Export a preview and build the Astro site"
-	@echo "  make site-dev  - Run the Astro dev server"
+	@echo "  make site-dev  - Run the Astro dev server on localhost:4321"
+	@echo "  make site-stop - Stop it (Astro 7 runs it as a daemon)"
 	@echo "  make test      - Run tests"
 	@echo "  make test-v    - Run tests with per-test output"
 	@echo "  make test-race - Run tests under the race detector"
