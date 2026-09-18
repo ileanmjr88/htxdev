@@ -20,6 +20,16 @@
   //
   // A Custom Domain cannot be created while a CNAME for the same hostname
   // exists, so if a deploy ever fails here, that record came back.
+  // Explicit, because declaring routes turns this off by default and a silent
+  // default is a bad reason for a URL to stop working. htxdev.ileanmjr.workers.dev
+  // now returns Cloudflare error 1042, which is what a disabled subdomain looks
+  // like from outside.
+  //
+  // Off is the right answer anyway: the site has one hostname, so there is no
+  // second copy for a crawler to index and no second URL to keep in step. Flip
+  // it to true if a staging URL is ever wanted.
+  "workers_dev": false,
+
   "routes": [
     { "pattern": "htxdev.ilean.me", "custom_domain": true }
   ],
