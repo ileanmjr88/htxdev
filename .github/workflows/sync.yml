@@ -1,0 +1,79 @@
+# Fetch every enabled feed and commit what changed.
+#
+# This is what makes the site self-updating. The commit it pushes is what
+# Cloudflare builds from, so one job refreshes the data, the page and the API
+# together. A push made with GITHUB_TOKEN deliberately does not trigger other
+# workflows, which is what stops this from retriggering itself; Cloudflare's
+# GitHub App is a webhook rather than a workflow, so it still sees the push.
+name: sync
+
+on:
+  schedule:
+    # 09:20 and 21:20 UTC, which is 04:20 and 16:20 in Houston on CDT. Twice a
+    # day because a meetup is announced days ahead, never minutes. Offset from
+    # the hour on purpose: everything on GitHub's cron is scheduled at :00 and
+    # that is where the queue is longest.
+    - cron: '20 9,21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One sync at a time, repository-wide. Two concurrent runs would both write
+# htxdev.db and both try to push, and the loser would be rebasing onto a
+# database it did not produce.
+#
+# cancel-in-progress is false rather than true: a cancelled run may already
+# have written the database, and a queued sync is cheap.
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # Non-zero only if every source failed, so one dead feed does not stop
+      # the other ten from updating. The report says which.
+      # shell: bash rather than the default, which is `bash -e` with no
+      # pipefail. Without it the exit status of `make run | tee` is tee's, so a
+      # sync where every source failed would report success and this job would
+      # cheerfully commit an unchanged database.
+      - name: Fetch every enabled source
+        shell: bash
+        run: make run | tee /tmp/sync.txt
+
+      - name: Export the published events
+        shell: bash
+        run: make events | tee /tmp/export.txt
+
+      - name: Commit what changed
+        run: |
+          if git diff --quiet -- htxdev.db data/events.json; then
+            echo "no change; nothing to commit"
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add htxdev.db data/events.json
+
+          # The report in the body, so the history says what a sync actually
+          # did rather than only that one ran.
+          {
+            echo "chore: sync $(date -u +%Y-%m-%d)"
+            echo
+            sed -n '1,40p' /tmp/sync.txt
+            echo
+            sed -n '1,10p' /tmp/export.txt
+          } > /tmp/msg.txt
+
+          git commit -F /tmp/msg.txt
+          git push

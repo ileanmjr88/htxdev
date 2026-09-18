@@ -3,7 +3,7 @@
 # alternative, mattn/go-sqlite3, requires cgo and will not build under this.
 export CGO_ENABLED := 0
 
-.PHONY: build run sync-dry db events events-preview serve serve-check site site-preview site-dev site-dev-preview site-stop site-status site-install test test-v test-race coverage fmt vet lint check clean help
+.PHONY: build run sync-dry db events events-preview serve serve-check site site-preview site-dev site-dev-preview site-stop site-status site-install test test-v test-race coverage fmt fmt-check vet lint check clean help
 
 # Compile every package, then link the binary. Both, not just the binary:
 # `go build ./...` is what catches a package that no longer compiles but that
@@ -118,6 +118,16 @@ coverage:
 fmt:
 	gofmt -w .
 
+# Fail if anything is unformatted rather than fixing it. `fmt` is for a working
+# copy; CI needs the other one, because reformatting and then passing hides the
+# fact that what was committed was not formatted.
+fmt-check:
+	@unformatted=$$(gofmt -l .); \
+	if [ -n "$$unformatted" ]; then \
+		echo "not gofmt'd:"; echo "$$unformatted"; exit 1; \
+	fi
+	@echo "all files are gofmt'd"
+
 # Vet
 vet:
 	go vet ./...
@@ -158,6 +168,7 @@ help:
 	@echo "  make test-race - Run tests under the race detector"
 	@echo "  make coverage  - Test coverage report"
 	@echo "  make fmt       - Format the Go code"
+	@echo "  make fmt-check - Fail if anything is unformatted (CI)"
 	@echo "  make vet       - Vet the Go code"
 	@echo "  make lint      - Lint the Go code (needs golangci-lint)"
 	@echo "  make check     - fmt + vet + test-race"

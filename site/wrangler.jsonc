@@ -1,0 +1,25 @@
+{
+  // Cloudflare Workers Static Assets, not Pages. Cloudflare's own guidance as
+  // of 2026 is that new projects start here: Pages stays supported but every
+  // new feature goes to Workers, and static asset requests are free.
+  //
+  // There is no "main" script. A Worker that serves only static assets does
+  // not need one, and adding an empty one would put a runtime in front of
+  // files that do not need it.
+  "name": "htxdev",
+  "compatibility_date": "2026-09-18",
+
+  "assets": {
+    // Relative to this file, so the root directory in Workers Builds is site/.
+    "directory": "./dist/",
+
+    // Serves src/pages/404.astro for an unmatched path. Without that page this
+    // setting has nothing to return.
+    "not_found_handling": "404-page",
+
+    // Matches Astro's build.format: 'directory'. A folder index is served with
+    // a trailing slash, a standalone file without one, so there is one URL per
+    // page rather than two that both work.
+    "html_handling": "auto-trailing-slash"
+  }
+}

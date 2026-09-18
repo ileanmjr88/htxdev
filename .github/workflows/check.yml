@@ -1,0 +1,91 @@
+# Everything that has to be true before a change lands.
+#
+# The registry test is the reason this matters more than it would on most
+# repos: data/sources.yaml is edited by pull request, often by people who do
+# not run the code, and internal/registry's loader is the gate that catches a
+# malformed entry here rather than at the next sync.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push to the same branch makes the previous run irrelevant. Safe to
+# cancel because nothing here writes anything.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # From go.mod, so the version lives in one place. compendium.toml pins
+      # the same number for local work.
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # The same targets used locally, so a green CI run and a green laptop
+      # mean the same thing.
+      - run: make build
+      - run: make fmt-check
+      - run: make vet
+
+      # The race detector is not optional here: internal/fetch runs a worker
+      # pool, and a data race in it passes a plain `go test` every time.
+      - run: make test-race
+
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.11.4
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Cloudflare reads site/.node-version when it builds. Reading the same
+      # file here means CI and the deployed build cannot use different Node
+      # versions without this step failing first.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: site/.node-version
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      # Compendium pins Node for local work and .node-version pins it for
+      # Cloudflare, and nothing makes them agree on its own. A build that is
+      # reproducible on a laptop and not in production is not reproducible.
+      - name: the two Node pins agree
+        run: |
+          pinned=$(sed -n 's/^node = "\(.*\)"/\1/p' compendium.toml)
+          declared=$(cat site/.node-version)
+          if [ "$pinned" != "$declared" ]; then
+            echo "compendium.toml pins node $pinned"
+            echo "site/.node-version says   $declared"
+            echo "Cloudflare reads .node-version, so the deployed build would not be the pinned one."
+            exit 1
+          fi
+          echo "both pin node $pinned"
+
+      - run: npm --prefix site ci
+
+      # data/events.json is committed, so the site builds from the repository
+      # with no sync step and no network.
+      - run: npm --prefix site run build
+
+      # The static API and the page come out of one build. If the endpoint
+      # stops emitting, the site still looks fine and the API quietly 404s.
+      - name: the API asset was emitted
+        run: |
+          test -s site/dist/api/v1/events.json
+          diff data/events.json site/dist/api/v1/events.json
+          echo "/api/v1/events.json matches data/events.json byte for byte"

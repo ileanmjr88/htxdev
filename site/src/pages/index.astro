@@ -1,39 +1,14 @@
 ---
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import '../styles/global.css';
 import EventCard from '../components/EventCard.astro';
 import Wordmark from '../components/Wordmark.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import { readEvents } from '../lib/events';
 
-// Read at build time with fs rather than importing the JSON, because the file
-// lives outside this Astro project and Vite's filesystem allow-list would
-// otherwise have to be widened to reach it. It is also honest about when this
-// happens: the site is static, so build time is the only time there is.
-//
-// Resolved against the working directory rather than import.meta.url, which
-// points at the bundled chunk in dist/ once Astro has built it and sends the
-// relative path somewhere that does not exist. Both candidates are here
-// because `npm run build` inside site/ and `npm --prefix site run build` from
-// the repo root are both reasonable and have different working directories.
-const candidates = [
-  process.env.HTXDEV_EVENTS,
-  'data/events.json',
-  '../data/events.json',
-].filter(Boolean).map((p) => resolve(p));
-
-const file = candidates.find((p) => existsSync(p));
-if (!file) {
-  throw new Error(
-    `no events file found. Looked in:\n  ${candidates.join('\n  ')}\n` +
-    `Run "htxdev export" first, or "htxdev export -preview" to include ` +
-    `events from groups nobody has verified yet.`,
-  );
-}
-
-const data = JSON.parse(readFileSync(file, 'utf8'));
-
-const events = data.events ?? [];
+// Loaded from src/lib/events.ts, which this page and the /api/v1/events.json
+// endpoint both use. The loader explains where it looks and why.
+const data = readEvents();
+const events = data.events;
 
 // Every date and time on this page is rendered in America/Chicago, explicitly.
 // The JSON carries UTC instants and a build machine is in whatever zone it
