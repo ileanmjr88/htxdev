@@ -401,8 +401,8 @@ groups:
     name: Houston PyLadies
     url: https://www.meetup.com/Houston_PyLadies/
     category: dev
-    verified_by: ileanmjr88
-    verified_at: 2026-09-18
+    verified_by:
+    verified_at:
     aliases:
       - PyLadies Houston
       - PyLadies
@@ -419,7 +419,19 @@ groups:
     # that group does not exist ({"message":"Group not found"}) and is not this
     # one. Checked 2026-09-18.
     #
-    # Verified 2026-09-18. One upcoming event, and see the warning below.
+    # NOT VERIFIED, and this one is worth being explicit about. It was
+    # verified on 2026-09-18 and unverified the same day, because verifying it
+    # was a mistake: Ilean had not heard of this group before that day, and
+    # verification is not "the feed decodes" or "the slug resolves". It is a
+    # person saying the group is real and the feed is legitimately theirs, and
+    # nobody here can say that yet.
+    #
+    # Adding a group and vouching for it are two different acts. Everything
+    # below about the slug still holds and is still useful; none of it is
+    # evidence about the group.
+    #
+    # To verify: go, or ask somebody who has. PyHou and the PyTexas meetup are
+    # both known quantities and either could vouch.
     #
     # NO DEFAULT VENUE, same reason as PyHou: its one event is the statewide
     # PyTexas meetup, which happens in Discord.
