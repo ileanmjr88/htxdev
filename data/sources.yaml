@@ -308,11 +308,22 @@ groups:
     # as one yet. Three reasons, all checked:
     #   - Event pages carry a date and no time:
     #       <time datetime="2026-10-01T00:00:00.000Z">
-    #     Publishing that means showing midnight or inventing 18:00. The group
-    #     meets Thursdays 6-8pm and Oct 1 is a Thursday, so the time is
-    #     knowable, but not from anything they publish. A wrong venue sends
-    #     somebody to the wrong building; a wrong time makes them miss the
-    #     event, so this is not the place to guess.
+    #     The site post is the announcement; the actual start time lives on the
+    #     LinkedIn event it links to, which is also where people register.
+    #
+    #     htxdev will not read that. LinkedIn's robots.txt opens with "The use
+    #     of robots or other automated means to access LinkedIn without the
+    #     express permission of LinkedIn is strictly prohibited", and grants
+    #     only LinkedInBot and Googlebot; there is no User-agent: * rule to
+    #     fall under. Same principle that keeps Eventbrite out of this file,
+    #     applied to a harder no: theirs is a path disallow, this is an
+    #     explicit prohibition in the user agreement.
+    #
+    #     So the time is published, just not anywhere htxdev may go. Showing
+    #     the date alone means midnight, and inventing 18:00 means asserting a
+    #     time nobody published. A wrong venue sends somebody to the wrong
+    #     building; a wrong time makes them miss the event entirely, so a
+    #     default start time is not the same trade as a default venue.
     #   - The index carries no dates, so reading it is one request per event
     #     rather than the single page HOSS gets away with.
     #   - rss.xml is the unmodified Astro starter template: "First post",
@@ -320,11 +331,19 @@ groups:
     #     homepage's <link rel="alternate">, and so does the og:url on each
     #     event page.
     #
-    # ASK DANYAL. Two things, and Ilean knows him: his RSS feed is publishing
-    # placeholder posts, which he probably does not know; and a start time on
-    # the event pages, or an ICS feed, would make the group syndicatable by
-    # anything, not just by htxdev. Same move as the HOSS ask, and that one
-    # turned out to have good markup already.
+    # ASK DANYAL, and the ask is small. He already writes the event page and
+    # already knows the time, because it is on the LinkedIn event he made. All
+    # that is missing is putting it in the datetime attribute he is already
+    # emitting:
+    #
+    #     <time datetime="2026-10-01T18:00:00-05:00">
+    #
+    # That is a template change on a site he controls, not a feed to build, and
+    # it makes the group readable by anything that reads a web page rather than
+    # by htxdev specifically.
+    #
+    # Second, unrelated and worth more to him: rss.xml is publishing Astro
+    # starter-template posts, and he almost certainly does not know.
     # Monthly-ish, Thursdays 6-8pm at Improving Houston, which is already a
     # curated venue above. Organized by Danyal Mahmud, who runs it as a Meetup
     # Pro group; 4+ years running. Confirmed 2026-09-17 by search AND by the
@@ -350,11 +369,16 @@ groups:
 #
 #   Eventbrite (any group) — robots.txt disallows /rss/, /atom/, /events/rss/
 #
+#   LinkedIn Events (any group) — robots.txt prohibits automated access
+#     outright, not just by path. Several Houston groups register attendees
+#     there, Side Project Society among them, and that is where their start
+#     times live. Not readable, and not worth asking LinkedIn about.
+#
 #   sideprojectsociety.com as an `html` source — NOT excluded, just not ready.
 #     Its event pages publish a date with no start time, and the index needs
 #     one request per event. See the note on side-project-society above; the
-#     first move is asking Danyal for a time or a feed, not writing a decoder
-#     that has to guess one.
+#     first move is asking Danyal to put the time in the datetime attribute he
+#     already emits, not writing a decoder that has to guess one.
 #     and *?calendar*. No polite automated path exists.
 #
 #   Discord-only groups — scheduled events require a bot token and per-server
