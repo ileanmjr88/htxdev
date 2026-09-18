@@ -85,14 +85,29 @@ func TestRealSourcesYAMLIsValid(t *testing.T) {
 		t.Error("ion-district is not verified; it was on 2026-09-17, so this is a revert")
 	}
 
-	// HLUG must stay unverified until its private entries are handled.
-	// Its public calendar runs off an account that is also somebody's personal
-	// one, so it carries appointments beside real meetings. data/rejects.yaml
-	// covers the one in the current window; verifying the group is a separate
-	// decision that needs a look at what else is in there.
+	// HLUG was blocked here until 2026-09-18, on the grounds that its calendar
+	// carries personal appointments beside real meetings. That was the right
+	// assertion and it did its job: verifying the group meant reading all 110
+	// events, which turned up a second private entry nobody knew about.
+	//
+	// What replaces it is the thing that actually has to stay true. Every
+	// private entry found on that calendar is in data/rejects.yaml, and the
+	// group being verified means the feed publishes, so an empty reject list
+	// against a verified HLUG is a regression rather than a tidy-up.
 	if verified["houston-linux-user-group"] {
-		t.Error("houston-linux-user-group is verified, but its feed carries personal entries; " +
-			"see data/rejects.yaml and the note in sources.yaml before doing this")
+		rej, err := LoadRejectsFile("../../data/rejects.yaml")
+		if err != nil {
+			t.Fatalf("load rejects: %v", err)
+		}
+		for _, fp := range []string{
+			"ics:6kqj0pb66kqmab9pc8s66b9k6gpm4b9p71ij2bb269hmad1n6ks3gdj368@google.com",
+			"ics:6li64dhj6dgm4b9m6or30b9k6ks3ibb271hj6b9gcpgj2dj5c9gmcp9n68@google.com",
+		} {
+			if _, ok := rej.Rejected(fp); !ok {
+				t.Errorf("houston-linux-user-group is verified but %s is no longer rejected; "+
+					"that is a personal appointment and removing it publishes somebody's private life", fp)
+			}
+		}
 	}
 }
 

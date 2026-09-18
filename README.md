@@ -12,16 +12,18 @@ calendar anywhere, that's the integration.
 
 ## Status
 
-**Early. Not live yet.** Phase 1 of 8: the domain types and the first feed
-decoder are done and tested. There is no site and no API yet.
+**Working, not deployed.** Eleven groups, seven verified, around seventy events
+a run. The site builds and runs locally; nothing is hosted yet.
 
 | | |
 |---|---|
-| ✅ Domain types, Ion (WordPress) decoder | done |
-| ⬜ Registry, live fetch, worker pool | next |
-| ⬜ iCalendar decoder (Meetup, Google Calendar) | |
-| ⬜ SQLite store, dedupe, venue resolution | |
-| ⬜ The site | |
+| ✅ Domain types, Ion (WordPress) decoder | |
+| ✅ Registry, live fetch, bounded worker pool | |
+| ✅ iCalendar decoder, recurrence expansion | |
+| ✅ SQLite store, `first_seen`, the publishing gate | |
+| ✅ Dedupe, venue resolution, excerpts, categories | |
+| ✅ `events.json` export and the site | builds locally |
+| ⬜ Scheduled sync (GitHub Actions) | next |
 | ⬜ Public JSON API | |
 
 ## How it works
@@ -32,17 +34,37 @@ data/sources.yaml  →  fetch  →  decode  →  dedupe  →  htxdev.db  →  th
    list of groups               per format             event history
 ```
 
-Two decoders cover every source: iCalendar, which Meetup and Google Calendar
-both emit, and The Events Calendar's JSON API, which WordPress sites expose.
-Adding a group is an entry in a YAML file, not code.
+Three decoders cover every source. iCalendar, which Meetup and Google Calendar
+both emit; The Events Calendar's JSON API, which WordPress sites expose; and
+one HTML reader for a single group that publishes no calendar at all but does
+publish `<time datetime="...">` on its meetings page. Adding a group is an entry
+in a YAML file, not code.
+
+Dedupe is keyed on the group and the start instant, never the title, because
+the same meeting arrives as "Houston Linux User Group" from one feed and
+"Houston Linux - Ion User Meeting" from another. Two groups meeting at the same
+hour stay two events, because that happens every week.
 
 The database is committed to the repo on purpose. It's the permanent record of
 every event ever seen, which is what makes "this group has met every Wednesday
 for two years" a thing the site can know.
 
+## Running it
+
+```bash
+source <(compendium activate)   # from the repo root; see Development
+make run                        # fetch every source into htxdev.db
+make site-dev                   # the site on localhost:4321
+```
+
+`make run` prints a per-source summary and writes the database. `make sync-dry`
+does the same and writes nothing. `make db` opens the database read-only.
+
 ## Adding a group
 
-Open a pull request against [`data/sources.yaml`](data/sources.yaml). One entry:
+Easiest is the [issue template](.github/ISSUE_TEMPLATE/add-group.yml), which
+asks for what it needs and nothing else. If you would rather send a pull
+request, it is one entry in [`data/sources.yaml`](data/sources.yaml):
 
 ```yaml
   - slug: houston-example
@@ -82,9 +104,14 @@ fields nobody thinks about. Ingesting a feed naively republishes all of it.
 So the pipeline is built to not do that. Feed decoders read only the fields
 they need, and nothing reaches the site until someone has looked at it.
 
+Verification is tracked as [issues labelled
+`verification`](../../issues?q=is%3Aissue+label%3Averification), one per group
+still waiting. Each carries what is already known about that feed so nobody
+redoes the research.
+
 **If you organize a group and you'd rather not be listed, open an issue and
 you'll be removed.** Same if you'd like to be added but your calendar isn't
-public.
+public. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Development
 
@@ -95,15 +122,24 @@ compendium install
 source <(compendium activate)
 ```
 
-Or use Go 1.26.1 directly (see [`go.mod`](go.mod)); everything except `make lint`
-works without Compendium.
+This pins Go, Node and golangci-lint. Run it **from the repo root**:
+`compendium activate` reads `compendium.toml` from the working directory, so
+from a subdirectory it fails silently and you build on whatever happens to be
+on your PATH. Every npm target in the Makefile uses `--prefix site` for that
+reason.
+
+Or use Go 1.26.1 and Node 22 directly (see [`go.mod`](go.mod) and
+[`compendium.toml`](compendium.toml)); everything except `make lint` works
+without Compendium.
 
 ```bash
-make check     # fmt + vet + test, run this before committing
-make test      # go test ./...
-make coverage  # coverage report
-make lint      # golangci-lint (needs an activated shell)
-make help      # all targets
+make check      # fmt + vet + test under -race, run this before committing
+make test       # go test ./...
+make test-race  # go test -race ./...
+make coverage   # coverage report
+make lint       # golangci-lint (needs an activated shell)
+make site       # export events.json and build the site
+make help       # all targets
 ```
 
 Tests are offline. Decoders take an `io.Reader`, so they're fed fixtures in
@@ -113,21 +149,24 @@ network even by accident.
 ## Layout
 
 ```
-cmd/htxdev          sync and serve commands
+cmd/htxdev          sync and export commands
 internal/core       domain types; imports only the standard library
 internal/source     one decoder per feed format, wire types stay private
-internal/registry   sources.yaml loader
+internal/registry   sources.yaml and rejects.yaml loaders
+internal/fetch      HTTP, concurrency, the Fetcher interface
+internal/normalize  resolution, dedupe, venues, excerpts
 internal/store      SQLite
 internal/api        HTTP handlers
 data/sources.yaml   the curated list of groups, venues, and feeds
-web/                the site
+data/rejects.yaml   individual events that must not publish
+site/               the Astro site
 ```
 
 `internal/core` is imported by everything and imports nothing. Feed-specific
 types never leave `internal/source`, which is what keeps WordPress and
 iCalendar quirks out of the rest of the system.
 
-Not all of these exist yet. See Status.
+`internal/api` does not exist yet. See Status.
 
 ## License
 

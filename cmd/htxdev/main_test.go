@@ -701,3 +701,81 @@ func TestExportExplainsAnEmptyResult(t *testing.T) {
 		}
 	}
 }
+
+// The only warning in the pipeline about somebody's private life reaching a
+// public page. Reviewing all 110 events on the Houston Linux feed found the
+// pattern held across all 34 distinct titles: every personal appointment
+// carried neither a venue nor a description, every real group event carried at
+// least one.
+func TestLooksUnreviewed(t *testing.T) {
+	mk := func(title, venue, excerpt string) core.Event {
+		return core.Event{Title: title, Excerpt: excerpt, Venue: core.Venue{Name: venue}}
+	}
+	events := []core.Event{
+		mk("Houston Linux - User Meeting", "Sesh Coworking", ""),           // venue, no excerpt
+		mk("Houston Code & Coffee", "", "A friendly, low-pressure meetup"), // excerpt, no venue
+		mk("ENRG HTX", "Ion", "A community for entrepreneurs"),             // both
+		mk("Dental", "", ""),       // neither
+		mk("Family visit", "", ""), // neither
+	}
+
+	got := looksUnreviewed(events)
+	if len(got) != 2 {
+		t.Fatalf("flagged %d events, want 2: %+v", len(got), got)
+	}
+	for i, want := range []string{"Dental", "Family visit"} {
+		if got[i].Title != want {
+			t.Errorf("flagged[%d] = %q, want %q", i, got[i].Title, want)
+		}
+	}
+
+	// Either one on its own is normal and must not trip it. Twelve of the 74
+	// published events have a venue and no excerpt, and four have an excerpt
+	// and no venue; flagging those would bury the two that matter.
+	if len(looksUnreviewed(events[:3])) != 0 {
+		t.Error("flagged an event carrying at least one of the two")
+	}
+	if len(looksUnreviewed(nil)) != 0 {
+		t.Error("flagged something in an empty run")
+	}
+}
+
+// The warning has to name the fingerprint, because that is what goes in
+// data/rejects.yaml, and say what to do about it either way.
+func TestReportStoreWarnsAboutUnreviewedEvents(t *testing.T) {
+	var out bytes.Buffer
+	reportStore(&out, "htxdev.db", stored{
+		records: 3, events: 3,
+		unreviewed: []core.Event{{
+			Title:       "Dental",
+			Fingerprint: "ics:6li64dhj@google.com",
+			GroupSlug:   "houston-linux-user-group",
+			Start:       time.Date(2026, 12, 11, 18, 0, 0, 0, time.UTC),
+		}},
+		counts: store.Counts{Total: 3, Published: 3},
+	})
+
+	got := out.String()
+	for _, want := range []string{
+		"1 event(s) carry neither a venue nor a description",
+		"Dental",
+		"ics:6li64dhj@google.com",
+		"houston-linux-user-group",
+		"data/rejects.yaml",
+		"venue: line in sources.yaml",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("warning missing %q:\n%s", want, got)
+		}
+	}
+}
+
+// Silent when there is nothing to say. It fires on zero of the 74 events
+// published today, and a warning that shows up every run stops being read.
+func TestReportStoreSaysNothingWhenNothingIsSuspicious(t *testing.T) {
+	var out bytes.Buffer
+	reportStore(&out, "htxdev.db", stored{records: 3, events: 3, counts: store.Counts{Total: 3}})
+	if strings.Contains(out.String(), "!!") {
+		t.Errorf("warned with nothing to warn about:\n%s", out.String())
+	}
+}

@@ -54,6 +54,27 @@ rejects:
     # removes the event. Erring the other way on a reject would mean a PR that
     # forgot a name silently republished what it was written to hide.
 
+  - fingerprint: "ics:6li64dhj6dgm4b9m6or30b9k6ks3ibb271hj6b9gcpgj2dj5c9gmcp9n68@google.com"
+    reason: Personal appointment on a shared group calendar, not a group event
+    rejected_by:
+    rejected_at:
+    # The second one on the same calendar, found 2026-09-18 while reviewing the
+    # whole feed rather than just the window. It is in December, so it had not
+    # reached the 60-day horizon yet and would have appeared on the site around
+    # the middle of October with nobody watching for it.
+    #
+    # Found by reading all 110 events, which is what verifying this group
+    # actually required. Worth recording what the review turned up, because it
+    # is a better signal than the title-prefix idea that was disproven in
+    # August: every private entry on this calendar has NO location and NO
+    # description, and every real group event has at least one of the two. That
+    # held for all 34 distinct titles.
+    #
+    # Deliberately not automated. It is an observation about one calendar at
+    # one moment, not a rule, and the cost of it being wrong is republishing
+    # somebody's private life. It is written down so the next review knows
+    # where to look first, not so a filter can skip the review.
+
 # Nothing from Ion is rejected yet, and that is the larger job. Two thirds of
 # its calendar is investor programming, office hours and coworking days. The
 # better fix for most of it is not this file: an event whose organizer names a

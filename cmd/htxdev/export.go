@@ -216,6 +216,12 @@ func writeJSON(path string, v any) error {
 	if err := tmp.Close(); err != nil {
 		return fmt.Errorf("close %s: %w", tmp.Name(), err)
 	}
+	// CreateTemp makes the file 0600, which is right for a temporary file and
+	// wrong for one that gets committed and served. Git only records the
+	// executable bit, so this is about the working copy rather than the repo.
+	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
+		return fmt.Errorf("chmod %s: %w", tmp.Name(), err)
+	}
 	if err := os.Rename(tmp.Name(), path); err != nil {
 		return fmt.Errorf("rename into %s: %w", path, err)
 	}

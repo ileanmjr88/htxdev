@@ -112,9 +112,11 @@ type stored struct {
 	events   int // what normalize concluded they were
 	rejected int // events dropped by data/rejects.yaml
 	listed   int // entries in the reject list, so an empty one is visible
-	problems []error
-	saved    store.SaveResult
-	counts   store.Counts
+	// Events carrying neither a venue nor an excerpt. See looksUnreviewed.
+	unreviewed []core.Event
+	problems   []error
+	saved      store.SaveResult
+	counts     store.Counts
 }
 
 // persist normalizes what the successful sources returned and writes it.
@@ -154,11 +156,41 @@ func persist(ctx context.Context, dbPath string, reg *registry.Registry, rejects
 	out.events, out.rejected, out.problems = len(events), rejected, problems
 	out.listed = rejects.Len()
 
+	out.unreviewed = looksUnreviewed(events)
+
 	if out.saved, err = st.SaveEvents(ctx, events, seenAt); err != nil {
 		return out, fmt.Errorf("save events to %s: %w", dbPath, err)
 	}
 	out.counts, err = st.Counts(ctx)
 	return out, err
+}
+
+// looksUnreviewed returns events that carry neither a venue nor an excerpt.
+//
+// That is the shape a personal appointment takes on a shared group calendar.
+// Reviewing all 110 events on the Houston Linux feed on 2026-09-18 found the
+// pattern held across all 34 distinct titles: every private entry had neither,
+// and every real group event had at least one. It caught "Dental", sitting in
+// December outside the fetch window, which would have reached the site in
+// October with nobody watching.
+//
+// Reported, never acted on. It is an observation about one calendar at one
+// moment rather than a rule, and inferring "this is private" from "this is
+// sparse" is exactly the guessing this project refuses elsewhere. A human
+// decides, and data/rejects.yaml records the decision.
+//
+// Zero of the 74 events published today trip it, so noise is not the problem
+// it would be if the threshold were looser. A legitimate event that trips it
+// usually means the group needs a venue: line in sources.yaml, which is the
+// same curation that fixes it for every future event.
+func looksUnreviewed(events []core.Event) []core.Event {
+	var out []core.Event
+	for _, e := range events {
+		if e.Venue.Name == "" && e.Excerpt == "" {
+			out = append(out, e)
+		}
+	}
+	return out
 }
 
 func reportStore(w io.Writer, dbPath string, st stored) {
@@ -183,6 +215,21 @@ func reportStore(w io.Writer, dbPath string, st stored) {
 
 	for _, p := range st.problems {
 		fmt.Fprintf(w, "  unattributable: %v\n", p)
+	}
+
+	// Loud on purpose, and above the row counts so it is not the last thing
+	// scrolled past. This is the only warning in the pipeline about somebody's
+	// private life reaching a public page.
+	if n := len(st.unreviewed); n > 0 {
+		fmt.Fprintf(w, "\n!! %d event(s) carry neither a venue nor a description, which is what a\n"+
+			"!! personal appointment looks like on a shared group calendar. Check them:\n", n)
+		for _, e := range st.unreviewed {
+			fmt.Fprintf(w, "!!   %s  %s  [%s]\n",
+				e.Start.In(houston).Format("2006-01-02 15:04"), e.Title, e.GroupSlug)
+			fmt.Fprintf(w, "!!     %s\n", e.Fingerprint)
+		}
+		fmt.Fprintf(w, "!! If any is private, add its fingerprint to data/rejects.yaml.\n"+
+			"!! If it is a real event, the group probably needs a venue: line in sources.yaml.\n")
 	}
 
 	fmt.Fprintf(w, "%s: %d new, %d updated", dbPath, st.saved.Inserted, st.saved.Updated)

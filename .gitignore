@@ -29,41 +29,28 @@ bin/
 build/
 dist/
 
-# htxdev.db is TEMPORARILY ignored, as of 2026-09-17.
+# htxdev.db and data/events.json are COMMITTED, as of 2026-09-18. D18.
 #
-# It is meant to be committed, and the architecture depends on that: it is the
-# permanent record of every event ever seen, first_seen cannot be rebuilt from
-# feeds because feeds only publish what is current, and Phase 7's GitHub
-# Actions cron has no persistent state, so from that phase onward the file has
-# to be in git for a sync to build on the last one. Measured at roughly 30 MB
-# per year at ten sources, which is the reason that is affordable.
+# Both were held out of git while the database contained Houston Linux User
+# Group's personal calendar entries. That group is now verified, which required
+# reading all 110 events on its feed, and both private entries are in
+# data/rejects.yaml, so neither reaches the database at all. `make run` also
+# warns loudly about any event carrying neither a venue nor a description,
+# which is the shape those entries take.
 #
-# Held back for now because it contains HLUG's private calendar entries. Their
-# public Google Calendar carries "Family visit" and "Dental" alongside real
-# group events, and while the pending gate keeps those off the website, it does
-# nothing about a git object: `strings htxdev.db` prints them. Nothing needs
-# this file committed before Phase 7, so the decision waits until the repo's
-# public/private status is settled. Committing it and going public later means
-# rewriting every SHA to undo, which has already been declined once here.
+# They have to be committed rather than merely may be: Phase 7 runs the sync on
+# a GitHub Actions runner, which keeps no state between runs, so a sync can
+# only build on the last one if the database is in the repo. htxdev.db is also
+# the only record of when an event was first seen, which cannot be rebuilt
+# because feeds only publish what is current.
 #
-# Two rules that keep it cheap once it does land: never VACUUM in CI, because
-# rewriting the whole file defeats git's delta compression, and set a
-# concurrency group on the sync workflow so two runs cannot both commit it.
-htxdev.db
-
-# data/events.json is TEMPORARILY ignored, for the same reasons as htxdev.db
-# and settled at the same time.
+# Two rules that keep it cheap, both still outstanding and both belonging to
+# Phase 7: never VACUUM in CI, because rewriting the whole file defeats git's
+# delta compression, and set a concurrency group on the sync workflow, because
+# two overlapping runs produce a binary merge conflict nobody can resolve.
 #
-# It is meant to be committed: it is the rolling upcoming-only window the site
-# reads, Phase 7's cron regenerates it on every sync, and a static site built
-# from a file that is not in the repo cannot be built by CI at all.
-#
-# Held back because `make site` writes a PREVIEW of it, containing events from
-# groups nobody has verified. A published-only export is safe by definition,
-# since the gate is what makes it published, but today that export is empty and
-# the preview is the one people will actually generate. Committing it would put
-# unverified data in git by accident rather than on purpose.
-#
-# Revisit with D18. Both files stop being ignored on the same day: when a group
-# has been verified and the repo's public/private status is settled.
-data/events.json
+# ONE THING THIS DOES NOT SETTLE. The repo is private today, so committing is
+# safe. If it ever goes public, every historical commit goes with it, and the
+# reject list is reactive: it catches a private entry after somebody notices,
+# not before it is committed. Going public needs a look at the history, not
+# just at the current file.
