@@ -66,6 +66,50 @@ venues:
     zip: "77011"
     url: https://txrxlabs.org
 
+  # The three venues HOSS rotates through that Ion's feed never mentions.
+  # Curated rather than left to discovery because a discovered venue is a name
+  # and nothing else: no address, no link, nowhere to tell somebody to go.
+  # Addresses below are HOSS's own, taken from the structured data on their
+  # venue pages on 2026-09-17.
+
+  - slug: bayland-community-center
+    name: Bayland Community Center
+    aliases:
+      - Bayland
+    address: 6400 Bissonnet Street
+    city: Houston
+    state: TX
+    zip: "77074"
+    url: https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center
+    # Hosts HOSS's fourth and fifth Wednesdays.
+
+  - slug: bayland-annex
+    name: Bayland Annex
+    aliases:
+      # HOSS's own structured data calls it just "Annex"; the heading on the
+      # same page says "Bayland Annex". Both, because either could arrive.
+      - Annex
+    city: Houston
+    state: TX
+    url: https://houstonopensourcesociety.com/meetings/venues/bayland-annex/
+    # A separate building in Bayland Park, not a room of the community centre,
+    # which is why it gets its own entry rather than an alias on the one above.
+    # HOSS publishes no street address for it and neither do we; the link goes
+    # to their page, which has a map.
+    #
+    # It hosts none of the next five meetings, so htxdev has never seen it in
+    # an event. It is here so that the first time HOSS moves a meeting to it,
+    # the venue is already canonical instead of arriving as a new discovery.
+
+  - slug: zion-lutheran-church
+    name: Zion Lutheran Church
+    address: 3606 Beauchamp Blvd
+    city: Houston
+    state: TX
+    zip: "77009"
+    url: https://zionhouston.org/
+    # In the Heights. Hosts HOSS's second Wednesday.
+
 groups:
   - slug: ion-district
     name: Ion District

@@ -19,8 +19,8 @@ func TestRealSourcesYAMLIsValid(t *testing.T) {
 	if len(reg.Groups) != 9 {
 		t.Errorf("got %d groups, want 9", len(reg.Groups))
 	}
-	if len(reg.Venues) != 3 {
-		t.Errorf("got %d venues, want 3", len(reg.Venues))
+	if len(reg.Venues) != 6 {
+		t.Errorf("got %d venues, want 6", len(reg.Venues))
 	}
 	if len(reg.Sources) != 9 {
 		t.Errorf("got %d sources, want 9", len(reg.Sources))
