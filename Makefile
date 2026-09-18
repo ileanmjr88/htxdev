@@ -106,8 +106,15 @@ test-v:
 # Run tests under the race detector. Separate from `test` because it is slower,
 # but not optional: internal/fetch runs a worker pool, and a data race there is
 # exactly the kind of bug that passes a plain `go test` every time.
+#
+# CGO_ENABLED=1 overrides the file-level 0, because the race detector needs cgo
+# on linux/amd64. It does NOT need it on darwin/arm64, where the race runtime
+# ships precompiled, so this target passed on a laptop and failed on the first
+# CI run with "-race requires cgo". Nothing about the build changes: the driver
+# is modernc.org/sqlite either way, and `make build` still links the static
+# CGO_ENABLED=0 binary that actually ships.
 test-race:
-	go test -race ./...
+	CGO_ENABLED=1 go test -race ./...
 
 # Test coverage report
 coverage:
