@@ -24,7 +24,7 @@ func venueRegistry() *registry.Registry {
 // Every venue string in the live database on 2026-09-17, plus the two array
 // shapes. Pinned because these were measured, not imagined.
 func TestResolveVenueAgainstLiveStrings(t *testing.T) {
-	n := New(venueRegistry())
+	n := New(venueRegistry(), nil)
 
 	cases := []struct {
 		name      string
@@ -91,7 +91,7 @@ func TestResolveVenueAgainstLiveStrings(t *testing.T) {
 // pinning it here means adding the alias will make this test fail loudly
 // rather than silently changing behaviour.
 func TestIonPlazaIsNotResolvedYet(t *testing.T) {
-	n := New(venueRegistry())
+	n := New(venueRegistry(), nil)
 	venue, room := n.resolveVenue([]core.RawVenue{{Name: "Ion Plaza"}})
 	if venue != "Ion Plaza" || room != "" {
 		t.Errorf("resolveVenue(Ion Plaza) = (%q, %q); if this changed, an alias was added and the comment needs updating",
@@ -104,7 +104,7 @@ func TestIonPlazaIsNotResolvedYet(t *testing.T) {
 // spellings and has to end up as one.
 func TestMergePrefersAResolvedVenue(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
-	events, _ := New(venueRegistry()).Events([]core.RawEvent{
+	events, _, _ := New(venueRegistry(), nil).Events([]core.RawEvent{
 		// Winner on priority, but its venue is not curated.
 		{SourceKey: hlugFeed, UpstreamID: "own", Title: "Winner", Start: start,
 			Venues: []core.RawVenue{{Name: "Somewhere Uncurated"}}},
@@ -127,7 +127,7 @@ func TestMergePrefersAResolvedVenue(t *testing.T) {
 // D9 on the merged event.
 func TestCategoryComesFromTheGroup(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
-	events, _ := New(venueRegistry()).Events([]core.RawEvent{{
+	events, _, _ := New(venueRegistry(), nil).Events([]core.RawEvent{{
 		SourceKey: ionFeed, UpstreamID: "x", Title: "T", Start: start,
 		Organizers: []core.RawOrganizer{{Name: "HLUG"}},
 		// Ion's own taxonomy, which must not become htxdev's.

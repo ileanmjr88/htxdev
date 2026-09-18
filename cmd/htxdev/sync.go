@@ -26,12 +26,15 @@ const (
 	// permanent record of every event htxdev has ever seen, and first_seen
 	// cannot be rebuilt from feeds because feeds forget.
 	defaultDBPath = "htxdev.db"
+
+	defaultRejectsPath = "data/rejects.yaml"
 )
 
 func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("htxdev sync", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	sourcesPath := fs.String("sources", defaultSourcesPath, "path to the source registry")
+	rejectsPath := fs.String("rejects", defaultRejectsPath, "path to the reject list")
 	dbPath := fs.String("db", defaultDBPath, "path to the SQLite database")
 	verbose := fs.Bool("v", false, "list every event fetched, not just the per-source summary")
 	dryRun := fs.Bool("n", false, "fetch and report without writing to the database")
@@ -47,6 +50,14 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 	// problem in the file with its line and column. Wrapping it again would
 	// only bury that.
 	reg, err := registry.LoadFile(*sourcesPath)
+	if err != nil {
+		return err
+	}
+
+	// Loaded before anything is fetched, so a malformed reject list fails in a
+	// second rather than after nine network round trips. A missing file is not
+	// an error; the count is reported instead, so an absent filter is visible.
+	rejects, err := registry.LoadRejectsFile(*rejectsPath)
 	if err != nil {
 		return err
 	}
@@ -72,11 +83,12 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 	// question, and it is exactly the question somebody asks before filling in
 	// a group's verified_by.
 	if *dryRun {
-		fmt.Fprintf(stdout, "\nDry run: nothing written to %s.\n", *dbPath)
+		fmt.Fprintf(stdout, "\nDry run: nothing written to %s. %d rejects loaded.\n",
+			*dbPath, rejects.Len())
 		return verdict(sum)
 	}
 
-	stored, err := persist(ctx, *dbPath, reg, results, sum.fetchedAt)
+	stored, err := persist(ctx, *dbPath, reg, rejects, results, sum.fetchedAt)
 	if err != nil {
 		return err
 	}
@@ -98,6 +110,8 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 type stored struct {
 	records  int // RawEvents handed to normalize
 	events   int // what normalize concluded they were
+	rejected int // events dropped by data/rejects.yaml
+	listed   int // entries in the reject list, so an empty one is visible
 	problems []error
 	saved    store.SaveResult
 	counts   store.Counts
@@ -111,7 +125,7 @@ type stored struct {
 // being cancelled. That is the first of the three guards in the
 // absence-means-cancelled contract, and it is enforced by this loop rather
 // than by anything downstream.
-func persist(ctx context.Context, dbPath string, reg *registry.Registry, results []fetch.Result, seenAt time.Time) (stored, error) {
+func persist(ctx context.Context, dbPath string, reg *registry.Registry, rejects *registry.Rejects, results []fetch.Result, seenAt time.Time) (stored, error) {
 	var out stored
 
 	st, err := store.Open(dbPath)
@@ -136,8 +150,9 @@ func persist(ctx context.Context, dbPath string, reg *registry.Registry, results
 	}
 	out.records = len(raw)
 
-	events, problems := normalize.New(reg).Events(raw)
-	out.events, out.problems = len(events), problems
+	events, rejected, problems := normalize.New(reg, rejects).Events(raw)
+	out.events, out.rejected, out.problems = len(events), rejected, problems
+	out.listed = rejects.Len()
 
 	if out.saved, err = st.SaveEvents(ctx, events, seenAt); err != nil {
 		return out, fmt.Errorf("save events to %s: %w", dbPath, err)
@@ -151,10 +166,20 @@ func reportStore(w io.Writer, dbPath string, st stored) {
 	// dedupe did anything, and if it ever reads "76 records into 76 events"
 	// then resolution has silently stopped matching organizers to groups.
 	fmt.Fprintf(w, "\n%d records normalized into %d events", st.records, st.events)
-	if n := st.records - st.events; n > 0 {
+	// records minus events is NOT the merge count once anything is rejected,
+	// because a rejected event also disappears between the two numbers.
+	// Reporting the difference said "3 merged" on a run with two merges and
+	// one rejection, which is the kind of number somebody would later try to
+	// reconcile against the database and fail to.
+	if n := st.records - st.events - st.rejected; n > 0 {
 		fmt.Fprintf(w, " (%d merged)", n)
 	}
 	fmt.Fprintln(w, ".")
+
+	// Always printed, including when it is zero. A filter that quietly stopped
+	// being loaded looks exactly like a filter with nothing in it, and only
+	// one of those is a problem.
+	fmt.Fprintf(w, "%d rejected by data/rejects.yaml (%d listed).\n", st.rejected, st.listed)
 
 	for _, p := range st.problems {
 		fmt.Fprintf(w, "  unattributable: %v\n", p)

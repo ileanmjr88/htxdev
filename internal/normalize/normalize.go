@@ -32,15 +32,19 @@ type Normalizer struct {
 	// Curated venues only. Everything else a feed names is discovered rather
 	// than declared, keeps its name and gets a row when it is first stored.
 	venuesByName map[string]core.Venue
+
+	// May be nil, which answers "no" to everything.
+	rejects *registry.Rejects
 }
 
-func New(reg *registry.Registry) *Normalizer {
+func New(reg *registry.Registry, rejects *registry.Rejects) *Normalizer {
 	n := &Normalizer{
 		sources: make(map[string]core.Source, len(reg.Sources)),
 		groups:  make(map[string]core.Group, len(reg.Groups)),
 		byName:  make(map[string]string),
 
 		venuesByName: make(map[string]core.Venue),
+		rejects:      rejects,
 	}
 	for _, v := range reg.Venues {
 		for _, name := range append([]string{v.Slug, v.Name}, v.Aliases...) {
@@ -83,8 +87,7 @@ type resolved struct {
 // Problems are returned rather than causing a failure, on the same principle
 // as Skipped one layer up: one event nobody can attribute must not discard the
 // other seventy-five.
-func (n *Normalizer) Events(raw []core.RawEvent) ([]core.Event, []error) {
-	var problems []error
+func (n *Normalizer) Events(raw []core.RawEvent) (events []core.Event, rejected int, problems []error) {
 
 	clusters := map[string][]resolved{}
 	var order []string // insertion order, so output does not depend on map iteration
@@ -112,9 +115,32 @@ func (n *Normalizer) Events(raw []core.RawEvent) ([]core.Event, []error) {
 
 	out := make([]core.Event, 0, len(order))
 	for _, k := range order {
-		out = append(out, n.collapse(clusters[k])...)
+		for _, e := range n.collapse(clusters[k]) {
+			// Rejection happens after the merge, not before it, so that
+			// rejecting any one of an event's fingerprints rejects the event.
+			// Whoever wrote the entry named whichever feed's copy they were
+			// looking at, and should not have to know it was published twice.
+			if rj, ok := n.rejectedEvent(e); ok {
+				_ = rj
+				rejected++
+				continue
+			}
+			out = append(out, e)
+		}
 	}
-	return out, problems
+	return out, rejected, problems
+}
+
+// rejectedEvent reports whether any record behind this event is on the reject
+// list. Applied whether or not the entry has been signed for: see the comment
+// in data/rejects.yaml on why both blank fields fail closed.
+func (n *Normalizer) rejectedEvent(e core.Event) (registry.Reject, bool) {
+	for _, src := range e.Sources {
+		if rj, ok := n.rejects.Rejected(src.Fingerprint); ok {
+			return rj, true
+		}
+	}
+	return registry.Reject{}, false
 }
 
 // clusterKey is the dedupe key: the group an event belongs to, and the instant

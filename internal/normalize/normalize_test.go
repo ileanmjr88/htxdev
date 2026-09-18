@@ -82,7 +82,7 @@ func realCluster() []core.RawEvent {
 }
 
 func TestDeduplicatesTheRealCluster(t *testing.T) {
-	events, problems := New(testRegistry()).Events(realCluster())
+	events, _, problems := New(testRegistry(), nil).Events(realCluster())
 	if len(problems) != 0 {
 		t.Fatalf("problems = %v, want none", problems)
 	}
@@ -137,7 +137,7 @@ func TestDeduplicatesTheRealCluster(t *testing.T) {
 // live window and are never the same meeting.
 func TestSameInstantDifferentGroupsStaySeparate(t *testing.T) {
 	start := at("2026-10-21T23:00:00Z")
-	events, problems := New(testRegistry()).Events([]core.RawEvent{
+	events, _, problems := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: hlugFeed, UpstreamID: "hlug-oct21", Title: "Houston Linux - User Meeting", Start: start},
 		{SourceKey: hossFeed, UpstreamID: "third-wednesday_20261021T230000Z",
 			Title: "Houston Open Source Society, Third Wednesday", Start: start},
@@ -181,7 +181,7 @@ func TestGroupResolution(t *testing.T) {
 			if tc.organizer != "" {
 				e.Organizers = []core.RawOrganizer{{Name: tc.organizer}}
 			}
-			events, problems := New(testRegistry()).Events([]core.RawEvent{e})
+			events, _, problems := New(testRegistry(), nil).Events([]core.RawEvent{e})
 			if len(problems) != 0 {
 				t.Fatalf("problems = %v", problems)
 			}
@@ -197,7 +197,7 @@ func TestGroupResolution(t *testing.T) {
 
 // The first organizer that resolves wins. Ion sends one or two per event.
 func TestFirstResolvableOrganizerWins(t *testing.T) {
-	events, _ := New(testRegistry()).Events([]core.RawEvent{{
+	events, _, _ := New(testRegistry(), nil).Events([]core.RawEvent{{
 		SourceKey: ionFeed, UpstreamID: "x", Title: "T", Start: at("2026-10-01T18:00:00Z"),
 		Organizers: []core.RawOrganizer{{Name: "Some Company LLC"}, {Name: "HOSS"}},
 	}})
@@ -210,7 +210,7 @@ func TestMergePrefersTheLowerPriorityNumber(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
 	// Deliberately listed venue-first, so a merge that just took the first
 	// record would pick the wrong one.
-	events, _ := New(testRegistry()).Events([]core.RawEvent{
+	events, _, _ := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: ionFeed, UpstreamID: "ion-copy", Title: "Ion's wording", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
 		{SourceKey: hlugFeed, UpstreamID: "own-copy", Title: "The organizer's wording", Start: start},
@@ -227,7 +227,7 @@ func TestMergePrefersTheLowerPriorityNumber(t *testing.T) {
 // always the richer record.
 func TestMergeGapFillsFromLosers(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
-	events, _ := New(testRegistry()).Events([]core.RawEvent{
+	events, _, _ := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: hlugFeed, UpstreamID: "own", Title: "Winner", Start: start},
 		{SourceKey: ionFeed, UpstreamID: "ion", Title: "Loser", Start: start,
 			Organizers:  []core.RawOrganizer{{Name: "HLUG"}},
@@ -258,7 +258,7 @@ func TestMergeGapFillsFromLosers(t *testing.T) {
 
 func TestUnregisteredSourceIsReportedNotDropped(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
-	events, problems := New(testRegistry()).Events([]core.RawEvent{
+	events, _, problems := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: "https://nowhere.test/feed", UpstreamID: "orphan", Title: "Orphan", Start: start},
 		{SourceKey: hlugFeed, UpstreamID: "fine", Title: "Fine", Start: start},
 	})
@@ -274,14 +274,14 @@ func TestUnregisteredSourceIsReportedNotDropped(t *testing.T) {
 // but events within a cluster arrive in whatever order the feeds listed them.
 func TestOutputIsDeterministic(t *testing.T) {
 	raw := realCluster()
-	first, _ := New(testRegistry()).Events(raw)
+	first, _, _ := New(testRegistry(), nil).Events(raw)
 
 	// Reverse the input; the clustering must not care.
 	reversed := make([]core.RawEvent, len(raw))
 	for i, e := range raw {
 		reversed[len(raw)-1-i] = e
 	}
-	second, _ := New(testRegistry()).Events(reversed)
+	second, _, _ := New(testRegistry(), nil).Events(reversed)
 
 	if len(first) != len(second) {
 		t.Fatalf("got %d then %d events", len(first), len(second))
@@ -335,7 +335,7 @@ func TestAmbiguousAliasResolvesConsistently(t *testing.T) {
 		Start: at("2026-10-01T18:00:00Z"), Organizers: []core.RawOrganizer{{Name: "Shared Name"}}}}
 
 	for range 20 {
-		events, _ := New(reg).Events(raw)
+		events, _, _ := New(reg, nil).Events(raw)
 		if len(events) != 1 || events[0].GroupSlug != "first-claim" {
 			t.Fatalf("resolved to %+v, want first-claim every time", events)
 		}
@@ -349,10 +349,10 @@ func TestAgainstTheRealRegistry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
-	n := New(reg)
+	n := New(reg, nil)
 
 	start := at("2026-09-24T23:00:00Z")
-	events, problems := n.Events([]core.RawEvent{
+	events, _, problems := n.Events([]core.RawEvent{
 		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=2", Title: "Houston Linux User Group", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "Houston Linux User’s Group"}}},
 		{SourceKey: hlugFeed, UpstreamID: "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com",
@@ -373,7 +373,7 @@ func TestAgainstTheRealRegistry(t *testing.T) {
 // collapse every meeting a group has ever held into one event, which is the
 // mirror image of grouping on the instant alone.
 func TestSameGroupAtDifferentTimesStaysSeparate(t *testing.T) {
-	events, problems := New(testRegistry()).Events([]core.RawEvent{
+	events, _, problems := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: hlugFeed, UpstreamID: "sep30", Title: "September meeting", Start: at("2026-09-30T23:00:00Z")},
 		{SourceKey: hlugFeed, UpstreamID: "oct07", Title: "October meeting", Start: at("2026-10-07T23:00:00Z")},
 		{SourceKey: hlugFeed, UpstreamID: "oct21", Title: "Another October meeting", Start: at("2026-10-21T23:00:00Z")},
@@ -405,7 +405,7 @@ func TestSameFeedAtTheSameInstantIsNotAMerge(t *testing.T) {
 	start := at("2026-09-25T15:00:00Z")
 	// Fed in upstream-id order 65740, 64682, 64738, so the assertion on
 	// output order below tests the sort rather than the input.
-	events, problems := New(testRegistry()).Events([]core.RawEvent{
+	events, _, problems := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=65740", Title: "SCORE Office Hours", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "SCORE"}}},
 		{SourceKey: ionFeed, UpstreamID: "iondistrict.com?id=64682", Title: "NASA Office Hours", Start: start,
@@ -433,7 +433,7 @@ func TestSameFeedAtTheSameInstantIsNotAMerge(t *testing.T) {
 // which of Ion's two records the HLUG one pairs with.
 func TestAmbiguousClusterIsNotMerged(t *testing.T) {
 	start := at("2026-10-01T18:00:00Z")
-	events, _ := New(testRegistry()).Events([]core.RawEvent{
+	events, _, _ := New(testRegistry(), nil).Events([]core.RawEvent{
 		{SourceKey: ionFeed, UpstreamID: "ion-a", Title: "Ion A", Start: start,
 			Organizers: []core.RawOrganizer{{Name: "HLUG"}}},
 		{SourceKey: ionFeed, UpstreamID: "ion-b", Title: "Ion B", Start: start,
@@ -442,5 +442,60 @@ func TestAmbiguousClusterIsNotMerged(t *testing.T) {
 	})
 	if len(events) != 3 {
 		t.Fatalf("got %d events, want 3 left unmerged", len(events))
+	}
+}
+
+func rejectList(t *testing.T, body string) *registry.Rejects {
+	t.Helper()
+	r, err := registry.LoadRejects(strings.NewReader(body))
+	if err != nil {
+		t.Fatalf("LoadRejects: %v", err)
+	}
+	return r
+}
+
+// Rejection happens after the merge, so rejecting ANY of an event's
+// fingerprints rejects the event. Whoever wrote the entry named whichever
+// feed's copy they were looking at, and should not have to know it was
+// published twice.
+func TestRejectingAnyFingerprintRejectsTheEvent(t *testing.T) {
+	ionFP := core.Fingerprint(core.KindTribe, "iondistrict.com?id=2")
+	hlugFP := core.Fingerprint(core.KindICS, "1vb0jpkre7nnn4vr4g4u2ekoh1@google.com")
+
+	for _, fp := range []string{ionFP, hlugFP} {
+		t.Run(fp, func(t *testing.T) {
+			rejects := rejectList(t, "rejects:\n  - fingerprint: \""+fp+"\"\n    reason: Not for us\n")
+			events, rejected, problems := New(testRegistry(), rejects).Events(realCluster())
+
+			if len(problems) != 0 {
+				t.Fatalf("problems = %v", problems)
+			}
+			if rejected != 1 {
+				t.Errorf("rejected = %d, want 1", rejected)
+			}
+			// The NASA talk survives; only the merged HLUG event goes.
+			if len(events) != 1 || events[0].GroupSlug != "ion-district" {
+				t.Fatalf("events = %+v, want only the NASA talk", events)
+			}
+		})
+	}
+}
+
+func TestRejectingLeavesEverythingElseAlone(t *testing.T) {
+	rejects := rejectList(t, "rejects:\n  - fingerprint: \"ics:nothing-here\"\n    reason: Not for us\n")
+	events, rejected, _ := New(testRegistry(), rejects).Events(realCluster())
+	if rejected != 0 {
+		t.Errorf("rejected = %d, want 0", rejected)
+	}
+	if len(events) != 2 {
+		t.Errorf("got %d events, want the usual 2", len(events))
+	}
+}
+
+// A nil reject list is the no-filter case and must not panic.
+func TestNilRejectListRejectsNothing(t *testing.T) {
+	events, rejected, _ := New(testRegistry(), nil).Events(realCluster())
+	if rejected != 0 || len(events) != 2 {
+		t.Errorf("got %d events and %d rejected, want 2 and 0", len(events), rejected)
 	}
 }

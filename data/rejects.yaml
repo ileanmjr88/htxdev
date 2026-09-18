@@ -1,0 +1,61 @@
+# htxdev rejects — events this project has decided not to publish.
+#
+# The registry says which feeds to read. This says which individual events to
+# drop from them, and it exists because a curated feed is not the same as a
+# curated calendar: Ion's calendar is legitimately Ion's, and roughly two
+# thirds of it is investor programming that nobody looking for a Houston tech
+# meetup wants to see.
+#
+# Rejecting is a human act with a name on it, like verification. Edit this by
+# pull request; the commit author is the provenance.
+#
+# HOW IT WORKS
+#   One entry per event, keyed on its fingerprint. Rejecting any fingerprint an
+#   event was built from rejects the whole event, so it does not matter which
+#   feed's copy you happened to be looking at when you decided.
+#
+#   Find a fingerprint with:
+#     ./bin/htxdev sync -n -v            # see the titles
+#     sqlite3 -readonly htxdev.db "SELECT fingerprint, title, starts_at FROM events ORDER BY starts_at"
+#
+# WHY FINGERPRINTS AND NOT TITLES
+#   Deliberate, and the reason is privacy rather than precision. A title-keyed
+#   reject list would contain the titles being rejected, which for the case
+#   below means writing somebody's private calendar entry into a file, to stop
+#   htxdev publishing somebody's private calendar entry. A fingerprint is an
+#   opaque upstream id and says nothing.
+#
+#   It costs something: a recurring entry gets a new fingerprint each
+#   occurrence, so it needs a new line each time. That is the right trade for
+#   this project, and the reasons below stay generic on purpose.
+#
+# WHAT THIS IS NOT FOR
+#   Not for a whole group. Remove it from data/sources.yaml instead.
+#   Not for a feed that broke. That is a bug, and a reject would hide it.
+
+rejects:
+  - fingerprint: "ics:6kqj0pb66kqmab9pc8s66b9k6gpm4b9p71ij2bb269hmad1n6ks3gdj368@google.com"
+    reason: Personal appointment on a shared group calendar, not a group event
+    rejected_by:
+    rejected_at:
+    # Houston Linux User Group runs its public calendar from an account that is
+    # also somebody's personal calendar, so private entries appear beside real
+    # meetings. Found 2026-08-04 and still true 2026-09-17. This is the entry
+    # standing between HLUG and being verifiable: every other event on that
+    # feed is a real, public group meeting.
+    #
+    # rejected_by is blank, the same way verified_by is, and it means the same
+    # thing: nobody has signed for this yet. It does NOT mean the reject is
+    # inactive. A reject applies the moment it is in this file.
+    #
+    # That is the opposite of how verification behaves, and deliberately so.
+    # Both blank fields fail closed, because both point at "do not publish":
+    # an unverified group publishes nothing, and an unsigned reject still
+    # removes the event. Erring the other way on a reject would mean a PR that
+    # forgot a name silently republished what it was written to hide.
+
+# Nothing from Ion is rejected yet, and that is the larger job. Two thirds of
+# its calendar is investor programming, office hours and coworking days. The
+# better fix for most of it is not this file: an event whose organizer names a
+# real group should have that group added to data/sources.yaml, which both
+# attributes it correctly and makes it publishable. Reject only what is left.

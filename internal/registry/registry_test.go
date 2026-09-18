@@ -111,7 +111,10 @@ groups:
 	}
 }
 
-func TestLoadRejects(t *testing.T) {
+// Renamed 2026-09-17. This is about Load() rejecting an invalid registry, and
+// it collided with the test for LoadRejects(), which reads the reject list.
+// Two different senses of the word, one of which is now a type.
+func TestLoadRejectsInvalidRegistries(t *testing.T) {
 	cases := []struct {
 		name string
 		in   string
