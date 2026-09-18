@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   // Static. The whole point of the pipeline is that everything is decided
@@ -13,4 +14,8 @@ export default defineConfig({
   site: 'https://htxdev.ilean.me',
 
   build: { format: 'directory' },
+
+  // Tailwind 4 is a Vite plugin rather than an Astro integration, and its
+  // config lives in CSS. See the @theme block in src/styles/global.css.
+  vite: { plugins: [tailwindcss()] },
 });

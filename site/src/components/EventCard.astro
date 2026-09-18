@@ -23,46 +23,61 @@ const mapQuery = event.venue?.address
   ? [event.venue.name, event.venue.address, event.venue.city, event.venue.state, event.venue.zip]
       .filter(Boolean).join(', ')
   : null;
+
+const tag = 'rounded-full border border-line px-2 py-0.5 text-[.7rem] text-muted';
 ---
 
-<article class:list={['event', { 'is-pending': event.pending }]}>
+<article
+  class:list={[
+    'mb-2 rounded-lg border bg-surface px-4 py-4',
+    event.pending ? 'border-dashed border-warn/60' : 'border-line',
+  ]}
+>
   {/* The group leads, above the title rather than buried in the meta line
       below it. Two communities can cross-post one talk and both listings are
       worth having: somebody looking for Houston PyLadies needs to see that
-      PyLadies is running it, not only that PyHou is. When that happens the
-      two cards are identical except for this line, so this line has to be the
+      PyLadies is running it, not only that PyHou is. When that happens the two
+      cards are identical except for this line, so this line has to be the
       first thing read rather than small grey text underneath. */}
-  <div class="byline">
+  <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[.82rem] font-semibold text-accent">
     {event.group.url
-      ? <a href={event.group.url}>{event.group.name}</a>
-      : event.group.name}
-    <span aria-hidden="true" class="dot">·</span>
-    <span class="time">{when}</span>
+      ? <a class="hover:underline" href={event.group.url}>{event.group.name}</a>
+      : <span>{event.group.name}</span>}
+    <span aria-hidden="true" class="text-line">·</span>
+    <span class="font-normal tabular-nums text-muted">{when}</span>
   </div>
 
-  <h3>
-    {event.url ? <a href={event.url}>{event.title}</a> : event.title}
+  <h3 class="mt-1 mb-1.5 text-[1.05rem] leading-snug font-semibold">
+    {event.url
+      ? <a class="hover:text-accent hover:underline" href={event.url}>{event.title}</a>
+      : event.title}
   </h3>
 
-  <div class="meta">
+  <div class="flex flex-wrap gap-x-3 gap-y-1 text-[.88rem] text-muted">
     {place && (
       <span>
         {mapQuery
-          ? <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}>{place}</a>
+          ? <a
+              class="text-accent hover:underline"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`}
+            >{place}</a>
           : place}
       </span>
     )}
-
-    {event.register_url && <span><a href={event.register_url}>Register</a></span>}
+    {event.register_url && (
+      <span><a class="text-accent hover:underline" href={event.register_url}>Register</a></span>
+    )}
   </div>
 
-  {event.excerpt && <p class="excerpt">{event.excerpt}</p>}
+  {event.excerpt && <p class="mt-2 text-[.92rem] text-fg/85">{event.excerpt}</p>}
 
-  <div class="tags">
-    {event.virtual && <span class="tag">Online</span>}
-    {(event.categories ?? []).map((c) => <span class="tag">{c}</span>)}
+  <div class="mt-2 flex flex-wrap gap-1.5">
+    {event.virtual && <span class={tag}>Online</span>}
+    {(event.categories ?? []).map((c) => <span class={tag}>{c}</span>)}
     {/* Two feeds carrying one event is the only visible evidence dedupe ran. */}
-    {event.sources > 1 && <span class="tag">{event.sources} feeds</span>}
-    {event.pending && <span class="tag pending">pending</span>}
+    {event.sources > 1 && <span class={tag}>{event.sources} feeds</span>}
+    {event.pending && (
+      <span class="rounded-full border border-warn px-2 py-0.5 text-[.7rem] text-warn">pending</span>
+    )}
   </div>
 </article>

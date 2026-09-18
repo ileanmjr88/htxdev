@@ -77,15 +77,17 @@ const generated = new Intl.DateTimeFormat('en-US', {
   </head>
 
   <body>
-    <div class="wrap">
+    <div class="mx-auto max-w-2xl px-5 pt-10 pb-16">
       <header>
-        <h1>Houston tech events</h1>
-        <p>Collected from the groups that run them, so you only have to look in one place.</p>
+        <h1 class="text-2xl font-semibold tracking-tight">Houston tech events</h1>
+        <p class="mt-1 text-muted">
+          Collected from the groups that run them, so you only have to look in one place.
+        </p>
       </header>
 
       {data.preview && (
-        <div class="banner">
-          <strong>Preview build — not for publishing.</strong>
+        <div class="mt-6 rounded-lg border border-warn bg-warn-bg px-4 py-3 text-sm">
+          <strong class="mb-1 block">Preview build — not for publishing.</strong>
           This page includes events from groups nobody has verified yet. A group is verified
           by a human reading its feed once and putting their name in <code>sources.yaml</code>,
           and until that happens these events are not publishable.
@@ -93,9 +95,9 @@ const generated = new Intl.DateTimeFormat('en-US', {
       )}
 
       {days.length === 0 ? (
-        <div class="empty">
+        <div class="mt-8 rounded-lg border border-dashed border-line p-8 text-center text-muted">
           <p>Nothing upcoming.</p>
-          <p>
+          <p class="mt-2">
             If that is a surprise, no group has been verified yet, so every event is still
             pending. Run <code>htxdev export -preview</code> to see what verifying them
             would publish.
@@ -103,21 +105,23 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </div>
       ) : (
         days.map((day) => (
-          <section class="day">
-            <h2>{day.label}</h2>
+          <section class="mt-9">
+            <h2 class="mb-2 border-b border-line pb-1.5 text-xs font-semibold tracking-[.08em] text-muted uppercase">
+              {day.label}
+            </h2>
             {day.events.map((event) => <EventCard event={event} tz={TZ} />)}
           </section>
         ))
       )}
 
-      <footer>
+      <footer class="mt-12 border-t border-line pt-5 text-[.82rem] text-muted">
         <p>
           {events.length} event{events.length === 1 ? '' : 's'}, generated {generated} Houston time.
         </p>
-        <p>
+        <p class="mt-2">
           Events belong to the groups that run them. htxdev reads their public calendars and
           links back. If you organise a Houston tech group and want to be listed, or want to
-          not be, <a href="https://github.com/ileanmjr88/htxdev">say so here</a>.
+          not be, <a class="text-accent hover:underline" href="https://github.com/ileanmjr88/htxdev/issues/new/choose">say so here</a>.
         </p>
       </footer>
     </div>
