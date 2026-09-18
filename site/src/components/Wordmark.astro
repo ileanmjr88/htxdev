@@ -1,0 +1,20 @@
+---
+/* func htxdev() {}
+ *
+ * A wordmark rather than an image: it is text, so it scales, re-themes, reads
+ * aloud to a screen reader and costs no request. The syntax is the point. This
+ * is a Go project about Houston developers, and the declaration says both
+ * without a tagline.
+ *
+ * The punctuation is dimmed and the name carries the accent, which is the same
+ * thing an editor would do to it.
+ */
+const { as: Tag = 'span', class: cls = '' } = Astro.props;
+// An <a> needs somewhere to go; anything else must not have an href.
+const href = Tag === 'a' ? '/' : undefined;
+---
+
+<Tag href={href} class:list={['font-mono whitespace-nowrap no-underline', cls]}>
+  <span class="text-muted">func</span>
+  <span class="text-accent font-semibold">&nbsp;htxdev</span><span class="text-muted">() {'{}'}</span>
+</Tag>

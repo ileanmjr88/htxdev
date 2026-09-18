@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import '../styles/global.css';
 import EventCard from '../components/EventCard.astro';
+import Wordmark from '../components/Wordmark.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 // Read at build time with fs rather than importing the JSON, because the file
 // lives outside this Astro project and Vite's filesystem allow-list would
@@ -71,15 +73,33 @@ const generated = new Intl.DateTimeFormat('en-US', {
       name="description"
       content="Houston tech meetups and events, collected from the groups that run them."
     />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {/* A preview build carries unverified data and must never be indexed if it
         somehow gets deployed. */}
     {data.preview && <meta name="robots" content="noindex, nofollow" />}
+
+    {/* Before first paint, deliberately. Setting the attribute from the toggle
+        component instead would mean the page renders in one theme and then
+        swaps, which is the flash every site with a theme switcher gets wrong
+        at least once. Small enough to stay inline; a request for it would
+        reintroduce the flash it exists to prevent. */}
+    <script is:inline>
+      try {
+        const t = localStorage.getItem('htxdev-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
   </head>
 
   <body>
     <div class="mx-auto max-w-2xl px-5 pt-10 pb-16">
       <header>
-        <h1 class="text-2xl font-semibold tracking-tight">Houston tech events</h1>
+        <div class="flex items-center justify-between gap-4">
+          <Wordmark as="a" class="text-[.95rem]" />
+          <ThemeToggle />
+        </div>
+
+        <h1 class="mt-7 text-2xl font-semibold tracking-tight">Houston tech events</h1>
         <p class="mt-1 text-muted">
           Collected from the groups that run them, so you only have to look in one place.
         </p>

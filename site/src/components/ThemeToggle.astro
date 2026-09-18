@@ -1,0 +1,63 @@
+---
+/* Three states, not two: system, light, dark.
+ *
+ * A two-way toggle has a one-way door in it. Click it once and the page stops
+ * following the OS forever, with no way back, which is worse for somebody
+ * whose machine switches at sunset than having no toggle at all. So "system"
+ * is a state you can return to, and it is the default.
+ *
+ * The choice lives in localStorage under one key and nowhere else. There is no
+ * server and nothing to sync.
+ */
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  class="rounded-md border border-line px-2.5 py-1 text-[.75rem] text-muted transition-colors hover:border-accent hover:text-accent"
+  aria-label="Change colour theme"
+>
+  <span data-theme-label>System</span>
+</button>
+
+<script is:inline>
+  (() => {
+    const KEY = 'htxdev-theme';
+    const ORDER = ['system', 'light', 'dark'];
+    const LABEL = { system: 'System', light: 'Light', dark: 'Dark' };
+
+    // localStorage throws in some privacy modes rather than returning null, so
+    // every access is guarded. The page has to render either way.
+    const read = () => {
+      try {
+        return localStorage.getItem(KEY);
+      } catch {
+        return null;
+      }
+    };
+    const write = (v) => {
+      try {
+        v === 'system' ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, v);
+      } catch {
+        /* nothing to do; the page still works, the choice just does not stick */
+      }
+    };
+
+    const apply = (mode) => {
+      if (mode === 'system') delete document.documentElement.dataset.theme;
+      else document.documentElement.dataset.theme = mode;
+      const label = document.querySelector('[data-theme-label]');
+      if (label) label.textContent = LABEL[mode];
+    };
+
+    const stored = read();
+    let current = ORDER.includes(stored) ? stored : 'system';
+    apply(current);
+
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      current = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
+      write(current);
+      apply(current);
+    });
+  })();
+</script>

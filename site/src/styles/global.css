@@ -34,18 +34,21 @@
     Helvetica, Arial, sans-serif;
 }
 
-/* Dark first, like the blog, and light only for somebody who asked for it.
- * Not a toggle: a static page with no JavaScript should not grow a runtime
- * just to hold a preference, and the OS already has one.
+/* Dark first, like the blog. Light applies in two cases, and they need two
+ * selectors because they are genuinely different questions:
  *
- * Overridden on :root rather than in a second @theme block, which is the
- * mistake this started as. Tailwind 4 resolves @theme at build time to emit
- * its utility classes, so a nested one does not become conditional: the last
- * definition simply wins everywhere, and the whole site came out light. The
- * utilities reference var(--color-*), so re-declaring the variables here
- * re-themes all of them with no extra CSS. */
+ *   1. the OS asks for light AND the reader has not overridden it
+ *   2. the reader picked light, whatever the OS says
+ *
+ * Both re-declare the plain CSS variables on :root rather than opening a
+ * second @theme block. Tailwind 4 resolves @theme at build time to emit its
+ * utility classes, so a nested one is not conditional: the last definition
+ * wins everywhere, and the first version of this file came out light in both
+ * modes with a green build and no error. The utilities all reference
+ * var(--color-*), so re-declaring the variables re-themes every one of them.
+ */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --color-bg: #f9fafb;
     --color-surface: #ffffff;
     --color-line: #e5e7eb;
@@ -56,6 +59,18 @@
     --color-warn: #b45309;
     --color-warn-bg: #fff4e5;
   }
+}
+
+:root[data-theme="light"] {
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-line: #e5e7eb;
+  --color-fg: #111827;
+  --color-muted: #6b7280;
+  --color-accent: #0369a1;
+  --color-accent-soft: #0284c7;
+  --color-warn: #b45309;
+  --color-warn-bg: #fff4e5;
 }
 
 @layer base {
