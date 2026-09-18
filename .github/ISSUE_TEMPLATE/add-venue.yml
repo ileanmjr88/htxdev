@@ -1,0 +1,74 @@
+name: Add or fix a venue
+description: A place Houston tech groups meet
+title: "Venue: "
+labels: ["venue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most venues do not need an entry. The site learns them from event data
+        and gives them a row automatically.
+
+        **Curate one here when a name needs settling**: when the same building
+        arrives spelled several ways, when feeds give no address, or when a
+        group meets somewhere its calendar never names.
+
+  - type: input
+    id: name
+    attributes:
+      label: Venue name
+      description: The canonical one. Everything else goes in aliases below.
+      placeholder: Ion
+    validations:
+      required: true
+
+  - type: textarea
+    id: aliases
+    attributes:
+      label: Other spellings
+      description: |
+        One per line, exactly as other feeds write them, punctuation included.
+        "The Ion" is an alias of "Ion", and that single line is what stops the
+        same building appearing twice on the site.
+      placeholder: |
+        The Ion
+        Ion District Building
+
+  - type: input
+    id: address
+    attributes:
+      label: Street address
+      placeholder: 4201 Main St
+
+  - type: input
+    id: city
+    attributes:
+      label: City, state, ZIP
+      placeholder: Houston, TX 77002
+
+  - type: input
+    id: url
+    attributes:
+      label: Website
+
+  - type: dropdown
+    id: reason
+    attributes:
+      label: Why does this one need curating
+      options:
+        - It shows up under several different names
+        - Feeds do not give its address
+        - A group meets here and its calendar never says so
+        - Something is wrong with the entry that already exists
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: |
+        Rooms in particular. The Ion sends a dozen variants of itself and
+        everything after the dash is a room rather than a venue. If this place
+        does something similar, say so.

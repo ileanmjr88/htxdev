@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a group to publish a calendar
+    url: https://github.com/ileanmjr88/htxdev/blob/main/data/sources.yaml
+    about: >
+      Some groups publish no machine-readable calendar at all. The best fix is
+      asking them for one rather than writing a scraper, and sources.yaml
+      records which groups are in that position and what was already tried.

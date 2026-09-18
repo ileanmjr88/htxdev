@@ -1,0 +1,102 @@
+name: Add a group
+description: A Houston tech group that should be on the site
+title: "Add group: "
+labels: ["new source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks. The registry is the part of this project that matters most, so a
+        good entry here is worth more than a good patch.
+
+        **You do not need to know the technical answers.** Fill in what you know
+        and leave the rest; the feed can be worked out from a link to the group.
+
+  - type: input
+    id: name
+    attributes:
+      label: Group name
+      description: As the group writes it, not as you would.
+      placeholder: Houston Open Source Society
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: Where the group lives
+      description: Homepage, Meetup page, wherever somebody would go to find out about it.
+      placeholder: https://houstonopensourcesociety.com
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: What kind of group is it
+      description: |
+        One per group. This becomes the event's category on the site, because
+        the groups know what they are and the feeds mostly do not.
+      options:
+        - dev
+        - hardware
+        - data
+        - startup
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: feed
+    attributes:
+      label: Calendar feed, if you know of one
+      description: |
+        An `.ics` link is ideal. On Meetup it is the group URL plus
+        `/events/ical/`. Leave blank if you do not know; it can be found.
+      placeholder: https://www.meetup.com/example/events/ical/
+
+  - type: input
+    id: venue
+    attributes:
+      label: Where do they usually meet
+      description: |
+        Only if it is consistent. Several feeds send no location at all, and
+        this fills the gap. Leave blank if the group moves around, because a
+        wrong venue is worse than none.
+      placeholder: Improving Houston
+
+  - type: textarea
+    id: aliases
+    attributes:
+      label: Other names it goes by
+      description: |
+        One per line. This is how the site works out that two feeds are
+        describing the same meeting. Ion writes the Linux group as
+        "Houston Linux User's Group" with a curly apostrophe, and that alias is
+        the only reason its events deduplicate.
+      placeholder: |
+        HOSS
+        Houston OSS
+
+  - type: checkboxes
+    id: vouch
+    attributes:
+      label: Can you vouch for it
+      description: |
+        Adding a group and vouching for one are different things, and both are
+        useful. Events from a group nobody has vouched for are collected but
+        never published.
+      options:
+        - label: I have been, or I know the people who run it
+        - label: I organise this group
+        - label: I found it and it looks legitimate, but I cannot personally vouch
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: |
+        Especially anything odd. Does the calendar carry things other than the
+        group's events? Is it run off somebody's personal account? That
+        question is not paranoia; it has caught real private appointments on a
+        real Houston group's public calendar twice.
