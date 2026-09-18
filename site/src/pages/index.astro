@@ -118,6 +118,15 @@ const generated = new Intl.DateTimeFormat('en-US', {
           links back. If you organise a Houston tech group and want to be listed, or want to
           not be, <a class="text-accent hover:underline" href="https://github.com/ileanmjr88/htxdev/issues/new/choose">say so here</a>.
         </p>
+        {/* The same data this page was built from, as JSON. Worth saying out
+            loud: the point of collecting this in one place is that somebody
+            else can use it without scraping the page. */}
+        <p class="mt-2">
+          Building something with this? The data is at
+          <a class="text-accent hover:underline" href="/api/v1/events.json"><code>/api/v1/events.json</code></a>,
+          CORS open, no key.
+          <a class="text-accent hover:underline" href="https://github.com/ileanmjr88/htxdev">Source on GitHub</a>.
+        </p>
       </footer>
     </div>
   </body>
