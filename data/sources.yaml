@@ -423,6 +423,23 @@ groups:
     #
     # NO DEFAULT VENUE, same reason as PyHou: its one event is the statewide
     # PyTexas meetup, which happens in Discord.
+    #
+    # THAT EVENT APPEARS TWICE ON THE SITE, under this group and under PyHou,
+    # and that is the decision rather than a bug to fix later. Both groups
+    # cross-post the statewide meetup and Meetup gives each its own event id,
+    # so dedupe leaves them alone: the cluster key is (group, instant) and
+    # these are two groups.
+    #
+    # Merging them was considered and rejected. Somebody looking for Houston
+    # PyLadies needs to see that PyLadies is running something, not only that
+    # PyHou is; a listing is how a person finds their community, and
+    # collapsing it to one row deletes exactly the fact they came for. There
+    # is also no defensible winner: the event belongs to PyTexas, neither
+    # group is PyTexas, and both feeds are priority 10.
+    #
+    # The cost is two identical-looking rows, and that is a rendering problem
+    # rather than a data one. The site leads each card with the group name
+    # above the title so the pair reads as two communities and one talk.
     sources:
       - kind: ics
         url: https://www.meetup.com/Houston_PyLadies/events/ical/

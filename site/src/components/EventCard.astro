@@ -26,19 +26,25 @@ const mapQuery = event.venue?.address
 ---
 
 <article class:list={['event', { 'is-pending': event.pending }]}>
-  <div class="time">{when}</div>
+  {/* The group leads, above the title rather than buried in the meta line
+      below it. Two communities can cross-post one talk and both listings are
+      worth having: somebody looking for Houston PyLadies needs to see that
+      PyLadies is running it, not only that PyHou is. When that happens the
+      two cards are identical except for this line, so this line has to be the
+      first thing read rather than small grey text underneath. */}
+  <div class="byline">
+    {event.group.url
+      ? <a href={event.group.url}>{event.group.name}</a>
+      : event.group.name}
+    <span aria-hidden="true" class="dot">·</span>
+    <span class="time">{when}</span>
+  </div>
 
   <h3>
     {event.url ? <a href={event.url}>{event.title}</a> : event.title}
   </h3>
 
   <div class="meta">
-    <span>
-      {event.group.url
-        ? <a href={event.group.url}>{event.group.name}</a>
-        : event.group.name}
-    </span>
-
     {place && (
       <span>
         {mapQuery
