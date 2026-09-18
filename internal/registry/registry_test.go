@@ -16,17 +16,17 @@ func TestRealSourcesYAMLIsValid(t *testing.T) {
 		t.Fatalf("committed sources.yaml does not load:\n%v", err)
 	}
 
-	if len(reg.Groups) != 10 {
-		t.Errorf("got %d groups, want 10", len(reg.Groups))
+	if len(reg.Groups) != 11 {
+		t.Errorf("got %d groups, want 11", len(reg.Groups))
 	}
 	if len(reg.Venues) != 6 {
 		t.Errorf("got %d venues, want 6", len(reg.Venues))
 	}
-	if len(reg.Sources) != 10 {
-		t.Errorf("got %d sources, want 10", len(reg.Sources))
+	if len(reg.Sources) != 11 {
+		t.Errorf("got %d sources, want 11", len(reg.Sources))
 	}
-	if got := len(reg.EnabledSources()); got != 10 {
-		t.Errorf("got %d enabled sources, want 10", got)
+	if got := len(reg.EnabledSources()); got != 11 {
+		t.Errorf("got %d enabled sources, want 11", got)
 	}
 
 	// HOSS publishes no calendar, so it is the one source read as HTML. This

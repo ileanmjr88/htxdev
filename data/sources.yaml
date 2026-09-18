@@ -397,6 +397,38 @@ groups:
         priority: 10
         enabled: true
 
+  - slug: pyladies-houston
+    name: Houston PyLadies
+    url: https://www.meetup.com/Houston_PyLadies/
+    category: dev
+    verified_by: ileanmjr88
+    verified_at: 2026-09-18
+    aliases:
+      - PyLadies Houston
+      - PyLadies
+    # THE SLUG MATTERS HERE. Three spellings answer with HTTP 200 and only one
+    # is canonical:
+    #   pyladies-houston  -> redirects to Houston_PyLadies   (this group)
+    #   pyladies-htx      -> redirects to Houston_PyLadies   (this group)
+    #   houston-pyladies  -> a DIFFERENT, empty group named just "PyLadies"
+    # Meetup answers 200 on a redirect, so a status check proves nothing. The
+    # underscore form is what X-ORIGINAL-URL reports and it resolves with no
+    # redirect at all, which is why it is the one in the file.
+    #
+    # pyladies.com/locations/ lists a "PyLadiesHMO" near Houston in the markup;
+    # that group does not exist ({"message":"Group not found"}) and is not this
+    # one. Checked 2026-09-18.
+    #
+    # Verified 2026-09-18. One upcoming event, and see the warning below.
+    #
+    # NO DEFAULT VENUE, same reason as PyHou: its one event is the statewide
+    # PyTexas meetup, which happens in Discord.
+    sources:
+      - kind: ics
+        url: https://www.meetup.com/Houston_PyLadies/events/ical/
+        priority: 10
+        enabled: true
+
 # Deliberately excluded — recorded so they don't get re-added later:
 #
 #   PyTexas virtual meetup — meetup.com/pytexas-virtual-meetup/ is the
@@ -410,6 +442,11 @@ groups:
 #     one, so no amount of guessing at names would have reached it. PyTexas
 #     links it from pytexas.org/meetup/local-meetups/, which is where to look
 #     next time rather than at Meetup's search.
+#
+#   meetup.com/houston-pyladies — a real group, and NOT Houston PyLadies. It
+#     is named just "PyLadies", has no events, and is a different group from
+#     meetup.com/Houston_PyLadies which is the live one. Recorded because the
+#     hyphenated spelling is the one somebody would guess at.
 #
 #   Other Houston-area Python groups PyTexas lists, not yet looked at:
 #     meetup.com/katy-python-coders, meetup.com/houston-data-science.
