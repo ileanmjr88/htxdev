@@ -178,16 +178,19 @@ func toRawEvent(te tribeEvent) (core.RawEvent, error) {
 		Start:       start,
 		End:         end,
 		AllDay:      te.AllDay,
-		URL:         te.URL,
-		RegisterURL: te.Website, // `website`, not `url`: the external signup link
-		VirtualURL:  te.VirtualURL,
+		// Every URL from a feed goes through cleanURL. A live feed shipped a
+		// schemeless signup link with a trailing space, which rendered as a
+		// relative path on the site.
+		URL:         cleanURL(te.URL),
+		RegisterURL: cleanURL(te.Website), // `website`, not `url`: the external signup link
+		VirtualURL:  cleanURL(te.VirtualURL),
 		Virtual:     te.IsVirtual,
 	}
 
 	for _, o := range te.Organizer {
 		re.Organizers = append(re.Organizers, core.RawOrganizer{
 			Name: html.UnescapeString(o.Organizer),
-			URL:  o.Website,
+			URL:  cleanURL(o.Website),
 		})
 	}
 	for _, v := range te.Venue {
@@ -198,7 +201,7 @@ func toRawEvent(te tribeEvent) (core.RawEvent, error) {
 			City:       v.City,
 			State:      v.State,
 			Zip:        v.Zip,
-			URL:        v.URL,
+			URL:        cleanURL(v.URL),
 		})
 	}
 	for _, c := range te.Categories {

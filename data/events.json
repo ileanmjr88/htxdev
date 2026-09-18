@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T18:33:02Z",
+  "generated_at": "2026-09-18T19:26:50Z",
   "events": [
     {
       "id": "ics:trh5l9tva915dsjpt4adr4r6sn@google.com_20260919T010000Z",
@@ -1020,7 +1020,7 @@
       },
       "room": "Rooms 29 and 30",
       "url": "https://iondistrict.com/event/houston-linux-user-group-11/",
-      "register_url": "www.houstonlinux.org ",
+      "register_url": "https://www.houstonlinux.org",
       "categories": [
         "dev"
       ],

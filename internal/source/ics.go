@@ -262,8 +262,8 @@ func (e *icsEvent) toRawEvents(from, until time.Time) ([]core.RawEvent, error) {
 		Start:       start.UTC(),
 		End:         utcOrZero(end),
 		AllDay:      allDay,
-		URL:         e.url,
-		VirtualURL:  e.conference,
+		URL:         cleanURL(e.url),
+		VirtualURL:  cleanURL(e.conference),
 		Virtual:     e.conference != "",
 	}
 

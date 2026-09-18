@@ -28,6 +28,7 @@ const tag = 'rounded-full border border-line px-2 py-0.5 text-[.7rem] text-muted
 ---
 
 <article
+  data-group={event.group.slug}
   class:list={[
     'mb-2 rounded-lg border bg-surface px-4 py-4',
     event.pending ? 'border-dashed border-warn/60' : 'border-line',
@@ -72,9 +73,15 @@ const tag = 'rounded-full border border-line px-2 py-0.5 text-[.7rem] text-muted
   {event.excerpt && <p class="mt-2 text-[.92rem] text-fg/85">{event.excerpt}</p>}
 
   <div class="mt-2 flex flex-wrap gap-1.5">
-    {event.virtual && <span class={tag}>Online</span>}
-    {(event.categories ?? []).map((c) => <span class={tag}>{c}</span>)}
-    {/* Two feeds carrying one event is the only visible evidence dedupe ran. */}
+    {event.virtual && <span class={tag}>Online</span>}{' '}
+    {(event.categories ?? []).map((c) => <><span class={tag}>{c}</span>{' '}</>)}
+    {/* Two feeds carrying one event is the only visible evidence dedupe ran.
+
+        The {' '} separators are not decoration. These are flex items with
+        gap-1.5, so they look spaced, but with no whitespace between them in
+        the DOM the text layer reads "dev2 feeds" to a screen reader, to reader
+        mode and to anyone who copies the page. Flex ignores whitespace between
+        items, so this costs nothing visually. */}
     {event.sources > 1 && <span class={tag}>{event.sources} feeds</span>}
     {event.pending && (
       <span class="rounded-full border border-warn px-2 py-0.5 text-[.7rem] text-warn">pending</span>

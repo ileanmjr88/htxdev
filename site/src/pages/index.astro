@@ -33,6 +33,18 @@ for (const event of events) {
   else days.push({ key, label: dayHeading.format(new Date(event.start)), events: [event] });
 }
 
+// Groups present in this build, most events first, for the filter chips. Built
+// here rather than in the browser so the buttons and their counts are in the
+// HTML: without JS you get the full list and no controls, which is the right
+// fallback, and with JS nothing has to be measured before the page settles.
+const groupCounts = new Map();
+for (const e of events) {
+  const g = groupCounts.get(e.group.slug) ?? { slug: e.group.slug, name: e.group.name, count: 0 };
+  g.count++;
+  groupCounts.set(e.group.slug, g);
+}
+const groups = [...groupCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
 const generated = new Intl.DateTimeFormat('en-US', {
   dateStyle: 'medium', timeStyle: 'short', timeZone: TZ,
 }).format(new Date(data.generated_at));
@@ -89,6 +101,38 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </div>
       )}
 
+      {/* Filter by group rather than by category, deliberately. The category
+          tags do no filtering work today: `startup` is 40 events and the Ion
+          District feed is 40 events, so the tag is the feed wearing a
+          different name. A group is a real attribute somebody verified.
+
+          Plain buttons with aria-pressed, no framework. Without JS every event
+          shows and the controls simply do nothing, which is the correct
+          fallback for a static page whose whole point is the list. */}
+      {groups.length > 1 && (
+        <div class="mt-7">
+          <div class="flex flex-wrap items-center gap-1.5" id="filters" role="group" aria-label="Filter by group">
+            <button
+              type="button"
+              data-filter="all"
+              aria-pressed="true"
+              class="rounded-full border border-line px-2.5 py-1 text-[.78rem] text-muted hover:border-accent hover:text-fg aria-pressed:border-accent aria-pressed:bg-accent/10 aria-pressed:text-fg"
+            >All {events.length}</button>
+            {groups.map((g) => (
+              <button
+                type="button"
+                data-filter={g.slug}
+                aria-pressed="true"
+                class="rounded-full border border-line px-2.5 py-1 text-[.78rem] text-muted hover:border-accent hover:text-fg aria-pressed:border-accent aria-pressed:bg-accent/10 aria-pressed:text-fg"
+              >{g.name} {g.count}</button>
+            ))}
+          </div>
+          {/* aria-live so a screen reader is told the list changed. The visual
+              change is obvious; the announcement is the only signal otherwise. */}
+          <p class="mt-2 text-[.8rem] text-muted" id="filter-status" aria-live="polite"></p>
+        </div>
+      )}
+
       {days.length === 0 ? (
         <div class="mt-8 rounded-lg border border-dashed border-line p-8 text-center text-muted">
           <p>Nothing upcoming.</p>
@@ -100,7 +144,7 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </div>
       ) : (
         days.map((day) => (
-          <section class="mt-9">
+          <section class="mt-9" data-day={day.key}>
             <h2 class="mb-2 border-b border-line pb-1.5 text-xs font-semibold tracking-[.08em] text-muted uppercase">
               {day.label}
             </h2>
@@ -129,5 +173,87 @@ const generated = new Intl.DateTimeFormat('en-US', {
         </p>
       </footer>
     </div>
+
+    {/* Filtering, inline and dependency-free.
+
+        State is the set of HIDDEN slugs, not the visible ones. That way a
+        group added to the registry next month shows up for everyone who has
+        used the filters before, instead of being invisible to exactly the
+        people who use the site most.
+
+        Every localStorage access is wrapped, because it throws rather than
+        returning null in a locked-down browser, and a thrown filter would take
+        the whole listing with it. */}
+    <script is:inline>
+      (() => {
+        const bar = document.getElementById('filters');
+        if (!bar) return;
+
+        const KEY = 'htxdev-hidden-groups';
+        const status = document.getElementById('filter-status');
+        const cards = [...document.querySelectorAll('article[data-group]')];
+        const days = [...document.querySelectorAll('section[data-day]')];
+        const buttons = [...bar.querySelectorAll('button[data-filter]')];
+        const all = buttons.filter((b) => b.dataset.filter !== 'all');
+
+        let hidden = new Set();
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (raw) hidden = new Set(JSON.parse(raw));
+        } catch {}
+
+        // A stored slug for a group that has since left the registry would
+        // hide nothing and confuse the counts, so drop it on load.
+        const known = new Set(all.map((b) => b.dataset.filter));
+        for (const slug of [...hidden]) if (!known.has(slug)) hidden.delete(slug);
+
+        const save = () => {
+          try { localStorage.setItem(KEY, JSON.stringify([...hidden])); } catch {}
+        };
+
+        const apply = () => {
+          let shown = 0;
+          for (const card of cards) {
+            const on = !hidden.has(card.dataset.group);
+            card.hidden = !on;
+            if (on) shown++;
+          }
+          // A date heading with nothing under it reads as a bug.
+          for (const day of days) {
+            day.hidden = !day.querySelector('article[data-group]:not([hidden])');
+          }
+          for (const b of all) {
+            b.setAttribute('aria-pressed', String(!hidden.has(b.dataset.filter)));
+          }
+          const allBtn = buttons.find((b) => b.dataset.filter === 'all');
+          if (allBtn) allBtn.setAttribute('aria-pressed', String(hidden.size === 0));
+
+          if (status) {
+            status.textContent = hidden.size === 0
+              ? ''
+              : shown === 0
+                ? 'No events match. Every group is filtered out.'
+                : `Showing ${shown} of ${cards.length} events.`;
+          }
+        };
+
+        bar.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-filter]');
+          if (!btn) return;
+          const slug = btn.dataset.filter;
+          if (slug === 'all') {
+            hidden.clear();
+          } else if (hidden.has(slug)) {
+            hidden.delete(slug);
+          } else {
+            hidden.add(slug);
+          }
+          save();
+          apply();
+        });
+
+        apply();
+      })();
+    </script>
   </body>
 </html>
