@@ -469,9 +469,9 @@ func TestDiscoveredVenuesGetRows(t *testing.T) {
 	seed(t, st, "ileanmjr88")
 
 	a := ev(tribeFeed, "a", "One", runOne.Add(24*time.Hour))
-	a.VenueName, a.Room = "Zion Lutheran Church", ""
+	a.Venue = core.Venue{Name: "Zion Lutheran Church", Address: "3606 Beauchamp Blvd", City: "Houston"}
 	b := ev(tribeFeed, "b", "Two", runOne.Add(48*time.Hour))
-	b.VenueName, b.Room = "Zion Lutheran Church", "Fellowship Hall"
+	b.Venue, b.Room = core.Venue{Name: "Zion Lutheran Church"}, "Fellowship Hall"
 	save(t, st, runOne, a, b)
 
 	var n int
@@ -489,8 +489,14 @@ func TestDiscoveredVenuesGetRows(t *testing.T) {
 	if len(up) != 2 {
 		t.Fatalf("got %d events, want 2", len(up))
 	}
-	if up[0].VenueID == 0 || up[0].VenueID != up[1].VenueID {
-		t.Errorf("venue ids = %d and %d, want one shared non-zero id", up[0].VenueID, up[1].VenueID)
+	if up[0].Venue.ID == 0 || up[0].Venue.ID != up[1].Venue.ID {
+		t.Errorf("venue ids = %d and %d, want one shared non-zero id", up[0].Venue.ID, up[1].Venue.ID)
+	}
+	// The address the first event supplied is on the row, and the second
+	// event supplying none did not blank it.
+	if up[0].Venue.Address != "3606 Beauchamp Blvd" || up[1].Venue.Address != "3606 Beauchamp Blvd" {
+		t.Errorf("addresses = %q and %q, want both kept from the first sighting",
+			up[0].Venue.Address, up[1].Venue.Address)
 	}
 	if up[1].Room != "Fellowship Hall" {
 		t.Errorf("room = %q, want it kept per event rather than on the venue", up[1].Room)
@@ -864,7 +870,7 @@ func TestUpcomingCarriesProvenanceAndCategories(t *testing.T) {
 	b := ev(tribeFeed, "ion", "Ion's copy", start)
 	e := merged("Merged event", start, a, b)
 	e.Categories = []string{"dev"}
-	e.VenueName, e.Room = "Ion", "Conference Room 030"
+	e.Venue, e.Room = core.Venue{Name: "Ion"}, "Conference Room 030"
 	save(t, st, runOne, e)
 
 	up, err := st.Upcoming(t.Context(), runOne)
@@ -881,7 +887,8 @@ func TestUpcomingCarriesProvenanceAndCategories(t *testing.T) {
 	if len(got.Categories) != 1 || got.Categories[0] != "dev" {
 		t.Errorf("categories = %v, want [dev]", got.Categories)
 	}
-	if got.VenueName != "Ion" || got.Room != "Conference Room 030" || got.VenueID == 0 {
-		t.Errorf("venue = (%d, %q, %q), want a resolved id and the room", got.VenueID, got.VenueName, got.Room)
+	if got.Venue.Name != "Ion" || got.Room != "Conference Room 030" || got.Venue.ID == 0 {
+		t.Errorf("venue = (%d, %q, %q), want a resolved id and the room",
+			got.Venue.ID, got.Venue.Name, got.Room)
 	}
 }

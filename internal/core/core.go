@@ -109,13 +109,19 @@ type Event struct {
 	End       time.Time
 	AllDay    bool
 
-	// VenueName is the canonical venue this resolved to, and VenueID is that
-	// venue's row once the database has one. Both, for the reason D14 gives
-	// for RawEvent.SourceKey: normalize runs before anything is written, so
-	// int64 ids do not exist yet, and a venue discovered from event data may
-	// have no row at all until this event creates it. 0 means unresolved.
-	VenueName   string
-	VenueID     int64
+	// Venue is where this resolved to, whole rather than as a name and an id.
+	// Its ID is 0 until the database has a row, for the reason D14 gives for
+	// RawEvent.SourceKey: normalize runs before anything is written, and a
+	// venue discovered from event data may have no row at all until this event
+	// creates it. An empty Name means nothing resolved, which is normal: 7 of
+	// HLUG's 110 events carry no LOCATION.
+	//
+	// A curated venue arrives here with the address sources.yaml gives it,
+	// which is the point of curating one. Ion's own feed spells its address
+	// three ways across five rooms ("4201 Main Street", "4201 Main St",
+	// "4201 Main St.") and sometimes omits the state or the zip. A discovered
+	// venue arrives with whatever its feed said, because that beats nothing.
+	Venue       Venue
 	Room        string // "Conference Room 028", split off the venue name
 	URL         string
 	RegisterURL string

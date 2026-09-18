@@ -25,9 +25,9 @@ var roomPrefixes = []string{"room", "rooms", "conference room", "suite", "floor"
 // venues to be discovered from event data and curated in sources.yaml only
 // when a name needs canonicalising. So the name survives even when nothing
 // matches, and the store gives it a row.
-func (n *Normalizer) resolveVenue(vs []core.RawVenue) (name, room string) {
+func (n *Normalizer) resolveVenue(vs []core.RawVenue) (venue core.Venue, room string) {
 	if len(vs) == 0 {
-		return "", ""
+		return core.Venue{}, ""
 	}
 
 	// Ion sends the hierarchy outright on 10 of 67 events, as a two-element
@@ -42,10 +42,10 @@ func (n *Normalizer) resolveVenue(vs []core.RawVenue) (name, room string) {
 		// "Ion – Lobby" and "Ion Plaza" beside "Ion". Strip that prefix and
 		// what is left is the room.
 		if room, ok := stripVenuePrefix(inner, outer); ok {
-			if canonical, matched := n.canonicalVenue(outer); matched {
-				return canonical, room
+			if curated, matched := n.canonicalVenue(outer); matched {
+				return curated, room
 			}
-			return outer, room
+			return discovered(outer, vs[len(vs)-1]), room
 		}
 
 		// It does not, so it is somewhere else that happens to sit inside the
@@ -55,46 +55,100 @@ func (n *Normalizer) resolveVenue(vs []core.RawVenue) (name, room string) {
 		// room of the Ion sends people to the wrong door. sources.yaml already
 		// records the same trap for Industrious and Second Draught, which
 		// share an address with the Ion and are separate venues.
-		if canonical, matched := n.canonicalVenue(inner); matched {
-			return canonical, ""
+		if curated, matched := n.canonicalVenue(inner); matched {
+			return curated, ""
 		}
-		return inner, ""
+		return discovered(inner, vs[0]), ""
 	}
 
 	raw := strings.TrimSpace(vs[0].Name)
 
 	// Whole string first. "Ion", "Improving Houston", "Second Draught" and
 	// every HOSS venue arrive this way and need no splitting at all.
-	if canonical, ok := n.canonicalVenue(raw); ok {
-		return canonical, ""
+	if curated, ok := n.canonicalVenue(raw); ok {
+		return curated, ""
 	}
 
 	// The tribe form: an en dash separates building from room. Split on the
 	// first one only, so "Ion – Conference Room 029 – 030" keeps the second
 	// dash inside the room where it belongs.
 	if before, after, ok := splitOnDash(raw); ok {
-		if canonical, matched := n.canonicalVenue(before); matched {
-			return canonical, after
+		if curated, matched := n.canonicalVenue(before); matched {
+			return curated, after
 		}
-		return before, after
+		return discovered(before, vs[0]), after
 	}
 
 	// The ICS form: one flat LOCATION string, comma separated, venue first.
 	if before, after, ok := strings.Cut(raw, ","); ok {
 		before = strings.TrimSpace(before)
-		if canonical, matched := n.canonicalVenue(before); matched {
+		if curated, matched := n.canonicalVenue(before); matched {
 			// Only now is it safe to look for a room. The segment after a
 			// venue we recognise is either a room or the start of an address
 			// we already know, and a leading digit rules out the former.
-			return canonical, roomSegment(after)
+			return curated, roomSegment(after)
 		}
-		// Unrecognised: keep the venue name and drop the address, which
-		// RawVenue could not parse into fields either. Phase 6 links to the
-		// group, not to a map.
-		return before, ""
+		// Unrecognised, so the rest of the string is the only address this
+		// venue will ever have. ICS sends one flat LOCATION and the shape is
+		// regular: "Name, Street, City, ST ZIP, Country".
+		v := discovered(before, vs[0])
+		v.Address, v.City, v.State, v.Zip = splitFlatAddress(after)
+		return v, ""
 	}
 
-	return raw, ""
+	return discovered(raw, vs[0]), ""
+}
+
+// discovered builds a venue from what a feed said about a place nobody has
+// curated. The name is passed separately because it has usually been cleaned
+// up (a room split off, a district name stripped) by the time we get here.
+//
+// Ion's feed carries structured address fields, so a venue it names arrives
+// complete: Second Draught is "4201 Main St. Suite 130, Houston TX 77002" in
+// the payload. Throwing that away and showing a bare name would be choosing to
+// know less than the feed told us.
+func discovered(name string, raw core.RawVenue) core.Venue {
+	return core.Venue{
+		Name:    name,
+		Address: strings.TrimSpace(raw.Address),
+		City:    strings.TrimSpace(raw.City),
+		State:   strings.TrimSpace(raw.State),
+		Zip:     strings.TrimSpace(raw.Zip),
+		URL:     strings.TrimSpace(raw.URL),
+	}
+}
+
+// splitFlatAddress pulls what it can out of the tail of an ICS LOCATION.
+//
+// The shape is "Street, City, ST ZIP, Country" and it is consistent across
+// both Google Calendar and Meetup, but it is still a string somebody typed, so
+// every field is best-effort and a segment that does not fit is dropped rather
+// than guessed at. Missing beats wrong on an address.
+func splitFlatAddress(rest string) (address, city, state, zip string) {
+	var parts []string
+	for _, p := range strings.Split(rest, ",") {
+		if p = strings.TrimSpace(p); p != "" && !strings.EqualFold(p, "USA") && !strings.EqualFold(p, "US") {
+			parts = append(parts, p)
+		}
+	}
+	if len(parts) > 0 {
+		address = parts[0]
+	}
+	if len(parts) > 1 {
+		city = parts[1]
+	}
+	if len(parts) > 2 {
+		// "TX 77077", and occasionally just one or the other.
+		for f := range strings.FieldsSeq(parts[2]) {
+			switch {
+			case len(f) == 2 && f == strings.ToUpper(f) && state == "":
+				state = f
+			case len(f) == 5 && f[0] >= '0' && f[0] <= '9':
+				zip = f
+			}
+		}
+	}
+	return address, city, state, zip
 }
 
 // stripVenuePrefix reports whether inner begins with outer, and returns what
@@ -129,11 +183,9 @@ func stripVenuePrefix(inner, outer string) (room string, ok bool) {
 // and returns the curated spelling. That is the point of curating one: HLUG
 // writes "The Ion" and Ion writes "Ion", and both have to end up as one venue
 // or the same building appears twice on the site.
-func (n *Normalizer) canonicalVenue(name string) (string, bool) {
-	if v, ok := n.venuesByName[foldKey(name)]; ok {
-		return v.Name, true
-	}
-	return "", false
+func (n *Normalizer) canonicalVenue(name string) (core.Venue, bool) {
+	v, ok := n.venuesByName[foldKey(name)]
+	return v, ok
 }
 
 // splitOnDash splits at the first dash of any width, once folding has made

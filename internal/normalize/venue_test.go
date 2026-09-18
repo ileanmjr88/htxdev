@@ -92,9 +92,9 @@ func TestResolveVenueAgainstLiveStrings(t *testing.T) {
 				vs = append(vs, core.RawVenue{Name: s})
 			}
 			gotVenue, gotRoom := n.resolveVenue(vs)
-			if gotVenue != tc.wantVenue || gotRoom != tc.wantRoom {
+			if gotVenue.Name != tc.wantVenue || gotRoom != tc.wantRoom {
 				t.Errorf("resolveVenue(%q) = (%q, %q), want (%q, %q)",
-					tc.in, gotVenue, gotRoom, tc.wantVenue, tc.wantRoom)
+					tc.in, gotVenue.Name, gotRoom, tc.wantVenue, tc.wantRoom)
 			}
 		})
 	}
@@ -108,9 +108,9 @@ func TestResolveVenueAgainstLiveStrings(t *testing.T) {
 func TestIonPlazaIsNotResolvedYet(t *testing.T) {
 	n := New(venueRegistry(), nil)
 	venue, room := n.resolveVenue([]core.RawVenue{{Name: "Ion Plaza"}})
-	if venue != "Ion Plaza" || room != "" {
+	if venue.Name != "Ion Plaza" || room != "" {
 		t.Errorf("resolveVenue(Ion Plaza) = (%q, %q); if this changed, an alias was added and the comment needs updating",
-			venue, room)
+			venue.Name, room)
 	}
 }
 
@@ -133,9 +133,13 @@ func TestMergePrefersAResolvedVenue(t *testing.T) {
 	if events[0].Title != "Winner" {
 		t.Errorf("title = %q, want the priority winner's", events[0].Title)
 	}
-	if events[0].VenueName != "Ion" || events[0].Room != "Conference Room 030" {
+	if events[0].Venue.Name != "Ion" || events[0].Room != "Conference Room 030" {
 		t.Errorf("venue = (%q, %q), want the curated one from the losing record",
-			events[0].VenueName, events[0].Room)
+			events[0].Venue.Name, events[0].Room)
+	}
+	// The curated address comes with it, which is the point of curating one.
+	if events[0].Venue.Address != "4201 Main St" {
+		t.Errorf("address = %q, want the curated one", events[0].Venue.Address)
 	}
 }
 
@@ -179,5 +183,133 @@ func TestRoomSegment(t *testing.T) {
 		if got := roomSegment(tc.in); got != tc.want {
 			t.Errorf("roomSegment(%q) = %q, want %q", tc.in, got, tc.want)
 		}
+	}
+}
+
+// ICS sends one flat LOCATION string and the shape is regular across both
+// Google Calendar and Meetup. It is still a string somebody typed, so every
+// field is best-effort and a segment that does not fit is dropped rather than
+// guessed at: missing beats wrong on an address.
+func TestSplitFlatAddress(t *testing.T) {
+	cases := []struct {
+		name                   string
+		in                     string
+		addr, city, state, zip string
+	}{
+		{
+			name: "the HLUG shape",
+			in:   " 1127 Eldridge Pkwy Suite 600, Houston, TX 77077, USA",
+			addr: "1127 Eldridge Pkwy Suite 600", city: "Houston", state: "TX", zip: "77077",
+		},
+		{
+			name: "a unit number in the street",
+			in:   " 2808 Caroline St #100, Houston, TX 77004, USA",
+			addr: "2808 Caroline St #100", city: "Houston", state: "TX", zip: "77004",
+		},
+		{
+			name: "no country",
+			in:   " 3606 Beauchamp Blvd, Houston, TX 77009",
+			addr: "3606 Beauchamp Blvd", city: "Houston", state: "TX", zip: "77009",
+		},
+		{
+			name: "zip missing",
+			in:   " 100 Main St, Houston, TX",
+			addr: "100 Main St", city: "Houston", state: "TX",
+		},
+		{
+			name: "state missing",
+			in:   " 100 Main St, Houston, 77002",
+			addr: "100 Main St", city: "Houston", zip: "77002",
+		},
+		{"street only", " 100 Main St", "100 Main St", "", "", ""},
+		{"nothing", "", "", "", "", ""},
+		{"only a country", " USA", "", "", "", ""},
+		{
+			// A nine-digit zip is not five, so it is dropped rather than
+			// truncated into something that looks right and is not.
+			name: "zip plus four",
+			in:   " 100 Main St, Houston, TX 77002-1234",
+			addr: "100 Main St", city: "Houston", state: "TX",
+		},
+		{
+			// A state has to be two UPPERCASE letters. Every feed writes it
+			// that way, and without the case requirement any two-letter word
+			// in the segment becomes a state: "de", "la", "el" all appear in
+			// Houston street and place names. Dropping a lowercase "tx" is
+			// the cost, and missing beats wrong on an address.
+			name: "lowercase is not a state",
+			in:   " 100 Main St, Houston, tx 77002",
+			addr: "100 Main St", city: "Houston", zip: "77002",
+		},
+		{
+			name: "a two-letter word is not a state",
+			in:   " 100 Main St, Houston, de 77002",
+			addr: "100 Main St", city: "Houston", zip: "77002",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a, c, s, z := splitFlatAddress(tc.in)
+			if a != tc.addr || c != tc.city || s != tc.state || z != tc.zip {
+				t.Errorf("splitFlatAddress(%q) = (%q, %q, %q, %q), want (%q, %q, %q, %q)",
+					tc.in, a, c, s, z, tc.addr, tc.city, tc.state, tc.zip)
+			}
+		})
+	}
+}
+
+// A curated venue's address is canonical and a feed's is not. Ion's own
+// payload spells its street three ways across five rooms and sometimes omits
+// the state or the zip, so letting a feed win would make the address change
+// depending on which room was booked.
+func TestCuratedAddressBeatsTheFeed(t *testing.T) {
+	n := New(venueRegistry(), nil)
+
+	venue, room := n.resolveVenue([]core.RawVenue{{
+		Name:    "Ion – Conference Room 028",
+		Address: "4201 Main St.", // the feed's third spelling
+		City:    "Houston",
+	}})
+	if venue.Name != "Ion" || room != "Conference Room 028" {
+		t.Fatalf("resolved to (%q, %q)", venue.Name, room)
+	}
+	if venue.Address != "4201 Main St" {
+		t.Errorf("address = %q, want the curated spelling", venue.Address)
+	}
+}
+
+// A venue nobody curated keeps whatever its feed said, because that beats a
+// bare name. Ion's payload carries structured address fields, so Second
+// Draught arrives complete.
+func TestDiscoveredVenueKeepsTheFeedsAddress(t *testing.T) {
+	n := New(venueRegistry(), nil)
+
+	venue, _ := n.resolveVenue([]core.RawVenue{{
+		Name: "Second Draught", Address: "4201 Main St. Suite 130",
+		City: "Houston", State: "TX", Zip: "77002",
+	}})
+	if venue.Name != "Second Draught" {
+		t.Fatalf("name = %q", venue.Name)
+	}
+	if venue.Address != "4201 Main St. Suite 130" || venue.Zip != "77002" {
+		t.Errorf("venue = %+v, want the feed's address kept", venue)
+	}
+}
+
+// And an uncurated ICS venue gets its address out of the flat string, which is
+// the only place it exists.
+func TestDiscoveredICSVenueRecoversItsAddress(t *testing.T) {
+	n := New(venueRegistry(), nil)
+
+	venue, room := n.resolveVenue([]core.RawVenue{{
+		Name: "Finn MacCool’s Irish Bar, 1127 Eldridge Pkwy Suite 600, Houston, TX 77077, USA",
+	}})
+	if venue.Name != "Finn MacCool’s Irish Bar" || room != "" {
+		t.Fatalf("resolved to (%q, %q)", venue.Name, room)
+	}
+	if venue.Address != "1127 Eldridge Pkwy Suite 600" || venue.City != "Houston" ||
+		venue.State != "TX" || venue.Zip != "77077" {
+		t.Errorf("venue = %+v, want the address recovered from the LOCATION string", venue)
 	}
 }

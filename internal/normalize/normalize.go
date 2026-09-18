@@ -283,10 +283,10 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 			Fingerprint: core.Fingerprint(r.src.Kind, r.raw.UpstreamID),
 		})
 
-		if name, room := n.resolveVenue(r.raw.Venues); name != "" {
-			_, curated := n.canonicalVenue(name)
-			if ev.VenueName == "" || (!venueResolved && curated) {
-				ev.VenueName, ev.Room, venueResolved = name, room, curated
+		if venue, room := n.resolveVenue(r.raw.Venues); venue.Name != "" {
+			_, curated := n.canonicalVenue(venue.Name)
+			if ev.Venue.Name == "" || (!venueResolved && curated) {
+				ev.Venue, ev.Room, venueResolved = venue, room, curated
 			}
 		}
 		if ev.Excerpt == "" {

@@ -228,7 +228,7 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.Event, seenAt time
 		}
 		res.Merged += merged
 
-		venueID, err := venueID(ctx, tx, e.VenueName)
+		venueID, err := venueRow(ctx, tx, e.Venue)
 		if err != nil {
 			return res, fmt.Errorf("event %q: %w", e.Fingerprint, err)
 		}
@@ -243,7 +243,7 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.Event, seenAt time
 					status, first_seen, last_seen)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				e.Fingerprint, e.GroupSlug, e.Title, e.Excerpt, formatTime(e.Start), formatTime(e.End),
-				boolToInt(e.AllDay), venueID, e.VenueName, e.Room, e.URL, e.RegisterURL,
+				boolToInt(e.AllDay), venueID, e.Venue.Name, e.Room, e.URL, e.RegisterURL,
 				boolToInt(e.Virtual), status, stamp, stamp)
 			if err != nil {
 				return res, fmt.Errorf("insert %s: %w", e.Fingerprint, err)
@@ -267,7 +267,7 @@ func (s *Store) SaveEvents(ctx context.Context, events []core.Event, seenAt time
 					register_url = ?, virtual = ?, status = ?, last_seen = ?
 				WHERE id = ?`,
 				e.GroupSlug, e.Title, e.Excerpt, formatTime(e.Start), formatTime(e.End),
-				boolToInt(e.AllDay), venueID, e.VenueName, e.Room, e.URL, e.RegisterURL,
+				boolToInt(e.AllDay), venueID, e.Venue.Name, e.Room, e.URL, e.RegisterURL,
 				boolToInt(e.Virtual), status, stamp, id); err != nil {
 				return res, fmt.Errorf("update %s: %w", e.Fingerprint, err)
 			}
@@ -353,37 +353,58 @@ func claim(ctx context.Context, tx *sql.Tx, fingerprints []string) (id int64, st
 	return survivor.id, survivor.status, true, merged, nil
 }
 
-// venueID maps a resolved venue name onto a row, creating one for a venue
-// discovered from event data.
+// venueRow maps a resolved venue onto a row, creating one for a venue
+// discovered from event data and filling in anything the curated row is
+// missing.
 //
 // Discovery is the normal case, not the exception: sources.yaml curates a
 // venue only when its name needs canonicalising or it appears under several
-// spellings. "Zion Lutheran Church" and "Sesh Coworking" arrive with no
-// curation behind them and still have to be somewhere.
-func venueID(ctx context.Context, tx *sql.Tx, name string) (int64, error) {
-	if name == "" {
+// spellings. "Sesh Coworking" and "Greentown Labs" arrive with no curation
+// behind them and still have to be somewhere, with whatever address their feed
+// supplied.
+func venueRow(ctx context.Context, tx *sql.Tx, v core.Venue) (int64, error) {
+	if v.Name == "" {
 		return 0, nil
 	}
+
 	var id int64
-	err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE name = ?`, name).Scan(&id)
+	err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE name = ?`, v.Name).Scan(&id)
 	switch {
 	case err == nil:
+		// Fill in blanks only. A curated venue's address is the canonical one
+		// and must survive contact with the feeds: Ion's own payload spells
+		// its street three ways across five rooms and sometimes omits the
+		// state or the zip, so letting a feed overwrite sources.yaml would
+		// make the address change depending on which room was booked.
+		if _, err := tx.ExecContext(ctx, `
+			UPDATE venues SET
+				address = CASE WHEN address = '' THEN ? ELSE address END,
+				city    = CASE WHEN city    = '' THEN ? ELSE city    END,
+				state   = CASE WHEN state   = '' THEN ? ELSE state   END,
+				zip     = CASE WHEN zip     = '' THEN ? ELSE zip     END,
+				url     = CASE WHEN url     = '' THEN ? ELSE url     END
+			WHERE id = ?`, v.Address, v.City, v.State, v.Zip, v.URL, id); err != nil {
+			return 0, fmt.Errorf("enrich venue %q: %w", v.Name, err)
+		}
 		return id, nil
 	case !errors.Is(err, sql.ErrNoRows):
-		return 0, fmt.Errorf("look up venue %q: %w", name, err)
+		return 0, fmt.Errorf("look up venue %q: %w", v.Name, err)
 	}
 
-	r, err := tx.ExecContext(ctx,
-		`INSERT INTO venues (slug, name) VALUES (?, ?) ON CONFLICT(slug) DO UPDATE SET name = excluded.name`,
-		venueSlug(name), name)
+	slug := venueSlug(v.Name)
+	r, err := tx.ExecContext(ctx, `
+		INSERT INTO venues (slug, name, address, city, state, zip, url)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(slug) DO UPDATE SET name = excluded.name`,
+		slug, v.Name, v.Address, v.City, v.State, v.Zip, v.URL)
 	if err != nil {
-		return 0, fmt.Errorf("create venue %q: %w", name, err)
+		return 0, fmt.Errorf("create venue %q: %w", v.Name, err)
 	}
 	if id, err = r.LastInsertId(); err != nil || id == 0 {
 		// ON CONFLICT DO UPDATE does not always report a useful last id, so
 		// read it back rather than trusting it.
-		if err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE slug = ?`, venueSlug(name)).Scan(&id); err != nil {
-			return 0, fmt.Errorf("read back venue %q: %w", name, err)
+		if err := tx.QueryRowContext(ctx, `SELECT id FROM venues WHERE slug = ?`, slug).Scan(&id); err != nil {
+			return 0, fmt.Errorf("read back venue %q: %w", v.Name, err)
 		}
 	}
 	return id, nil
@@ -539,12 +560,14 @@ func (s *Store) Counts(ctx context.Context) (Counts, error) {
 // defined there with its handler rather than here, per D3.
 func (s *Store) Upcoming(ctx context.Context, from time.Time) ([]core.Event, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT id, fingerprint, group_slug, title, excerpt, starts_at, ends_at,
-		       all_day, venue_id, venue_name, room, url, register_url, virtual,
-		       first_seen, last_seen
-		FROM events
-		WHERE status = ? AND starts_at >= ?
-		ORDER BY starts_at, id`, StatusPublished, formatTime(from))
+		SELECT e.id, e.fingerprint, e.group_slug, e.title, e.excerpt, e.starts_at, e.ends_at,
+		       e.all_day, e.venue_id, e.venue_name, e.room, e.url, e.register_url, e.virtual,
+		       e.first_seen, e.last_seen,
+		       COALESCE(v.address, ''), COALESCE(v.city, ''), COALESCE(v.state, ''),
+		       COALESCE(v.zip, ''), COALESCE(v.url, '')
+		FROM events e LEFT JOIN venues v ON v.id = e.venue_id
+		WHERE e.status = ? AND e.starts_at >= ?
+		ORDER BY e.starts_at, e.id`, StatusPublished, formatTime(from))
 	if err != nil {
 		return nil, fmt.Errorf("query upcoming: %w", err)
 	}
@@ -561,8 +584,9 @@ func (s *Store) Upcoming(ctx context.Context, from time.Time) ([]core.Event, err
 			allDay, virtual                   int
 		)
 		if err := rows.Scan(&e.ID, &e.Fingerprint, &e.GroupSlug, &e.Title, &e.Excerpt,
-			&starts, &ends, &allDay, &e.VenueID, &e.VenueName, &e.Room,
-			&e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen); err != nil {
+			&starts, &ends, &allDay, &e.Venue.ID, &e.Venue.Name, &e.Room,
+			&e.URL, &e.RegisterURL, &virtual, &firstSeen, &lastSeen,
+			&e.Venue.Address, &e.Venue.City, &e.Venue.State, &e.Venue.Zip, &e.Venue.URL); err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)
 		}
 		for _, f := range []struct {
