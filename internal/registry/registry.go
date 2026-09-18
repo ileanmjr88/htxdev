@@ -49,6 +49,9 @@ type wireGroup struct {
 	URL      string   `yaml:"url"`
 	Category string   `yaml:"category"`
 	Aliases  []string `yaml:"aliases"`
+	// Where the group meets when its feed does not say. A venue slug from the
+	// venues list above.
+	Venue string `yaml:"venue"`
 	// Blank in the file until a human verifies the source. Kept as a string
 	// rather than time.Time so an empty value is not a parse error.
 	VerifiedBy string       `yaml:"verified_by"`
@@ -156,12 +159,20 @@ func Load(r io.Reader) (*Registry, error) {
 			problems = append(problems, where+": verified_by is set but verified_at is blank")
 		}
 
+		// A default venue has to name one of the venues above. A typo here
+		// would silently give a group no venue at all, which is exactly the
+		// state it was added to fix.
+		if wg.Venue != "" && !seenVenue[wg.Venue] {
+			problems = append(problems, fmt.Sprintf("%s: venue %q is not in the venues list", where, wg.Venue))
+		}
+
 		reg.Groups = append(reg.Groups, core.Group{
 			Slug:       wg.Slug,
 			Name:       wg.Name,
 			URL:        wg.URL,
 			Category:   wg.Category,
 			Aliases:    wg.Aliases,
+			VenueSlug:  wg.Venue,
 			VerifiedBy: wg.VerifiedBy,
 			VerifiedAt: verifiedAt,
 			// The file has no `active` key. Presence in the registry is what

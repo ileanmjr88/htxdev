@@ -24,12 +24,22 @@ const (
 )
 
 type Group struct {
-	Slug       string // "houston-oss"
-	Name       string
-	URL        string   // homepage, always link back
-	Category   string   // default for its events
-	Aliases    []string // names it appears under in other feeds
-	VerifiedBy string   // GitHub handle; empty means events stay pending
+	Slug     string // "houston-oss"
+	Name     string
+	URL      string   // homepage, always link back
+	Category string   // default for its events
+	Aliases  []string // names it appears under in other feeds
+
+	// VenueSlug is where this group meets when its feed does not say.
+	//
+	// Three of the Meetup feeds send no LOCATION at all, so without this their
+	// events have no venue even after they publish, and a discovery site that
+	// cannot say where to go has not solved the problem. It is a default and
+	// not an override: a feed that names a place wins, because the feed knows
+	// about the week the meeting moved and this file does not.
+	VenueSlug string
+
+	VerifiedBy string // GitHub handle; empty means events stay pending
 	VerifiedAt time.Time
 	Active     bool
 }

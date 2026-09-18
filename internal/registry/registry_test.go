@@ -285,3 +285,39 @@ func TestLoadFileMissing(t *testing.T) {
 		t.Fatal("want error for a missing file, got nil")
 	}
 }
+
+// A default venue has to name a real one. A typo would silently leave a group
+// with no venue at all, which is the state it was added to fix.
+func TestLoadRejectsAnUnknownDefaultVenue(t *testing.T) {
+	_, err := Load(strings.NewReader(`
+venues:
+  - {slug: improving-houston, name: Improving Houston}
+groups:
+  - slug: a
+    name: A
+    venue: improving-huston
+`))
+	if err == nil {
+		t.Fatal("want an error, got nil")
+	}
+	if !strings.Contains(err.Error(), "improving-huston") || !strings.Contains(err.Error(), "not in the venues list") {
+		t.Errorf("err = %v, want it to name the typo", err)
+	}
+}
+
+func TestLoadAcceptsAKnownDefaultVenue(t *testing.T) {
+	reg, err := Load(strings.NewReader(`
+venues:
+  - {slug: improving-houston, name: Improving Houston}
+groups:
+  - slug: a
+    name: A
+    venue: improving-houston
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if reg.Groups[0].VenueSlug != "improving-houston" {
+		t.Errorf("VenueSlug = %q", reg.Groups[0].VenueSlug)
+	}
+}

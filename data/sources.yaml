@@ -159,8 +159,15 @@ groups:
     name: Houston Open Source Society
     url: https://houstonopensourcesociety.com
     category: dev
-    verified_by:
-    verified_at:
+    verified_by: ileanmjr88
+    verified_at: 2026-09-17
+    # Verified 2026-09-17. Five weekly meeting slots, every one of them a
+    # public HOSS meeting with a venue the group publishes itself. This is a
+    # group's own site describing its own schedule, which is the lowest-risk
+    # shape a source comes in.
+    #
+    # No default venue on purpose: HOSS rotates by week and its page names the
+    # venue for every slot, so a default here could only ever be wrong.
     aliases:
       - HOSS
       - "Houston OSS"
@@ -194,8 +201,17 @@ groups:
     name: Houston Code and Coffee
     url: https://www.meetup.com/houston-code-and-coffee/
     category: dev
-    verified_by:
-    verified_at:
+    venue: improving-houston
+    verified_by: ileanmjr88
+    verified_at: 2026-09-17
+    # Verified 2026-09-17. One scheduled meeting, Sunday 27 September, which is
+    # the group's own regular event on its own Meetup.
+    #
+    # The feed sends no LOCATION at all, which is why the default venue is
+    # here. Improving is named in the event description ("Shout out to our
+    # venue host - Improving!") but only in prose, and nothing can infer that
+    # safely. This is the curation the architecture asks for: knowledge a human
+    # has and a feed does not.
     sources:
       - kind: ics
         url: https://www.meetup.com/houston-code-and-coffee/events/ical/
@@ -234,9 +250,16 @@ groups:
     name: Houston Robotics Group
     url: https://www.meetup.com/houstonroboticsgroup/
     category: hardware
-    verified_by:
-    verified_at:
-    # Meets at TXRX Labs, occasionally at Ion. Feed currently empty.
+    venue: txrx-labs
+    verified_by: ileanmjr88
+    verified_at: 2026-09-17
+    # Verified 2026-09-17. One scheduled meeting, "Houston Robotics Group
+    # Meeting @TXRX" on 19 September, the group's own event on its own Meetup.
+    #
+    # The feed sends no LOCATION, so the venue comes from here. The event title
+    # says @TXRX and the group meets there; it occasionally moves to the Ion,
+    # and on those weeks Meetup will either carry a LOCATION, which wins, or it
+    # will be wrong. A default that is right most weeks beats no venue at all.
     sources:
       - kind: ics
         url: https://www.meetup.com/houstonroboticsgroup/events/ical/

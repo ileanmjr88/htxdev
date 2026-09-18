@@ -313,3 +313,60 @@ func TestDiscoveredICSVenueRecoversItsAddress(t *testing.T) {
 		t.Errorf("venue = %+v, want the address recovered from the LOCATION string", venue)
 	}
 }
+
+// Three of the Meetup feeds send no LOCATION at all, so without a default
+// their events have no venue even after they publish, and a discovery site
+// that cannot say where to go has not solved the problem.
+func TestGroupDefaultVenue(t *testing.T) {
+	reg := venueRegistry()
+	for i := range reg.Groups {
+		if reg.Groups[i].Slug == "houston-linux-user-group" {
+			reg.Groups[i].VenueSlug = "improving-houston"
+		}
+	}
+	n := New(reg, nil)
+	start := at("2026-10-01T18:00:00Z")
+
+	t.Run("used when the feed names no venue", func(t *testing.T) {
+		events, _, _ := n.Events([]core.RawEvent{
+			{SourceKey: hlugFeed, UpstreamID: "a", Title: "No location", Start: start},
+		})
+		if len(events) != 1 {
+			t.Fatalf("got %d events", len(events))
+		}
+		if events[0].Venue.Name != "Improving Houston" {
+			t.Errorf("venue = %q, want the group's default", events[0].Venue.Name)
+		}
+		// The whole curated record, not just a name.
+		if events[0].Venue.Address == "" && venueRegistry().Venues[1].Address != "" {
+			t.Error("the default venue arrived without its address")
+		}
+	})
+
+	// A default, not an override. The feed knows about the week the meeting
+	// moved and sources.yaml does not.
+	t.Run("a feed that names a venue wins", func(t *testing.T) {
+		events, _, _ := n.Events([]core.RawEvent{
+			{SourceKey: hlugFeed, UpstreamID: "b", Title: "Moved this week", Start: start,
+				Venues: []core.RawVenue{{Name: "Ion – Conference Room 030"}}},
+		})
+		if len(events) != 1 {
+			t.Fatalf("got %d events", len(events))
+		}
+		if events[0].Venue.Name != "Ion" || events[0].Room != "Conference Room 030" {
+			t.Errorf("venue = (%q, %q), want the feed's", events[0].Venue.Name, events[0].Room)
+		}
+	})
+
+	t.Run("a group with no default is left alone", func(t *testing.T) {
+		events, _, _ := n.Events([]core.RawEvent{
+			{SourceKey: hossFeed, UpstreamID: "c", Title: "No location, no default", Start: start},
+		})
+		if len(events) != 1 {
+			t.Fatalf("got %d events", len(events))
+		}
+		if events[0].Venue.Name != "" {
+			t.Errorf("venue = %q, want none invented", events[0].Venue.Name)
+		}
+	})
+}

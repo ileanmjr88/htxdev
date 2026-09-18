@@ -312,6 +312,16 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 		}
 	}
 
+	// Fall back to where the group usually meets. Three Meetup feeds send no
+	// LOCATION at all, so without this their events have no venue even after
+	// they publish. Applied last, so any venue an actual feed named wins: the
+	// feed knows about the week the meeting moved and sources.yaml does not.
+	if ev.Venue.Name == "" && w.group.VenueSlug != "" {
+		if v, ok := n.venuesByName[foldKey(w.group.VenueSlug)]; ok {
+			ev.Venue = v
+		}
+	}
+
 	if !ev.End.IsZero() {
 		ev.End = ev.End.UTC()
 	}
