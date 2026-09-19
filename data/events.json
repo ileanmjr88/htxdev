@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-09-19T09:28:22Z",
+  "generated_at": "2026-09-19T21:25:17Z",
   "events": [
-    {
-      "id": "ics:event_316562517@meetup.com",
-      "title": "Houston Robotics Group Meeting @TXRX",
-      "excerpt": "Houston Robotics Group",
-      "start": "2026-09-19T19:00:00Z",
-      "end": "2026-09-19T23:00:00Z",
-      "group": {
-        "slug": "houston-robotics-group",
-        "name": "Houston Robotics Group",
-        "url": "https://www.meetup.com/houstonroboticsgroup/"
-      },
-      "venue": {
-        "name": "TXRX Labs",
-        "address": "6501 Navigation Blvd",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77011",
-        "url": "https://txrxlabs.org"
-      },
-      "url": "https://www.meetup.com/houstonroboticsgroup/events/316562517/",
-      "categories": [
-        "hardware"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=56222",
       "title": "Angel Investing 101",
