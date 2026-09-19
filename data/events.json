@@ -1,29 +1,6 @@
 {
-  "generated_at": "2026-09-18T21:26:05Z",
+  "generated_at": "2026-09-19T09:28:22Z",
   "events": [
-    {
-      "id": "ics:trh5l9tva915dsjpt4adr4r6sn@google.com_20260919T010000Z",
-      "title": "Houston Linux - Social at Finn MacCool's",
-      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
-      "start": "2026-09-19T01:00:00Z",
-      "end": "2026-09-19T05:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Finn MacCool’s Irish Bar",
-        "address": "1127 Eldridge Pkwy Suite 600",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77077"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:event_316562517@meetup.com",
       "title": "Houston Robotics Group Meeting @TXRX",
@@ -462,6 +439,29 @@
       "sources": 1
     },
     {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20260926T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-09-26T02:00:00Z",
+      "end": "2026-09-26T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "ics:event_316571151@meetup.com",
       "title": "Houston Code \u0026 Coffee",
       "excerpt": "Houston Code and Coffee Code \u0026 Coffee is a friendly, low-pressure meetup for coders and code-curious. All skill levels are welcome!",
@@ -686,6 +686,29 @@
       "sources": 1
     },
     {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261003T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-10-03T02:00:00Z",
+      "end": "2026-10-03T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "ics:event_316448127@meetup.com",
       "title": "PyTexas Monthly Meetup: How to Read the AI Brain",
       "excerpt": "PyHou - Houston Python Enthusiasts! Join us for our monthly meetup! The meetup will take place in the PyTexas Discord server, so be sure to join! This month we are excited to be joined by Shayan Ali",
@@ -857,6 +880,29 @@
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
       "start": "2026-10-10T01:00:00Z",
       "end": "2026-10-10T05:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261010T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-10-10T02:00:00Z",
+      "end": "2026-10-10T06:00:00Z",
       "group": {
         "slug": "houston-linux-user-group",
         "name": "Houston Linux User Group",
@@ -1130,6 +1176,29 @@
       "sources": 1
     },
     {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261017T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-10-17T02:00:00Z",
+      "end": "2026-10-17T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=66522",
       "title": "The Technology Leadership Advantage Series – For CEOs, VCs and PE Firms",
       "excerpt": "AI isn’t your biggest challenge. Leadership Is. Why most AI strategies fail before the technology does.",
@@ -1318,6 +1387,29 @@
       "sources": 1
     },
     {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261024T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-10-24T02:00:00Z",
+      "end": "2026-10-24T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "ics:7uql4b3akmuqggmk895nm5d5jo@google.com",
       "title": "Houston Linux - User Meeting",
       "start": "2026-10-28T23:00:00Z",
@@ -1372,6 +1464,29 @@
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
       "start": "2026-10-31T01:00:00Z",
       "end": "2026-10-31T05:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261031T020000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-10-31T02:00:00Z",
+      "end": "2026-10-31T06:00:00Z",
       "group": {
         "slug": "houston-linux-user-group",
         "name": "Houston Linux User Group",
@@ -1469,6 +1584,29 @@
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
       "start": "2026-11-07T02:00:00Z",
       "end": "2026-11-07T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261107T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-11-07T03:00:00Z",
+      "end": "2026-11-07T07:00:00Z",
       "group": {
         "slug": "houston-linux-user-group",
         "name": "Houston Linux User Group",
@@ -1611,6 +1749,29 @@
       "sources": 1
     },
     {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261114T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-11-14T03:00:00Z",
+      "end": "2026-11-14T07:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=56226",
       "title": "Angel Investing 101",
       "excerpt": "In a world where only the very wealthy, well connected, and major institutions have access to premium investment opportunities, which have created massive wealth for a small portion of the population, the Innovation…",
@@ -1631,6 +1792,32 @@
       },
       "room": "Conference Room 029 – 030",
       "url": "https://iondistrict.com/event/angel-investing-101-12/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=55701",
+      "title": "How to Start a Startup",
+      "excerpt": "You have an idea…now what?",
+      "start": "2026-11-18T23:00:00Z",
+      "end": "2026-11-19T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Forum Stairs",
+      "url": "https://iondistrict.com/event/how-to-start-a-startup-9/",
       "categories": [
         "startup"
       ],
