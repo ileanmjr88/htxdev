@@ -51,6 +51,12 @@ The database is committed to the repo on purpose. It's the permanent record of
 every event ever seen, which is what makes "this group has met every Wednesday
 for two years" a thing the site can know.
 
+The site is one page: every event still ahead, grouped by day, with jump links
+for this week, next week and each month after that, and a toggle per group that
+a reader's browser remembers. One inline script does the filtering over the
+events already in the HTML, so the page works with JavaScript off and the
+anchors work before the script runs.
+
 ## Running it
 
 ```bash
@@ -186,6 +192,19 @@ Tests are offline. Decoders take an `io.Reader`, so they're fed fixtures in
 [`internal/source/testdata/`](internal/source/testdata) and can't reach the
 network even by accident.
 
+The front page's script is the one piece of user-facing behaviour no Go test
+can reach, so it has its own suite:
+
+```bash
+npm --prefix site run build   # the tests read the built page
+npm --prefix site test
+```
+
+CI runs both suites on every pull request, plus lint, the API asset check, and
+a check that `compendium.toml` and `site/.node-version` still pin the same
+Node.
+[CONTRIBUTING.md](CONTRIBUTING.md) has what's expected of a change.
+
 ## Layout
 
 ```
@@ -200,6 +219,7 @@ internal/api        HTTP handlers and the JSON contract
 data/sources.yaml   the curated list of groups, venues, and feeds
 data/rejects.yaml   individual events that must not publish
 site/               the Astro site and the static API
+site/test/          the front page script, run against the built page
 .github/workflows/  sync on a schedule, check on every push
 ```
 
@@ -213,4 +233,9 @@ is the API's response precomputed, not a second format to keep in step.
 
 ## License
 
-Not yet chosen.
+[MIT](LICENSE).
+
+That covers the code. The event listings in `htxdev.db` and
+`data/events.json` come from feeds the groups publish themselves and belong to
+those groups, which is why being removed from them takes an issue and not a
+license argument. See Verification and privacy above.
