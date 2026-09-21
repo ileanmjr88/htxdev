@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T21:25:44Z",
+  "generated_at": "2026-09-21T09:37:50Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=56222",
@@ -1846,6 +1846,111 @@
       "room": "Conference Room 029 – 030",
       "url": "https://iondistrict.com/event/houston-linux-user-group-9/",
       "register_url": "https://www.houstonlinux.org",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:26i9622tp1i2u720r64gergij1@google.com",
+      "title": "Houston Linux - Ion User Meeting",
+      "excerpt": "Parking is free for three hours, we recommend that you not arrive too early or leave late. We encourage members to park at 4203 Fannin Street, the \"red\" parking lot, located across Fannin St. from the Ion. This lot is…",
+      "start": "2026-11-20T00:00:00Z",
+      "end": "2026-11-20T02:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Rooms 29 and 30",
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10004090",
+      "title": "Ion Networking with Cup of Joey",
+      "excerpt": "What is the purpose of Cup of Joey? It is to create a connected culture of coffee shop-open networking across our region. Every Friday morning, you’ll have the opportunity to meet new and expand your current networks…",
+      "start": "2026-11-20T14:30:00Z",
+      "end": "2026-11-20T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Lobby",
+      "url": "https://iondistrict.com/event/ion-networking-with-cup-of-joey-34/2026-11-20/",
+      "register_url": "https://www.cupofjoey.org/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=63711",
+      "title": "ENRG HTX – November 2026",
+      "excerpt": "ENRG (Entrepreneurial Networking Resource Group) is a community for entrepreneurs with 10-250 employees running on EOS or EOS Curious.",
+      "start": "2026-11-20T14:30:00Z",
+      "end": "2026-11-20T16:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 028",
+      "url": "https://iondistrict.com/event/enrg-htx-november-2026/",
+      "register_url": "https://www.eventbrite.com/e/enrg-htx-november-2026-tickets-1992151890933?aff=oddtdtcreator",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=65703",
+      "title": "Mapping Houston’s Innovation Ecosystem",
+      "excerpt": "Facilitated by Wade Pinder, Ion’s Mentor in Residence",
+      "start": "2026-11-20T16:00:00Z",
+      "end": "2026-11-20T17:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 027",
+      "url": "https://iondistrict.com/event/mapping-houstons-innovation-ecosystem-9/",
       "categories": [
         "startup"
       ],
