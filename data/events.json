@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T09:30:29Z",
+  "generated_at": "2026-09-22T21:26:13Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=56222",
@@ -206,6 +206,29 @@
         "dev"
       ],
       "sources": 2
+    },
+    {
+      "id": "ics:1ngarfoqoibreia38sdtofe0fs@google.com",
+      "title": "Houston Linux - Social",
+      "excerpt": "Join us to enjoy hanging out in the garden and drinks. There is also a food truck that you can order food from.",
+      "start": "2026-09-25T01:00:00Z",
+      "end": "2026-09-25T04:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Social Beer Garden HTX",
+        "address": "3101 San Jacinto St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77004"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
     },
     {
       "id": "tribe:iondistrict.com?id=10004082",
