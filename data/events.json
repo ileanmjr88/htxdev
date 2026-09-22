@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T21:27:17Z",
+  "generated_at": "2026-09-22T09:30:29Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=56222",
@@ -482,6 +482,32 @@
       },
       "url": "https://iondistrict.com/event/industrial-growth-series-why-great-reputations-dont-create-opportunities-2/",
       "register_url": "https://www.eventbrite.com/e/1996108502264?aff=oddtdtcreator",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=60330",
+      "title": "Women In Wealth",
+      "excerpt": "WOMEN IN WEALTH SERIES",
+      "start": "2026-09-29T23:00:00Z",
+      "end": "2026-09-30T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/women-in-wealth-2/",
+      "register_url": "https://www.eventbrite.com/e/women-in-wealth-tickets-2000660707031?aff=oddtdtcreator",
       "categories": [
         "startup"
       ],
@@ -1954,6 +1980,29 @@
       "url": "https://iondistrict.com/event/mapping-houstons-innovation-ecosystem-9/",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261121T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-11-21T03:00:00Z",
+      "end": "2026-11-21T07:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
       ],
       "sources": 1
     }
