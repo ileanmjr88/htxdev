@@ -1,58 +1,6 @@
 {
-  "generated_at": "2026-09-22T21:26:13Z",
+  "generated_at": "2026-09-23T09:32:22Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=56222",
-      "title": "Angel Investing 101",
-      "excerpt": "In a world where only the very wealthy, well connected, and major institutions have access to premium investment opportunities, which have created massive wealth for a small portion of the population, the Innovation…",
-      "start": "2026-09-22T22:30:00Z",
-      "end": "2026-09-22T23:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 029 – 030",
-      "url": "https://iondistrict.com/event/angel-investing-101-10/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=66302",
-      "title": "Houston Pitch Nights at the Ion",
-      "excerpt": "Houston Pitch Night",
-      "start": "2026-09-22T23:00:00Z",
-      "end": "2026-09-23T00:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-pitch-nights-at-the-ion/",
-      "register_url": "https://luma.com/oqoutcy6",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=66540",
       "title": "Houston Methodist Innovation Discussion: Transforming Healthcare Through AI, Technology, and Innovation",
@@ -661,6 +609,134 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=66646",
+      "title": "AI Circle Houston",
+      "excerpt": "AI Circle Houston is a weekly Friday morning gathering for people building, implementing, or exploring AI.",
+      "start": "2026-10-02T14:30:00Z",
+      "end": "2026-10-02T16:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/ai-circle-houston-7/",
+      "register_url": "https://www.linkedin.com/groups/18970005/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=66648",
+      "title": "SCORE Office Hours",
+      "excerpt": "About SCORE Office Hours",
+      "start": "2026-10-02T15:00:00Z",
+      "end": "2026-10-02T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/score-office-hours-54/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=66652",
+      "title": "Welcome to the Ion: An Introduction and Tour",
+      "excerpt": "Join the Ion’s Mentor in Residence, Wade Pinder, for an engaging tour and introduction to the Ion, Houston’s dynamic hub for innovation and entrepreneurship, powered by Rice University. This event is designed for…",
+      "start": "2026-10-02T15:00:00Z",
+      "end": "2026-10-02T16:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/welcome-to-the-ion-an-introduction-and-tour-21/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=66655",
+      "title": "Rice Tech Transfer Office Hours",
+      "excerpt": "Have an idea, startup, or company looking for innovative technology? Meet with the Rice University Office of Technology Transfer during office hours at The Ion to explore how university research can power your next…",
+      "start": "2026-10-02T15:00:00Z",
+      "end": "2026-10-02T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/rice-tech-transfer-office-hours-7/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=66650",
+      "title": "Startup Circle Houston 💫",
+      "excerpt": "Startup Circle Houston 💫 brings together founders, teammates, experts and newbies of startups in Greater Houston! Past topics include:",
+      "start": "2026-10-02T15:30:00Z",
+      "end": "2026-10-02T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Lobby",
+      "url": "https://iondistrict.com/event/startup-circle-houston-%f0%9f%92%ab-23/",
+      "register_url": "https://www.linkedin.com/company/startup-circle-houston/about/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=65533",
       "title": "Stock Market Investing Class for Women",
       "excerpt": "Ladies, get ready to level up your finances with our Stock Market Investing Class. Let’s make those dollars work for us!",
@@ -841,6 +917,28 @@
       },
       "url": "https://iondistrict.com/event/upstream-digital-tech-meetup-at-second-draught-3/2026-10-08/",
       "register_url": "https://luma.com/timbergrove",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=66636",
+      "title": "Fall Pickleball Social 🏓",
+      "excerpt": "Join us for a Fall Pickleball Social! Grab your paddles and come out for an evening of friendly competition, community, and fun on the court at Pickle Lab with Ion District friendlies. All skill levels are welcome…",
+      "start": "2026-10-08T22:30:00Z",
+      "end": "2026-10-09T00:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Pickle Lab",
+        "url": "https://iondistrict.com/venue/pickle-lab/"
+      },
+      "url": "https://iondistrict.com/event/fall-pickleball-social-%f0%9f%8f%93/",
+      "register_url": "https://luma.com/u7dflnu2",
       "categories": [
         "startup"
       ],
