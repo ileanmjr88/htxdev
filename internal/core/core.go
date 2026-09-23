@@ -25,6 +25,15 @@ const (
 	// Still the worst kind of source to have, and the standing preference is
 	// to ask a group for an ICS feed first. Retire this the day HOSS ships one.
 	KindHTML SourceKind = "html"
+
+	// KindBevy is a chapter on Bevy, the event platform behind Snowflake's
+	// user groups and Google Developer Groups among others. Bevy publishes no
+	// calendar feed and its robots.txt closes /api/, so the chapter page is
+	// read for links to its events, and each event page for the schema.org
+	// Event it carries as JSON-LD. Structured data with a spec behind it, the
+	// same line KindHTML stands on, and one request per event, which is its
+	// cost.
+	KindBevy SourceKind = "bevy"
 )
 
 type Group struct {

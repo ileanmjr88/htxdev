@@ -36,11 +36,13 @@ data/groups/*.yaml → fetch → decode → dedupe → htxdev.db ─┬→ data/
    list of groups             per format       history    └→ htxdev serve     /api/v1/events.json
 ```
 
-Three decoders cover every source. iCalendar, which Meetup and Google Calendar
-both emit; The Events Calendar's JSON API, which WordPress sites expose; and
-one HTML reader for a single group that publishes no calendar at all but does
-publish `<time datetime="...">` on its meetings page. Adding a group is one YAML
-file, not code.
+Four decoders cover every source. iCalendar, which Meetup and Google Calendar
+both emit; The Events Calendar's JSON API, which WordPress sites expose; one
+HTML reader for a single group that publishes no calendar at all but does
+publish `<time datetime="...">` on its meetings page; and a reader for Bevy, the
+platform behind Snowflake's user groups and Google Developer Groups, which takes
+the schema.org JSON-LD from each event page. Adding a group is one YAML file,
+not code.
 
 Dedupe is keyed on the group and the start instant, never the title, because
 the same meeting arrives as "Houston Linux User Group" from one feed and
@@ -129,8 +131,9 @@ sources:
 For a Meetup group, take the slug out of the URL and append `/events/ical/`.
 That's the whole onboarding cost.
 
-`kind` is `ics` for iCalendar or `tribe` for a WordPress site running The Events
-Calendar (its feed lives at `/wp-json/tribe/events/v1/events`).
+`kind` is `ics` for iCalendar, `tribe` for a WordPress site running The Events
+Calendar (its feed lives at `/wp-json/tribe/events/v1/events`), or `bevy` for a
+Bevy chapter page such as `https://usergroups.snowflake.com/houston/`.
 [`data/README.md`](data/README.md) has the rest.
 
 Venues are usually discovered from the event data. You only need to add one by
