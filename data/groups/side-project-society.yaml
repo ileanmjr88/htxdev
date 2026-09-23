@@ -1,0 +1,107 @@
+name: Side Project Society
+url: https://www.meetup.com/side-project-society/
+category: dev
+venue: improving-houston
+verified_by: ileanmjr88
+verified_at: 2026-09-17
+aliases:
+  - SPS
+# Verified 2026-09-17 on a different basis from the others, and worth
+# saying so. The feed has no scheduled events today, so there was no first
+# sync to read; the calendar answers, its name is right, and Ilean knows
+# the organizer personally and attends. That is a stronger claim than
+# reading output, not a weaker one, but it is not the same claim.
+#
+# What it does not cover is what the feed will contain later. Give the
+# first sync that returns actual events a glance, the way every other
+# group here got one.
+#
+# THE MEETUP FEED MAY STAY EMPTY. Checked 2026-09-17: the group has 48
+# monthly meetings behind it and announces upcoming ones on its own site
+# and on LinkedIn Events, not on Meetup. Meetup still lists past events but
+# nothing upcoming, which is why the ICS returns zero.
+#
+# sideprojectsociety.com/events/ is the live source, and it is not usable
+# as one yet. Three reasons, all checked:
+#   - Event pages carry a date and no time:
+#       <time datetime="2026-10-01T00:00:00.000Z">
+#     The site post is the announcement; the actual start time lives on the
+#     LinkedIn event it links to, which is also where people register.
+#
+#     htxdev will not read that. LinkedIn's robots.txt opens with "The use
+#     of robots or other automated means to access LinkedIn without the
+#     express permission of LinkedIn is strictly prohibited", and grants
+#     only LinkedInBot and Googlebot; there is no User-agent: * rule to
+#     fall under. Same principle that keeps Eventbrite out of this file,
+#     applied to a harder no: theirs is a path disallow, this is an
+#     explicit prohibition in the user agreement.
+#
+#     So the time is published, just not anywhere htxdev may go. Showing
+#     the date alone means midnight, and inventing 18:00 means asserting a
+#     time nobody published. A wrong venue sends somebody to the wrong
+#     building; a wrong time makes them miss the event entirely, so a
+#     default start time is not the same trade as a default venue.
+#   - The index carries no dates, so reading it is one request per event
+#     rather than the single page HOSS gets away with.
+#   - rss.xml is the unmodified Astro starter template: "First post",
+#     "Lorem ipsum", every link pointing at example.com. So does the
+#     homepage's <link rel="alternate">, and so does the og:url on each
+#     event page.
+#
+# ASK THE ORGANIZER, and the ask is small. They already write the event
+# page and already know the time, because it is on the LinkedIn event they
+# made. All that is missing is putting it in the datetime attribute they
+# are already emitting:
+#
+#     <time datetime="2026-10-01T18:00:00-05:00">
+#
+# That is a template change on a site he controls, not a feed to build, and
+# it makes the group readable by anything that reads a web page rather than
+# by htxdev specifically.
+#
+# Second, unrelated and worth more to him: rss.xml is publishing Astro
+# starter-template posts, and he almost certainly does not know.
+#
+# UPDATE 2026-09-18, from re-reading the live pages. Three corrections:
+#
+#   1. The datetime is not merely timeless, it is WRONG. 00:00:00.000Z is
+#      an instant, and instants convert: in Houston that is Wednesday
+#      30 September at 7:00 PM. Listing "the date" from that markup would
+#      put the October meetup in September. This is the argument that
+#      lands, and it is D10 seen from the other side.
+#
+#      The smallest correct fix is not the one suggested above. A bare
+#      date is valid HTML, carries no timezone and cannot be converted
+#      into the wrong day:
+#
+#          <time datetime="2026-10-01">
+#
+#      The likely cause is .toISOString() on a date-only value, which
+#      always emits UTC. That is where the Z comes from.
+#
+#   2. It is <link rel="canonical">, not only og:url, that points at
+#      example.com on every event page. That is the one with teeth: a
+#      canonical pointing off-domain tells Google the real page is
+#      somewhere else, so his event pages may not be indexing at all.
+#
+#   3. DO NOT BUILD A DECODER FOR THIS YET. This markup is not settled,
+#      and one written against the current shape would be built for
+#      something that may stop existing, which is this project's oldest
+#      mistake. Re-read the pages first; either a bare date or any
+#      offset-bearing timestamp is straightforward to decode when it lands.
+# Monthly-ish, Thursdays 6-8pm at Improving Houston, which is already a
+# curated venue above. Run as a Meetup Pro group; 4+ years going.
+# Confirmed 2026-09-17 by search AND by the
+# feed answering 200, which is a higher bar than houston-ai-meetup cleared.
+#
+# Category is a judgement call: the group is explicitly for side projects
+# "both technical and non-technical", so `dev` overstates it slightly.
+# Kept as dev because that is who attends and what gets demoed.
+#
+# Feed currently empty — Meetup only lists scheduled events, same as
+# code4yall and houston-robotics-group.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/side-project-society/events/ical/
+    priority: 10
+    enabled: true

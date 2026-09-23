@@ -1,0 +1,21 @@
+name: Ion District
+url: https://iondistrict.com
+category: startup
+verified_by: ileanmjr88
+verified_at: 2026-09-17
+# Verified 2026-09-17 by reading a full sync of this feed: 45 events in the
+# window, all of them public Ion District programming (pitch days, office
+# hours, tech talks, networking). Nothing personal, nothing that looked
+# like it was published by accident. This is a venue publishing its own
+# calendar, which is a much lower-risk shape than a group running its
+# calendar off a personal account, which is what went wrong with HLUG.
+# A venue, not a community — its calendar carries many groups' events.
+# Attribute each event to its `organizer` and fall back to Ion only when
+# that can't be resolved. High leverage: one source, a dozen groups.
+# Roughly a third of its events are technical; the rest is investor
+# programming, office hours and coworking days.
+sources:
+  - kind: tribe
+    url: https://iondistrict.com/wp-json/tribe/events/v1/events
+    priority: 50
+    enabled: true

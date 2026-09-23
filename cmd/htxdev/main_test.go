@@ -21,7 +21,7 @@ import (
 // There is no end-to-end happy-path test here, deliberately. Reaching one
 // would mean either relaxing the registry's https-only rule or exporting a
 // client seam out of fetch, and both are worse than the gap: the first is a
-// real check against a plaintext feed URL landing in sources.yaml, and the
+// real check against a plaintext feed URL landing in the registry, and the
 // second exists only for tests. fetch's own tests already drive every HTTP
 // path against httptest. What is left for this package is dispatch, flag
 // handling, rendering and the exit-code policy, and those are what is below.
@@ -85,8 +85,8 @@ func TestSyncRejectsBadInvocations(t *testing.T) {
 		wantErr string
 	}{
 		{"unknown flag", []string{"-nope"}, "not defined"},
-		{"positional argument", []string{"data/sources.yaml"}, "takes no arguments"},
-		{"missing registry file", []string{"-sources", "does/not/exist.yaml"}, "registry"},
+		{"positional argument", []string{"data"}, "takes no arguments"},
+		{"missing registry directory", []string{"-sources", "does/not/exist"}, "registry"},
 	}
 
 	for _, tt := range tests {
@@ -107,14 +107,12 @@ func TestSyncRejectsBadInvocations(t *testing.T) {
 // what is wrong. The loader reports every problem at once precisely because
 // the file is edited by pull request from people who never run the code.
 func TestSyncReportsRegistryProblems(t *testing.T) {
-	path := writeRegistry(t, `
-groups:
-  - slug: broken
-    name: Broken
-    sources:
-      - kind: rss
-        url: https://example.invalid/feed
-        enabled: true
+	path := writeRegistry(t, "broken", `
+name: Broken
+sources:
+  - kind: rss
+    url: https://example.invalid/feed
+    enabled: true
 `)
 	var stdout, stderr bytes.Buffer
 	err := runSync(t.Context(), []string{"-sources", path}, &stdout, &stderr)
@@ -127,14 +125,12 @@ groups:
 }
 
 func TestSyncFailsWhenNoRegistrySourceIsEnabled(t *testing.T) {
-	path := writeRegistry(t, `
-groups:
-  - slug: quiet
-    name: Quiet
-    sources:
-      - kind: ics
-        url: https://127.0.0.1:1/feed.ics
-        enabled: false
+	path := writeRegistry(t, "quiet", `
+name: Quiet
+sources:
+  - kind: ics
+    url: https://127.0.0.1:1/feed.ics
+    enabled: false
 `)
 	var stdout, stderr bytes.Buffer
 	err := runSync(t.Context(), []string{"-sources", path}, &stdout, &stderr)
@@ -151,14 +147,12 @@ groups:
 // immediately. That keeps the test offline and fast, and it stopped being
 // possible to lean on "ics has no decoder yet" when Phase 3 gave it one.
 func TestSyncFailsWhenEverySourceFails(t *testing.T) {
-	path := writeRegistry(t, `
-groups:
-  - slug: only-ics
-    name: Only ICS
-    sources:
-      - kind: ics
-        url: https://127.0.0.1:1/feed.ics
-        enabled: true
+	path := writeRegistry(t, "only-ics", `
+name: Only ICS
+sources:
+  - kind: ics
+    url: https://127.0.0.1:1/feed.ics
+    enabled: true
 `)
 	// -db into a temp directory, not the default. Without it this test writes
 	// an htxdev.db into the package directory and leaves it in the repo.
@@ -177,14 +171,12 @@ groups:
 }
 
 func TestSyncHonoursACancelledContext(t *testing.T) {
-	path := writeRegistry(t, `
-groups:
-  - slug: only-ics
-    name: Only ICS
-    sources:
-      - kind: ics
-        url: https://127.0.0.1:1/feed.ics
-        enabled: true
+	path := writeRegistry(t, "only-ics", `
+name: Only ICS
+sources:
+  - kind: ics
+    url: https://127.0.0.1:1/feed.ics
+    enabled: true
 `)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -322,13 +314,20 @@ func TestReportVerboseRendersHoustonTime(t *testing.T) {
 	}
 }
 
-func writeRegistry(t *testing.T, body string) string {
+// writeRegistry lays out a registry directory holding one group and no
+// curated venues, which is all any test here needs, and returns its path.
+func writeRegistry(t *testing.T, slug, group string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "sources.yaml")
-	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+	dir := t.TempDir()
+	for _, sub := range []string{"groups", "venues"} {
+		if err := os.Mkdir(filepath.Join(dir, sub), 0o700); err != nil {
+			t.Fatalf("creating temp registry: %v", err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(dir, "groups", slug+".yaml"), []byte(group), 0o600); err != nil {
 		t.Fatalf("writing temp registry: %v", err)
 	}
-	return path
+	return dir
 }
 
 // errString is a stand-in for whatever fetch actually returned. The report
@@ -370,20 +369,18 @@ func TestVerdict(t *testing.T) {
 // is enough to exercise persist: the registry still gets mirrored and the
 // event save is a well-formed no-op.
 const failingRegistry = `
-groups:
-  - slug: only-ics
-    name: Only ICS
-    url: https://example.test
-    sources:
-      - kind: ics
-        url: https://127.0.0.1:1/feed.ics
-        enabled: true
+name: Only ICS
+url: https://example.test
+sources:
+  - kind: ics
+    url: https://127.0.0.1:1/feed.ics
+    enabled: true
 `
 
 // The database is a committed git artifact, so "show me what this would do"
 // has to be answerable without doing it.
 func TestSyncDryRunWritesNothing(t *testing.T) {
-	path := writeRegistry(t, failingRegistry)
+	path := writeRegistry(t, "only-ics", failingRegistry)
 	dbPath := filepath.Join(t.TempDir(), "htxdev.db")
 
 	var stdout, stderr bytes.Buffer
@@ -403,7 +400,7 @@ func TestSyncDryRunWritesNothing(t *testing.T) {
 }
 
 func TestSyncCreatesAndMirrorsTheDatabase(t *testing.T) {
-	path := writeRegistry(t, failingRegistry)
+	path := writeRegistry(t, "only-ics", failingRegistry)
 	dbPath := filepath.Join(t.TempDir(), "htxdev.db")
 
 	var stdout, stderr bytes.Buffer
@@ -766,7 +763,7 @@ func TestReportStoreWarnsAboutUnreviewedEvents(t *testing.T) {
 		"ics:6li64dhj@google.com",
 		"houston-linux-user-group",
 		"data/rejects.yaml",
-		"venue: line in sources.yaml",
+		"venue: line in its groups/ file",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("warning missing %q:\n%s", want, got)

@@ -1,0 +1,18 @@
+name: Houston Robotics Group
+url: https://www.meetup.com/houstonroboticsgroup/
+category: hardware
+venue: txrx-labs
+verified_by: ileanmjr88
+verified_at: 2026-09-17
+# Verified 2026-09-17. One scheduled meeting, "Houston Robotics Group
+# Meeting @TXRX" on 19 September, the group's own event on its own Meetup.
+#
+# The feed sends no LOCATION, so the venue comes from here. The event title
+# says @TXRX and the group meets there; it occasionally moves to the Ion,
+# and on those weeks Meetup will either carry a LOCATION, which wins, or it
+# will be wrong. A default that is right most weeks beats no venue at all.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/houstonroboticsgroup/events/ical/
+    priority: 10
+    enabled: true

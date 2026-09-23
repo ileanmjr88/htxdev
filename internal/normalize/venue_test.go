@@ -8,7 +8,7 @@ import (
 	"github.com/ileanmjr88/htxdev/internal/registry"
 )
 
-// The curated venues, matching data/sources.yaml. The "The Ion" alias is the
+// The curated venues, matching the registry in data/. The "The Ion" alias is the
 // one that matters: HLUG writes it that way and Ion writes "Ion", and both
 // have to end up as one building or it appears twice on the site.
 func venueRegistry() *registry.Registry {
@@ -102,7 +102,7 @@ func TestResolveVenueAgainstLiveStrings(t *testing.T) {
 
 // The known miss, asserted rather than left as a surprise. Ion sends one event
 // at "Ion Plaza", which has no dash to split on, so it stays a venue of its
-// own. That is a curation decision for sources.yaml, not a parsing one, and
+// own. That is a curation decision for the registry, not a parsing one, and
 // pinning it here means adding the alias will make this test fail loudly
 // rather than silently changing behaviour.
 func TestIonPlazaIsNotResolvedYet(t *testing.T) {
@@ -344,7 +344,7 @@ func TestGroupDefaultVenue(t *testing.T) {
 	})
 
 	// A default, not an override. The feed knows about the week the meeting
-	// moved and sources.yaml does not.
+	// moved and the registry does not.
 	t.Run("a feed that names a venue wins", func(t *testing.T) {
 		events, _, _ := n.Events([]core.RawEvent{
 			{SourceKey: hlugFeed, UpstreamID: "b", Title: "Moved this week", Start: start,

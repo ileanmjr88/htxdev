@@ -1,15 +1,20 @@
-// Package registry loads data/sources.yaml, the curated list of groups,
-// venues and feeds. That file is edited by pull request, often by people who
-// do not run the code, so this loader is the CI gate: it validates everything
-// it can and reports every problem at once rather than the first one.
+// Package registry loads the curated list of groups, venues and feeds from
+// data/: one file per group in data/groups and one per venue in data/venues,
+// each named for its slug. Those files are edited by pull request, often by
+// people who do not run the code, so this loader is the CI gate: it validates
+// everything it can and reports every problem at once rather than the first
+// one.
 package registry
 
 import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/url"
 	"os"
+	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,7 +23,7 @@ import (
 	"github.com/ileanmjr88/htxdev/internal/core"
 )
 
-// Registry is the parsed, validated contents of sources.yaml.
+// Registry is the parsed, validated contents of the registry directory.
 type Registry struct {
 	Groups  []core.Group
 	Venues  []core.Venue
@@ -27,13 +32,10 @@ type Registry struct {
 
 // wire types mirror the YAML exactly and stay unexported, the same rule the
 // feed decoders follow. Nothing YAML-shaped escapes this package.
-type wireFile struct {
-	Venues []wireVenue `yaml:"venues"`
-	Groups []wireGroup `yaml:"groups"`
-}
-
+//
+// Neither carries a slug. The filename is the slug, so there is one place to
+// write it and nothing for a copied file to get out of step with.
 type wireVenue struct {
-	Slug    string   `yaml:"slug"`
 	Name    string   `yaml:"name"`
 	Aliases []string `yaml:"aliases"`
 	Address string   `yaml:"address"`
@@ -44,13 +46,12 @@ type wireVenue struct {
 }
 
 type wireGroup struct {
-	Slug     string   `yaml:"slug"`
 	Name     string   `yaml:"name"`
 	URL      string   `yaml:"url"`
 	Category string   `yaml:"category"`
 	Aliases  []string `yaml:"aliases"`
-	// Where the group meets when its feed does not say. A venue slug from the
-	// venues list above.
+	// Where the group meets when its feed does not say. A venue slug, which is
+	// a filename in venues/.
 	Venue string `yaml:"venue"`
 	// Blank in the file until a human verifies the source. Kept as a string
 	// rather than time.Time so an empty value is not a parse error.
@@ -66,54 +67,51 @@ type wireSource struct {
 	Enabled  bool   `yaml:"enabled"`
 }
 
-// LoadFile reads and validates sources.yaml at path.
-func LoadFile(path string) (*Registry, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("registry: %w", err)
-	}
-	defer func() { _ = f.Close() }() // read-only; a close error tells us nothing
+const (
+	venuesDir = "venues"
+	groupsDir = "groups"
+)
 
-	reg, err := Load(f)
+// slugPattern is what a filename has to be. Lowercase so that two files
+// differing only in case cannot both exist on Linux and collide on macOS, and
+// no leading, trailing or doubled hyphen because every slug already in use
+// looks like this and a typo is likelier than a need.
+var slugPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
+// LoadDir reads and validates the registry rooted at dir.
+func LoadDir(dir string) (*Registry, error) {
+	reg, err := Load(os.DirFS(dir))
 	if err != nil {
-		return nil, fmt.Errorf("registry %s: %w", path, err)
+		return nil, fmt.Errorf("registry %s: %w", dir, err)
 	}
 	return reg, nil
 }
 
-// Load parses and validates a registry from r. Split from LoadFile so tests
-// can hand it a string and stay off the filesystem.
-func Load(r io.Reader) (*Registry, error) {
-	var wf wireFile
-	if err := yaml.NewDecoder(r, yaml.Strict()).Decode(&wf); err != nil {
-		if errors.Is(err, io.EOF) {
-			return nil, errors.New("file is empty")
-		}
-		return nil, err
-	}
-
+// Load parses and validates a registry from fsys. Split from LoadDir so tests
+// can hand it an fstest.MapFS and stay off the filesystem.
+//
+// Files load in filename order, which fs.ReadDir guarantees. Order used to be
+// whatever the one big file said, and the one place it mattered, which group
+// wins a name two of them claim, is now a validation error instead.
+func Load(fsys fs.FS) (*Registry, error) {
 	reg := &Registry{}
 	var problems []string
 
+	venues, ps := decodeDir[wireVenue](fsys, venuesDir)
+	problems = append(problems, ps...)
+
 	seenVenue := map[string]bool{}
-	for i, wv := range wf.Venues {
-		where := fmt.Sprintf("venue %d", i)
-		if wv.Slug == "" {
-			problems = append(problems, where+": missing slug")
-			continue
-		}
-		where = "venue " + wv.Slug
-		if seenVenue[wv.Slug] {
-			problems = append(problems, where+": duplicate slug")
-			continue
-		}
-		seenVenue[wv.Slug] = true
+	venueNames := map[string]string{} // folded name -> the venue slug that claimed it
+	for _, v := range venues {
+		wv, where := v.wire, v.file
+		seenVenue[v.slug] = true
 
 		if wv.Name == "" {
 			problems = append(problems, where+": missing name")
 		}
+		problems = append(problems, claimNames(venueNames, v.slug, where, wv.Name, wv.Aliases)...)
 		reg.Venues = append(reg.Venues, core.Venue{
-			Slug:    wv.Slug,
+			Slug:    v.slug,
 			Name:    wv.Name,
 			Aliases: wv.Aliases,
 			Address: wv.Address,
@@ -124,25 +122,28 @@ func Load(r io.Reader) (*Registry, error) {
 		})
 	}
 
-	seenGroup := map[string]bool{}
+	groups, ps := decodeDir[wireGroup](fsys, groupsDir)
+	problems = append(problems, ps...)
+	if len(groups) == 0 && len(ps) == 0 {
+		problems = append(problems, groupsDir+"/: no groups")
+	}
+
+	groupNames := map[string]string{}
 	seenFeed := map[string]string{} // feed URL -> the group slug that claimed it
 
-	for i, wg := range wf.Groups {
-		where := fmt.Sprintf("group %d", i)
-		if wg.Slug == "" {
-			problems = append(problems, where+": missing slug")
-			continue
-		}
-		where = "group " + wg.Slug
-		if seenGroup[wg.Slug] {
-			problems = append(problems, where+": duplicate slug")
-			continue
-		}
-		seenGroup[wg.Slug] = true
+	for _, g := range groups {
+		wg, where := g.wire, g.file
 
 		if wg.Name == "" {
 			problems = append(problems, where+": missing name")
 		}
+
+		// A name is how another feed's organizer resolves to a group, so two
+		// groups answering to one name would split that group's events by
+		// whichever file happened to sort first. Nobody editing one file can
+		// see the other, which is why it is checked here and not left to
+		// review.
+		problems = append(problems, claimNames(groupNames, g.slug, where, wg.Name, wg.Aliases)...)
 
 		var verifiedAt time.Time
 		if wg.VerifiedAt != "" {
@@ -159,15 +160,15 @@ func Load(r io.Reader) (*Registry, error) {
 			problems = append(problems, where+": verified_by is set but verified_at is blank")
 		}
 
-		// A default venue has to name one of the venues above. A typo here
-		// would silently give a group no venue at all, which is exactly the
-		// state it was added to fix.
+		// A default venue has to name a real one. A typo here would silently
+		// give a group no venue at all, which is exactly the state it was
+		// added to fix.
 		if wg.Venue != "" && !seenVenue[wg.Venue] {
-			problems = append(problems, fmt.Sprintf("%s: venue %q is not in the venues list", where, wg.Venue))
+			problems = append(problems, fmt.Sprintf("%s: venue %q has no file in %s/", where, wg.Venue, venuesDir))
 		}
 
 		reg.Groups = append(reg.Groups, core.Group{
-			Slug:       wg.Slug,
+			Slug:       g.slug,
 			Name:       wg.Name,
 			URL:        wg.URL,
 			Category:   wg.Category,
@@ -176,7 +177,7 @@ func Load(r io.Reader) (*Registry, error) {
 			VerifiedBy: wg.VerifiedBy,
 			VerifiedAt: verifiedAt,
 			// The file has no `active` key. Presence in the registry is what
-			// makes a group active; removing it is how you deactivate one.
+			// makes a group active; deleting its file is how you deactivate one.
 			Active: true,
 		})
 
@@ -205,10 +206,10 @@ func Load(r io.Reader) (*Registry, error) {
 					swhere, owner))
 				continue
 			}
-			seenFeed[ws.URL] = wg.Slug
+			seenFeed[ws.URL] = g.slug
 
 			reg.Sources = append(reg.Sources, core.Source{
-				GroupSlug: wg.Slug,
+				GroupSlug: g.slug,
 				Kind:      core.SourceKind(ws.Kind),
 				URL:       ws.URL,
 				Priority:  ws.Priority,
@@ -221,6 +222,79 @@ func Load(r io.Reader) (*Registry, error) {
 		return nil, fmt.Errorf("%d problem(s):\n  %s", len(problems), strings.Join(problems, "\n  "))
 	}
 	return reg, nil
+}
+
+// entry is one decoded registry file.
+type entry[T any] struct {
+	slug string
+	file string // "groups/pyhou.yaml", which is what a contributor needs to see
+	wire T
+}
+
+// decodeDir strictly decodes every file in dir. A file that fails is reported
+// and left out, so one broken file does not hide the problems in the rest.
+func decodeDir[T any](fsys fs.FS, dir string) ([]entry[T], []string) {
+	des, err := fs.ReadDir(fsys, dir)
+	if err != nil {
+		return nil, []string{fmt.Sprintf("%s/: %v", dir, err)}
+	}
+
+	var (
+		out      []entry[T]
+		problems []string
+	)
+	for _, de := range des {
+		file := path.Join(dir, de.Name())
+		// Everything in these directories is a registry entry. A README or a
+		// .yml would otherwise be skipped in silence, and a group whose file
+		// is skipped is a group that quietly stopped syncing.
+		slug, ok := strings.CutSuffix(de.Name(), ".yaml")
+		if de.IsDir() || !ok {
+			problems = append(problems, file+": want only <slug>.yaml files here")
+			continue
+		}
+		if !slugPattern.MatchString(slug) {
+			problems = append(problems, fmt.Sprintf("%s: %q is not a slug; use lowercase letters, digits and single hyphens", file, slug))
+			continue
+		}
+
+		f, err := fsys.Open(file)
+		if err != nil {
+			problems = append(problems, fmt.Sprintf("%s: %v", file, err))
+			continue
+		}
+		var w T
+		err = yaml.NewDecoder(f, yaml.Strict()).Decode(&w)
+		_ = f.Close() // read-only; a close error tells us nothing
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				problems = append(problems, file+": file is empty")
+			} else {
+				problems = append(problems, fmt.Sprintf("%s: %v", file, err))
+			}
+			continue
+		}
+		out = append(out, entry[T]{slug: slug, file: file, wire: w})
+	}
+	return out, problems
+}
+
+// claimNames records every name slug answers to, folded the way normalize
+// matches them, and reports any another file already took.
+func claimNames(claimed map[string]string, slug, where, name string, aliases []string) []string {
+	var problems []string
+	for _, n := range append([]string{slug, name}, aliases...) {
+		key := core.FoldName(n)
+		if key == "" {
+			continue
+		}
+		if owner, taken := claimed[key]; taken && owner != slug {
+			problems = append(problems, fmt.Sprintf("%s: name %q is already claimed by %s", where, n, owner))
+			continue
+		}
+		claimed[key] = slug
+	}
+	return problems
 }
 
 // EnabledSources returns the feeds a sync run should fetch.

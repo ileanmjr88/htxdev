@@ -1,0 +1,34 @@
+name: PyHou
+url: https://www.meetup.com/python-14/
+category: dev
+verified_by: ileanmjr88
+verified_at: 2026-09-18
+aliases:
+  - "PyHou - Houston Python Enthusiasts!"
+  - Houston Python Enthusiasts
+  - PyTexas Houston
+# Houston's Python group, and the one PyTexas itself points Houston people
+# at from pytexas.org/meetup/local-meetups/ under "Houston-based Meetups".
+#
+# The slug is why this file used to say no Houston Python group existed.
+# It is meetup.com/python-14, a legacy numeric slug, so every obvious guess
+# (pytexas-houston, houston-python, pyhou) 404s. Found 2026-09-18 through
+# PyTexas's own local-meetups page rather than by guessing harder.
+#
+# Verified 2026-09-18: two upcoming events, both the group's own, on the
+# group's own Meetup.
+#
+# NO DEFAULT VENUE, deliberately, and this is the interesting part. The
+# feed mixes two kinds of event and sends no LOCATION on either:
+#   - "PyTexas Monthly Meetup" is the statewide virtual one, cross-posted
+#     here on the first Tuesday. It happens in the PyTexas Discord.
+#   - The group's own monthly meeting is in person at Improving.
+# Both say so only in prose, in the description. A default venue would put
+# the Discord meetup at 10111 Richmond Ave, which is worse than saying
+# nothing. Revisit if Meetup ever starts carrying LOCATION, or if the
+# virtual ones become detectable by something better than reading prose.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/python-14/events/ical/
+    priority: 10
+    enabled: true

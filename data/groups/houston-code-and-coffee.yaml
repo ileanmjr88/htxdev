@@ -1,0 +1,19 @@
+name: Houston Code and Coffee
+url: https://www.meetup.com/houston-code-and-coffee/
+category: dev
+venue: improving-houston
+verified_by: ileanmjr88
+verified_at: 2026-09-17
+# Verified 2026-09-17. One scheduled meeting, Sunday 27 September, which is
+# the group's own regular event on its own Meetup.
+#
+# The feed sends no LOCATION at all, which is why the default venue is
+# here. Improving is named in the event description ("Shout out to our
+# venue host - Improving!") but only in prose, and nothing can infer that
+# safely. This is the curation the architecture asks for: knowledge a human
+# has and a feed does not.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/houston-code-and-coffee/events/ical/
+    priority: 10
+    enabled: true

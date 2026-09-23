@@ -1,0 +1,10 @@
+# One of three venues HOSS rotates through; see bayland-community-center.yaml
+# for why they are curated rather than discovered.
+
+name: Zion Lutheran Church
+address: 3606 Beauchamp Blvd
+city: Houston
+state: TX
+zip: "77009"
+url: https://zionhouston.org/
+# In the Heights. Hosts HOSS's second Wednesday.
