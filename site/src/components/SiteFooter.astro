@@ -1,0 +1,15 @@
+---
+/* The last line of every page: who made this and where to find them. */
+import { AUTHOR, REPO_URL, SITE_URL } from '../lib/links';
+
+const link = 'text-accent hover:underline';
+---
+
+{/* The {' '} are load-bearing. Astro's HTML compression drops whitespace that
+    contains a line break before an inline element, so a separator at the end
+    of a line runs straight into the next link. */}
+<p class="mt-4 text-[.82rem] text-muted">
+  Made by <a class={link} href={SITE_URL}>{AUTHOR}</a>{' '}·{' '}
+  <a class={link} href={SITE_URL}>ilean.me</a>{' '}·{' '}
+  <a class={link} href={REPO_URL}>GitHub</a>
+</p>

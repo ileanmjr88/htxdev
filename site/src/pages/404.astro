@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import Wordmark from '../components/Wordmark.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
 // Referenced by wrangler.jsonc's not_found_handling: "404-page". Without this
 // file that setting has nothing to serve and Cloudflare falls back to a bare
@@ -26,21 +26,24 @@ import ThemeToggle from '../components/ThemeToggle.astro';
 
   <body>
     <div class="mx-auto max-w-2xl px-5 pt-10 pb-16">
-      <header class="flex items-center justify-between gap-4">
-        <Wordmark as="a" class="text-xl sm:text-2xl" />
-        <ThemeToggle />
+      <header>
+        <SiteHeader />
       </header>
 
       <main class="mt-16">
         <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Nothing here</h1>
         <p class="mt-2 text-muted">
-          That page does not exist. The events are on
+          That page does not exist. The events are on{' '}
           <a href="/" class="underline underline-offset-4">the front page</a>, and the
-          same data is at
+          same data is at{' '}
           <a href="/api/v1/events.json" class="underline underline-offset-4">
             <code>/api/v1/events.json</code></a>.
         </p>
       </main>
+
+      <footer class="mt-12 border-t border-line pt-1">
+        <SiteFooter />
+      </footer>
     </div>
   </body>
 </html>
