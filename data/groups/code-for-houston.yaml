@@ -1,0 +1,12 @@
+name: Code for Houston
+url: https://www.meetup.com/codeforhouston/
+category: dev
+verified_by:
+verified_at:
+aliases:
+  - "Ideas to Impact!"
+sources:
+  - kind: ics
+    url: https://www.meetup.com/codeforhouston/events/ical/
+    priority: 10
+    enabled: true

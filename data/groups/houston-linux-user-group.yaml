@@ -1,0 +1,48 @@
+name: Houston Linux User Group
+url: https://www.houstonlinux.org/
+category: dev
+verified_by: ileanmjr88
+verified_at: 2026-09-18
+# Verified 2026-09-18, and this one took an actual review rather than a
+# glance. Basis: Ilean knows people from the group, though has not attended
+# a meeting. That is weaker than the Side Project Society case, where the
+# organizer is known directly, so the feed was read in full to compensate.
+#
+# All 110 events, 34 distinct titles, not just the ones inside the current
+# window. Two are personal appointments and both are now in
+# data/rejects.yaml: the one already known about, and "Dental" in December,
+# which had not reached the horizon yet and would have appeared on the site
+# around mid-October with nobody watching for it.
+#
+# Everything else is a real group event, including the ones that look
+# informal: "Social Gathering", "Unoffical get together at Velvet Taco" and
+# "Social Dinner out @El Jarrito" all carry a venue or a description saying
+# members are meeting up. "Lunch meeting" in March 2026 is genuinely
+# ambiguous, carrying neither, but it is in the past and has no RRULE, so
+# it can never enter a forward window. Left alone rather than rejected, to
+# keep the reject list to things that can actually appear.
+#
+# WHAT THE REVIEW FOUND, and it is worth knowing next time: every private
+# entry on this calendar has no location and no description, and every real
+# group event has at least one. That held across all 34 titles, and it is a
+# far better signal than the title-prefix idea disproven in August. It is
+# not automated and should not be; see the note in data/rejects.yaml.
+#
+# THIS FEED NEEDS RE-REVIEWING, unlike the others. It is a public calendar
+# run from an account that is also somebody's personal one, so the next
+# private entry arrives without warning and without a pattern. Check it
+# when something new appears near the horizon.
+aliases:
+  # Ion writes it this way, with a curly apostrophe (U+2019)
+  - "Houston Linux User’s Group"
+  - "Houston Linux"
+  - HLUG
+# Weekly Wednesday user meetings plus a monthly meeting at Ion — the Ion one
+# arrives from both this feed and Ion's, which is the main dedupe case.
+# The feed also carries the calendar owner's personal appointments; do not
+# publish without reviewing.
+sources:
+  - kind: ics
+    url: https://calendar.google.com/calendar/ical/houstonlinuxusergroup%40gmail.com/public/basic.ics
+    priority: 10
+    enabled: true

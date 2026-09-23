@@ -1,0 +1,12 @@
+name: Houston Artificial Intelligence Meetup Group
+url: https://www.meetup.com/meetup-group-btoomzkr/
+category: data
+verified_by:
+verified_at:
+# UNCONFIRMED: found by search, not by Ilean. This may not be the Heights
+# AI group you had in mind — check before verifying. Feed currently empty.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/meetup-group-btoomzkr/events/ical/
+    priority: 10
+    enabled: true

@@ -103,7 +103,7 @@ func TestParseHOSSAgainstFixture(t *testing.T) {
 	// The Third Wednesday venue is already an alias on the curated `ion` venue,
 	// which is the join Phase 5 will make.
 	if page.Events[2].Venues[0].Name != "The Ion" {
-		t.Errorf("third Wednesday venue = %q, want the string sources.yaml already aliases",
+		t.Errorf("third Wednesday venue = %q, want the string the registry already aliases",
 			page.Events[2].Venues[0].Name)
 	}
 }

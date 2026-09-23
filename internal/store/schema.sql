@@ -20,7 +20,7 @@
 -- string, so indexes and ORDER BY work without conversion, and it carries the
 -- zone rather than leaving it to convention.
 
--- Groups, venues and sources mirror data/sources.yaml, which stays the
+-- Groups, venues and sources mirror the registry in data/, which stays the
 -- authoritative copy. The YAML is edited by pull request and the commit author
 -- is the provenance for a verification; these tables exist so the rest of the
 -- schema has something to reference and so the API can join without reparsing
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS venues (
 -- D14: a source's identity in the database is this integer, and its identity
 -- everywhere upstream of the database is its feed URL. RawEvent carries the
 -- URL because int64 IDs come from here, and inventing them by load order would
--- mean reordering sources.yaml silently rewrites attribution on every
+-- mean reordering the registry silently rewrites attribution on every
 -- historical event.
 CREATE TABLE IF NOT EXISTS sources (
     id         INTEGER PRIMARY KEY,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS events (
     all_day   INTEGER NOT NULL DEFAULT 0,
 
     -- 0 means unresolved, which is normal rather than exceptional: venues are
-    -- discovered from event data and curated in sources.yaml only when a name
+    -- discovered from event data and curated in the registry only when a name
     -- needs canonicalising. venue_name keeps what it resolved to either way.
     venue_id   INTEGER NOT NULL DEFAULT 0,
     venue_name TEXT NOT NULL DEFAULT '',

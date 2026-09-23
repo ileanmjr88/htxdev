@@ -22,7 +22,7 @@ var roomPrefixes = []string{"room", "rooms", "conference room", "suite", "floor"
 //
 // The answer is a canonical venue name and, where there is one, the room split
 // off it. An unrecognised venue is not an error: the architecture expects
-// venues to be discovered from event data and curated in sources.yaml only
+// venues to be discovered from event data and curated in the registry only
 // when a name needs canonicalising. So the name survives even when nothing
 // matches, and the store gives it a row.
 func (n *Normalizer) resolveVenue(vs []core.RawVenue) (venue core.Venue, room string) {
@@ -52,7 +52,7 @@ func (n *Normalizer) resolveVenue(vs []core.RawVenue) (venue core.Venue, room st
 		// outer one's district, and the event is at the inner place rather
 		// than the outer one. Ion sends [Greentown Labs, Ion]; Greentown Labs
 		// is its own building a couple of streets away, and filing it as a
-		// room of the Ion sends people to the wrong door. sources.yaml already
+		// room of the Ion sends people to the wrong door. the registry already
 		// records the same trap for Industrious and Second Draught, which
 		// share an address with the Ion and are separate venues.
 		if curated, matched := n.canonicalVenue(inner); matched {
@@ -158,7 +158,7 @@ func splitFlatAddress(rest string) (address, city, state, zip string) {
 // "Ion – Lobby" against "Ion" gives "Lobby"; "Ion Plaza" gives "Plaza";
 // "Greentown Labs" gives nothing, which is the whole point.
 func stripVenuePrefix(inner, outer string) (room string, ok bool) {
-	fi, fo := foldKey(inner), foldKey(outer)
+	fi, fo := core.FoldName(inner), core.FoldName(outer)
 	if fo == "" || !strings.HasPrefix(fi, fo) {
 		return "", false
 	}
@@ -184,7 +184,7 @@ func stripVenuePrefix(inner, outer string) (room string, ok bool) {
 // writes "The Ion" and Ion writes "Ion", and both have to end up as one venue
 // or the same building appears twice on the site.
 func (n *Normalizer) canonicalVenue(name string) (core.Venue, bool) {
-	v, ok := n.venuesByName[foldKey(name)]
+	v, ok := n.venuesByName[core.FoldName(name)]
 	return v, ok
 }
 
@@ -217,7 +217,7 @@ func roomSegment(rest string) string {
 	// nothing failed, because a segment starting with a digit cannot start
 	// with a room word either. It was redundant rather than untested, so it
 	// is gone; the case it was defending is the second one in TestRoomSegment.
-	folded := foldKey(seg)
+	folded := core.FoldName(seg)
 	for _, p := range roomPrefixes {
 		if folded == p || strings.HasPrefix(folded, p+" ") {
 			return seg

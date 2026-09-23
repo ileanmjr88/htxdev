@@ -68,11 +68,11 @@ calendar. It is a prompt to look, not a filter.
 
 ### How to record it
 
-Two lines against the group in [`data/sources.yaml`](data/sources.yaml):
+Two lines in the group's file, `data/groups/<slug>.yaml`:
 
 ```yaml
-    verified_by: your-github-handle
-    verified_at: 2026-09-18
+verified_by: your-github-handle
+verified_at: 2026-09-18
 ```
 
 Both, or the loader rejects it. Then open a pull request; the commit author is
@@ -150,8 +150,9 @@ Some groups publish nothing machine-readable. The best fix is asking them, not
 writing a scraper, and it is usually a smaller ask than it sounds: often a
 start time in a `<time datetime="...">` attribute their template already emits.
 
-[`data/sources.yaml`](data/sources.yaml) records which groups are in that
-position and exactly what was already tried, so nobody repeats the research.
+Each group's file in [`data/groups/`](data/groups/) records whether it is in that
+position, and [`data/README.md`](data/README.md#deliberately-excluded) lists the
+sources ruled out and exactly what was already tried, so nobody repeats the research.
 
 ---
 

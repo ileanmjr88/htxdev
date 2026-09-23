@@ -313,7 +313,7 @@ func TestVerifyingAGroupPromotesItsExistingEvents(t *testing.T) {
 		t.Fatalf("before verification: %+v, want 2 pending", counts)
 	}
 
-	// A human edits sources.yaml and the next sync mirrors it.
+	// A human edits the registry and the next sync mirrors it.
 	seed(t, st, "ileanmjr88")
 	res := save(t, st, runTwo, events...)
 
@@ -671,7 +671,7 @@ func TestParseAndFormatTimeRoundTrip(t *testing.T) {
 	}
 }
 
-// sources.yaml is the authoritative copy, so an edit to it has to reach the
+// the registry is the authoritative copy, so an edit to it has to reach the
 // mirror. Row identity is keyed on the URL and stays put; everything else
 // about the source is whatever the file says now.
 func TestSyncRegistryUpdatesMutableSourceFields(t *testing.T) {
@@ -810,7 +810,7 @@ func TestTwoExistingRowsMergeIntoOne(t *testing.T) {
 	fromHLUG := ev(icsFeed, "own-copy", "The organizer's wording", start)
 
 	// Both exist separately: normalize did not yet know they were the same,
-	// which is what an alias being missing from sources.yaml looks like.
+	// which is what an alias being missing from the registry looks like.
 	save(t, st, runOne, fromIon)
 	save(t, st, runOne.Add(time.Hour), fromHLUG)
 

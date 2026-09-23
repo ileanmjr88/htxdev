@@ -1,0 +1,16 @@
+# One of three venues HOSS rotates through that Ion's feed never mentions,
+# with bayland-annex and zion-lutheran-church.
+# Curated rather than left to discovery because a discovered venue is a name
+# and nothing else: no address, no link, nowhere to tell somebody to go.
+# The addresses on all three are HOSS's own, taken from the structured data on their
+# venue pages on 2026-09-17.
+
+name: Bayland Community Center
+aliases:
+  - Bayland
+address: 6400 Bissonnet Street
+city: Houston
+state: TX
+zip: "77074"
+url: https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center
+# Hosts HOSS's fourth and fifth Wednesdays.

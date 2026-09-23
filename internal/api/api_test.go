@@ -447,7 +447,7 @@ func TestETagFollowsTheContent(t *testing.T) {
 	}
 }
 
-// Also from mutation testing. A group that leaves sources.yaml still has events
+// Also from mutation testing. A group that leaves the registry still has events
 // in the database, and the join returns nothing for it. The slug is a poor name
 // but it is a name; the alternative renders an empty line on the site, which
 // looks like a layout bug rather than like missing data.

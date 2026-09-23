@@ -10,7 +10,7 @@ import (
 )
 
 // The three feeds involved in every interesting case, with the priorities
-// sources.yaml actually assigns: a group's own calendar is 10, a venue's
+// the registry actually assigns: a group's own calendar is 10, a venue's
 // listing of it is 50.
 const (
 	ionFeed  = "https://iondistrict.com/wp-json/tribe/events/v1/events"
@@ -25,7 +25,7 @@ func testRegistry() *registry.Registry {
 			{
 				Slug: "houston-linux-user-group",
 				Name: "Houston Linux User Group",
-				// Verbatim from data/sources.yaml, curly apostrophe included.
+				// Verbatim from the registry in data/, curly apostrophe included.
 				Aliases:  []string{"Houston Linux User’s Group", "Houston Linux", "HLUG"},
 				Category: "dev",
 			},
@@ -301,25 +301,6 @@ func TestOutputIsDeterministic(t *testing.T) {
 	}
 }
 
-func TestFoldKey(t *testing.T) {
-	cases := []struct{ in, want string }{
-		{"Houston Linux User’s Group", "houston linux user's group"},
-		{"Houston Linux User's Group", "houston linux user's group"},
-		{"  HOUSTON   linux  ", "houston linux"},
-		{"Ion – Conference Room 030", "ion - conference room 030"},
-		{"Ion — Lobby", "ion - lobby"},
-		{"“Quoted”", "\"quoted\""},
-		{"non breaking", "non breaking"},
-		{"", ""},
-		{"   ", ""},
-	}
-	for _, tc := range cases {
-		if got := foldKey(tc.in); got != tc.want {
-			t.Errorf("foldKey(%q) = %q, want %q", tc.in, got, tc.want)
-		}
-	}
-}
-
 // The registry is human-edited by pull request, so two groups can end up
 // claiming one name. First claim wins, and the point is that it wins the same
 // way on every run rather than depending on map iteration order.
@@ -345,7 +326,7 @@ func TestAmbiguousAliasResolvesConsistently(t *testing.T) {
 // The real registry has to keep working with this code, and the alias that
 // makes the live dedupe possible has to still be in it.
 func TestAgainstTheRealRegistry(t *testing.T) {
-	reg, err := registry.LoadFile("../../data/sources.yaml")
+	reg, err := registry.LoadDir("../../data")
 	if err != nil {
 		t.Fatalf("load registry: %v", err)
 	}
@@ -362,7 +343,7 @@ func TestAgainstTheRealRegistry(t *testing.T) {
 		t.Fatalf("problems = %v", problems)
 	}
 	if len(events) != 1 {
-		t.Fatalf("got %d events, want 1: the alias in sources.yaml is what merges these", len(events))
+		t.Fatalf("got %d events, want 1: the alias in the registry is what merges these", len(events))
 	}
 	if events[0].GroupSlug != "houston-linux-user-group" {
 		t.Errorf("group = %q", events[0].GroupSlug)

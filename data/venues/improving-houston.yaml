@@ -1,0 +1,11 @@
+name: Improving Houston
+address: 10111 Richmond Avenue, Suite 100
+city: Houston
+state: TX
+zip: "77042"
+url: https://improving.com
+# Publishes its monthly schedule only as an image, which is unusable as a
+# feed. It doesn't need to be a source: the groups that meet here (HOSS,
+# Code and Coffee) publish their own calendars, and their events resolve to
+# this venue. Treat the image as a discovery tool — read it, see who's
+# meeting here, add those groups.

@@ -30,7 +30,7 @@
 #   this project, and the reasons below stay generic on purpose.
 #
 # WHAT THIS IS NOT FOR
-#   Not for a whole group. Remove it from data/sources.yaml instead.
+#   Not for a whole group. Delete its file in data/groups/ instead.
 #   Not for a feed that broke. That is a bug, and a reject would hide it.
 
 rejects:
@@ -78,5 +78,5 @@ rejects:
 # Nothing from Ion is rejected yet, and that is the larger job. Two thirds of
 # its calendar is investor programming, office hours and coworking days. The
 # better fix for most of it is not this file: an event whose organizer names a
-# real group should have that group added to data/sources.yaml, which both
+# real group should have that group added in data/groups/, which both
 # attributes it correctly and makes it publishable. Reject only what is left.

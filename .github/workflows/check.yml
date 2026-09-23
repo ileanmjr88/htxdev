@@ -1,7 +1,7 @@
 # Everything that has to be true before a change lands.
 #
 # The registry test is the reason this matters more than it would on most
-# repos: data/sources.yaml is edited by pull request, often by people who do
+# repos: data/groups/ is edited by pull request, often by people who do
 # not run the code, and internal/registry's loader is the gate that catches a
 # malformed entry here rather than at the next sync.
 name: check

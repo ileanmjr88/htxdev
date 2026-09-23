@@ -13,7 +13,7 @@ build:
 	go build -o bin/htxdev ./cmd/htxdev
 
 # Fetch every enabled source, write to htxdev.db, and print what came back.
-# Reads data/sources.yaml relative to the repo root, so run it from here.
+# Reads the registry in data/ relative to the repo root, so run it from here.
 run:
 	go run ./cmd/htxdev sync
 

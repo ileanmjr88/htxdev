@@ -89,7 +89,7 @@ func (s *Store) Close() error { return s.db.Close() }
 // registry inline without a YAML file, and it keeps the direction of the
 // import graph obvious.
 //
-// Rows are never deleted here. A group removed from sources.yaml stops being
+// Rows are never deleted here. A group removed from the registry stops being
 // fetched, because EnabledSources no longer returns it, but its history stays,
 // which is the entire point of a permanent record. Deactivating is an absence
 // upstream, not a DELETE down here.
@@ -357,7 +357,7 @@ func claim(ctx context.Context, tx *sql.Tx, fingerprints []string) (id int64, st
 // discovered from event data and filling in anything the curated row is
 // missing.
 //
-// Discovery is the normal case, not the exception: sources.yaml curates a
+// Discovery is the normal case, not the exception: the registry curates a
 // venue only when its name needs canonicalising or it appears under several
 // spellings. "Sesh Coworking" and "Greentown Labs" arrive with no curation
 // behind them and still have to be somewhere, with whatever address their feed
@@ -374,7 +374,7 @@ func venueRow(ctx context.Context, tx *sql.Tx, v core.Venue) (int64, error) {
 		// Fill in blanks only. A curated venue's address is the canonical one
 		// and must survive contact with the feeds: Ion's own payload spells
 		// its street three ways across five rooms and sometimes omits the
-		// state or the zip, so letting a feed overwrite sources.yaml would
+		// state or the zip, so letting a feed overwrite the registry would
 		// make the address change depending on which room was booked.
 		if _, err := tx.ExecContext(ctx, `
 			UPDATE venues SET
@@ -514,7 +514,7 @@ func loadVerifiedGroups(ctx context.Context, tx *sql.Tx) (map[string]bool, error
 
 // Groups returns the mirrored registry, keyed by slug.
 //
-// Read from the database rather than from sources.yaml so a caller needs only
+// Read from the database rather than from the registry so a caller needs only
 // -db, which is what lets export run against a database somebody handed them
 // without also needing the registry that produced it.
 func (s *Store) Groups(ctx context.Context) (map[string]core.Group, error) {

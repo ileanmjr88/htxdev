@@ -20,7 +20,9 @@ import (
 // Relative, because sync is meant to run from the repo root and Phase 7's
 // workflow will do exactly that. The flag covers every other case.
 const (
-	defaultSourcesPath = "data/sources.yaml"
+	// The registry directory: one file per group in groups/ and per venue in
+	// venues/.
+	defaultSourcesPath = "data"
 
 	// Relative for the same reason, and committed to git on purpose: it is the
 	// permanent record of every event htxdev has ever seen, and first_seen
@@ -33,7 +35,7 @@ const (
 func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 	fs := flag.NewFlagSet("htxdev sync", flag.ContinueOnError)
 	fs.SetOutput(stderr)
-	sourcesPath := fs.String("sources", defaultSourcesPath, "path to the source registry")
+	sourcesPath := fs.String("sources", defaultSourcesPath, "directory holding the registry's groups/ and venues/")
 	rejectsPath := fs.String("rejects", defaultRejectsPath, "path to the reject list")
 	dbPath := fs.String("db", defaultDBPath, "path to the SQLite database")
 	verbose := fs.Bool("v", false, "list every event fetched, not just the per-source summary")
@@ -49,7 +51,7 @@ func runSync(ctx context.Context, args []string, stdout, stderr io.Writer) error
 	// The error already carries the path and, for a validation failure, every
 	// problem in the file with its line and column. Wrapping it again would
 	// only bury that.
-	reg, err := registry.LoadFile(*sourcesPath)
+	reg, err := registry.LoadDir(*sourcesPath)
 	if err != nil {
 		return err
 	}
@@ -137,7 +139,7 @@ func persist(ctx context.Context, dbPath string, reg *registry.Registry, rejects
 	defer func() { _ = st.Close() }()
 
 	// Before the events, always. Event rows reference source and group rows,
-	// and a feed added to sources.yaml this morning has neither until this
+	// and a feed added to the registry this morning has neither until this
 	// runs.
 	if err := st.SyncRegistry(ctx, reg.Groups, reg.Venues, reg.Sources); err != nil {
 		return out, fmt.Errorf("sync registry into %s: %w", dbPath, err)
@@ -181,7 +183,7 @@ func persist(ctx context.Context, dbPath string, reg *registry.Registry, rejects
 //
 // Zero of the 74 events published today trip it, so noise is not the problem
 // it would be if the threshold were looser. A legitimate event that trips it
-// usually means the group needs a venue: line in sources.yaml, which is the
+// usually means the group needs a venue: line in the registry, which is the
 // same curation that fixes it for every future event.
 func looksUnreviewed(events []core.Event) []core.Event {
 	var out []core.Event
@@ -229,7 +231,7 @@ func reportStore(w io.Writer, dbPath string, st stored) {
 			fmt.Fprintf(w, "!!     %s\n", e.Fingerprint)
 		}
 		fmt.Fprintf(w, "!! If any is private, add its fingerprint to data/rejects.yaml.\n"+
-			"!! If it is a real event, the group probably needs a venue: line in sources.yaml.\n")
+			"!! If it is a real event, the group probably needs a venue: line in its groups/ file.\n")
 	}
 
 	fmt.Fprintf(w, "%s: %d new, %d updated", dbPath, st.saved.Inserted, st.saved.Updated)

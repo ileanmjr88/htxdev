@@ -3,7 +3,11 @@
 // SQLite, or any particular feed format.
 package core
 
-import "time"
+import (
+	"strings"
+	"time"
+	"unicode"
+)
 
 type SourceKind string
 
@@ -46,7 +50,7 @@ type Group struct {
 
 type Venue struct {
 	ID      int64    // DB identity; 0 means unresolved
-	Slug    string   // set only when curated in sources.yaml, e.g. "ion"
+	Slug    string   // set only when curated in the registry, e.g. "ion"
 	Name    string   // "Ion"
 	Aliases []string // "The Ion", how other feeds write it
 	Address string
@@ -88,7 +92,7 @@ type RawEvent struct {
 	// SourceKey is the feed URL this record came from, stamped by the fetch
 	// layer rather than the decoder. It is a URL and not Source.ID because
 	// int64 IDs come from the database, which does not exist yet at fetch
-	// time. Inventing IDs by load order would mean reordering sources.yaml
+	// time. Inventing IDs by load order would mean reordering the registry
 	// silently rewrites the attribution stored against every historical event.
 	SourceKey   string
 	UpstreamID  string // global_id or ICS UID. Becomes Event.Fingerprint
@@ -126,7 +130,7 @@ type Event struct {
 	// creates it. An empty Name means nothing resolved, which is normal: 7 of
 	// HLUG's 110 events carry no LOCATION.
 	//
-	// A curated venue arrives here with the address sources.yaml gives it,
+	// A curated venue arrives here with the address the registry gives it,
 	// which is the point of curating one. Ion's own feed spells its address
 	// three ways across five rooms ("4201 Main Street", "4201 Main St",
 	// "4201 Main St.") and sometimes omits the state or the zip. A discovered
@@ -191,4 +195,38 @@ type EventSource struct {
 // yet and is not invented here.
 func Fingerprint(kind SourceKind, upstreamID string) string {
 	return string(kind) + ":" + upstreamID
+}
+
+// FoldName normalizes a name for matching: curly punctuation folded to ASCII,
+// lowercased, whitespace collapsed.
+//
+// In core rather than normalize because two packages have to agree on it:
+// normalize matches feed names with it, and the registry uses it to refuse two
+// groups claiming the same name, which is a match normalize would otherwise
+// settle by whichever file sorted first.
+//
+// The apostrophe is not hypothetical. Ion publishes the HLUG organizer as
+// "Houston Linux User’s Group" with U+2019, and the group's registry file records that
+// exact byte sequence as an alias, so today an exact comparison would work.
+// Folding is what keeps the match alive the day Ion switches to a straight
+// quote, which is the kind of change nobody announces and which would
+// otherwise silently stop two feeds deduplicating.
+func FoldName(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		switch r {
+		case '‘', '’', 'ʼ': // ' ' ʼ
+			b.WriteByte('\'')
+		case '“', '”': // " "
+			b.WriteByte('"')
+		case '–', '—', '−': // en dash, em dash, minus
+			b.WriteByte('-')
+		case ' ', '​': // non-breaking space, zero-width space
+			b.WriteByte(' ')
+		default:
+			b.WriteRune(unicode.ToLower(r))
+		}
+	}
+	return strings.Join(strings.Fields(b.String()), " ")
 }

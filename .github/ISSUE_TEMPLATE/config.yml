@@ -7,8 +7,8 @@ contact_links:
       group, adding one, or telling us a group is wrong or does not want to be
       listed.
   - name: Ask a group to publish a calendar
-    url: https://github.com/ileanmjr88/htxdev/blob/main/data/sources.yaml
+    url: https://github.com/ileanmjr88/htxdev/tree/main/data/groups
     about: >
       Some groups publish nothing machine-readable. The best fix is asking them
-      rather than writing a scraper, and sources.yaml records which groups are
-      in that position and what was already tried.
+      rather than writing a scraper, and each group's file in data/groups/
+      records whether it is in that position and what was already tried.

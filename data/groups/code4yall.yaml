@@ -1,0 +1,12 @@
+name: Code4Y'all
+url: https://www.meetup.com/code4yall/
+category: dev
+verified_by:
+verified_at:
+# Houston metro, meets around The Woodlands; Improving and Sparksuite
+# sponsor it. Feed is currently empty — Meetup only lists scheduled events.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/code4yall/events/ical/
+    priority: 10
+    enabled: true

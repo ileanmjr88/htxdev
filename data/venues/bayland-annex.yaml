@@ -1,0 +1,19 @@
+# One of three venues HOSS rotates through; see bayland-community-center.yaml
+# for why they are curated rather than discovered.
+
+name: Bayland Annex
+aliases:
+  # HOSS's own structured data calls it just "Annex"; the heading on the
+  # same page says "Bayland Annex". Both, because either could arrive.
+  - Annex
+city: Houston
+state: TX
+url: https://houstonopensourcesociety.com/meetings/venues/bayland-annex/
+# A separate building in Bayland Park, not a room of the community centre,
+# which is why it gets its own entry rather than an alias on the one above.
+# HOSS publishes no street address for it and neither do we; the link goes
+# to their page, which has a map.
+#
+# It hosts none of the next five meetings, so htxdev has never seen it in
+# an event. It is here so that the first time HOSS moves a meeting to it,
+# the venue is already canonical instead of arriving as a new discovery.

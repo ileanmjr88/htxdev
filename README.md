@@ -31,16 +31,16 @@ itself.
 ## How it works
 
 ```
-data/sources.yaml → fetch → decode → dedupe → htxdev.db ─┬→ data/events.json → the site
-   the curated               one decoder      permanent  │      committed         /
-   list of groups            per format       history    └→ htxdev serve     /api/v1/events.json
+data/groups/*.yaml → fetch → decode → dedupe → htxdev.db ─┬→ data/events.json → the site
+   the curated                one decoder      permanent  │      committed         /
+   list of groups             per format       history    └→ htxdev serve     /api/v1/events.json
 ```
 
 Three decoders cover every source. iCalendar, which Meetup and Google Calendar
 both emit; The Events Calendar's JSON API, which WordPress sites expose; and
 one HTML reader for a single group that publishes no calendar at all but does
-publish `<time datetime="...">` on its meetings page. Adding a group is an entry
-in a YAML file, not code.
+publish `<time datetime="...">` on its meetings page. Adding a group is one YAML
+file, not code.
 
 Dedupe is keyed on the group and the start instant, never the title, because
 the same meeting arrives as "Houston Linux User Group" from one feed and
@@ -110,20 +110,20 @@ cannot drift apart.
 
 Easiest is the [issue template](.github/ISSUE_TEMPLATE/add-group.yml), which
 asks for what it needs and nothing else. If you would rather send a pull
-request, it is one entry in [`data/sources.yaml`](data/sources.yaml):
+request, it is one new file, `data/groups/houston-example.yaml`. The filename is
+the slug:
 
 ```yaml
-  - slug: houston-example
-    name: Houston Example Group
-    url: https://example.org
-    category: dev
-    verified_by:
-    verified_at:
-    sources:
-      - kind: ics
-        url: https://www.meetup.com/houston-example/events/ical/
-        priority: 10
-        enabled: true
+name: Houston Example Group
+url: https://example.org
+category: dev
+verified_by:
+verified_at:
+sources:
+  - kind: ics
+    url: https://www.meetup.com/houston-example/events/ical/
+    priority: 10
+    enabled: true
 ```
 
 For a Meetup group, take the slug out of the URL and append `/events/ical/`.
@@ -131,6 +131,7 @@ That's the whole onboarding cost.
 
 `kind` is `ics` for iCalendar or `tribe` for a WordPress site running The Events
 Calendar (its feed lives at `/wp-json/tribe/events/v1/events`).
+[`data/README.md`](data/README.md) has the rest.
 
 Venues are usually discovered from the event data. You only need to add one by
 hand when its name shows up under several spellings and needs canonicalizing.
@@ -211,12 +212,13 @@ Node.
 cmd/htxdev          sync and export commands
 internal/core       domain types; imports only the standard library
 internal/source     one decoder per feed format, wire types stay private
-internal/registry   sources.yaml and rejects.yaml loaders
+internal/registry   registry and rejects.yaml loaders
 internal/fetch      HTTP, concurrency, the Fetcher interface
 internal/normalize  resolution, dedupe, venues, excerpts
 internal/store      SQLite
 internal/api        HTTP handlers and the JSON contract
-data/sources.yaml   the curated list of groups, venues, and feeds
+data/groups/        one file per group and its feeds
+data/venues/        one file per curated venue
 data/rejects.yaml   individual events that must not publish
 site/               the Astro site and the static API
 site/test/          the front page script, run against the built page

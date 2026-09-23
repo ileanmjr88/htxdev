@@ -1,0 +1,40 @@
+name: Houston Open Source Society
+url: https://houstonopensourcesociety.com
+category: dev
+verified_by: ileanmjr88
+verified_at: 2026-09-17
+# Verified 2026-09-17. Five weekly meeting slots, every one of them a
+# public HOSS meeting with a venue the group publishes itself. This is a
+# group's own site describing its own schedule, which is the lowest-risk
+# shape a source comes in.
+#
+# No default venue on purpose: HOSS rotates by week and its page names the
+# venue for every slot, so a default here could only ever be wrong.
+aliases:
+  - HOSS
+  - "Houston OSS"
+# Meets weekly on Wednesdays. Publishes NO calendar: atom.xml is talk
+# write-ups and member bios, re-checked 2026-09-17 and still true.
+#
+# What /meetings/ does publish is five meeting cards, one per weekly slot,
+# each carrying <time datetime="2026-10-07T18:00:00-05:00">. That is
+# semantic HTML with a spec behind it and a real UTC offset, so reading it
+# is not the same act as pattern matching over prose. kind: html exists for
+# this one source and nothing else.
+#
+# What you get is a schedule, not a calendar: the next date for each slot,
+# roughly five events covering about a month, refreshed every sync. Less
+# than the other sources give and it is all there is.
+#
+# STILL ASK THEM FOR AN ICS FEED. They're an open source group with a
+# Discord; it's a small favor, and the day they ship one this source
+# becomes `kind: ics` and internal/source/hoss.go gets deleted. That is the
+# goal, not this.
+#
+# Venues rotate by week and one of them is already curated here: the Third
+# Wednesday is at "The Ion", which is the alias on the `ion` venue above.
+sources:
+  - kind: html
+    url: https://houstonopensourcesociety.com/meetings/
+    priority: 10
+    enabled: true

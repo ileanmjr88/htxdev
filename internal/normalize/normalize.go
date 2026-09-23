@@ -14,9 +14,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
-	"strings"
 	"time"
-	"unicode"
 
 	"github.com/ileanmjr88/htxdev/internal/core"
 	"github.com/ileanmjr88/htxdev/internal/registry"
@@ -48,7 +46,7 @@ func New(reg *registry.Registry, rejects *registry.Rejects) *Normalizer {
 	}
 	for _, v := range reg.Venues {
 		for _, name := range append([]string{v.Slug, v.Name}, v.Aliases...) {
-			if key := foldKey(name); key != "" {
+			if key := core.FoldName(name); key != "" {
 				if _, taken := n.venuesByName[key]; !taken {
 					n.venuesByName[key] = v
 				}
@@ -65,7 +63,7 @@ func New(reg *registry.Registry, rejects *registry.Rejects) *Normalizer {
 		// both list resolves the same way on every run rather than depending
 		// on map iteration order.
 		for _, name := range append([]string{g.Slug, g.Name}, g.Aliases...) {
-			if key := foldKey(name); key != "" {
+			if key := core.FoldName(name); key != "" {
 				if _, taken := n.byName[key]; !taken {
 					n.byName[key] = g.Slug
 				}
@@ -155,7 +153,7 @@ func (n *Normalizer) rejectedEvent(e core.Event) (registry.Reject, bool) {
 // constantly and are never the same event.
 //
 // The group is what separates them, which is why resolution has to happen
-// first and why sources.yaml's aliases are load-bearing rather than decorative.
+// first and why the registry's aliases are load-bearing rather than decorative.
 func clusterKey(groupSlug string, start time.Time) string {
 	return groupSlug + "|" + start.UTC().Format(time.RFC3339)
 }
@@ -173,7 +171,7 @@ func clusterKey(groupSlug string, start time.Time) string {
 // group because the group is named "Ion District".
 func (n *Normalizer) groupFor(src core.Source, e core.RawEvent) (core.Group, bool) {
 	for _, o := range e.Organizers {
-		if slug, ok := n.byName[foldKey(o.Name)]; ok {
+		if slug, ok := n.byName[core.FoldName(o.Name)]; ok {
 			return n.groups[slug], true
 		}
 	}
@@ -266,7 +264,7 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 	// taxonomy is 20 marketing buckets ("Founders & Startups", "Start Here",
 	// "3rd Party Registration") with no technical signal anywhere in it, and
 	// 40 of 76 events carry none at all. htxdev's taxonomy already exists,
-	// curated one per group in sources.yaml, at 100% coverage. Ion's names are
+	// curated one per group in the registry, at 100% coverage. Ion's names are
 	// kept upstream as raw tags and deliberately do not become these.
 	if w.group.Category != "" {
 		ev.Categories = []string{w.group.Category}
@@ -315,9 +313,9 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 	// Fall back to where the group usually meets. Three Meetup feeds send no
 	// LOCATION at all, so without this their events have no venue even after
 	// they publish. Applied last, so any venue an actual feed named wins: the
-	// feed knows about the week the meeting moved and sources.yaml does not.
+	// feed knows about the week the meeting moved and the registry does not.
 	if ev.Venue.Name == "" && w.group.VenueSlug != "" {
-		if v, ok := n.venuesByName[foldKey(w.group.VenueSlug)]; ok {
+		if v, ok := n.venuesByName[core.FoldName(w.group.VenueSlug)]; ok {
 			ev.Venue = v
 		}
 	}
@@ -326,33 +324,4 @@ func (n *Normalizer) merge(rs []resolved) core.Event {
 		ev.End = ev.End.UTC()
 	}
 	return ev
-}
-
-// foldKey normalizes a name for matching: curly punctuation folded to ASCII,
-// lowercased, whitespace collapsed.
-//
-// The apostrophe is not hypothetical. Ion publishes the HLUG organizer as
-// "Houston Linux User’s Group" with U+2019, and sources.yaml records that
-// exact byte sequence as an alias, so today an exact comparison would work.
-// Folding is what keeps the match alive the day Ion switches to a straight
-// quote, which is the kind of change nobody announces and which would
-// otherwise silently stop two feeds deduplicating.
-func foldKey(s string) string {
-	var b strings.Builder
-	b.Grow(len(s))
-	for _, r := range s {
-		switch r {
-		case '‘', '’', 'ʼ': // ' ' ʼ
-			b.WriteByte('\'')
-		case '“', '”': // " "
-			b.WriteByte('"')
-		case '–', '—', '−': // en dash, em dash, minus
-			b.WriteByte('-')
-		case ' ', '​': // non-breaking space, zero-width space
-			b.WriteByte(' ')
-		default:
-			b.WriteRune(unicode.ToLower(r))
-		}
-	}
-	return strings.Join(strings.Fields(b.String()), " ")
 }
