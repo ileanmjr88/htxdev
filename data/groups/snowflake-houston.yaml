@@ -1,0 +1,28 @@
+name: Snowflake Houston User Group
+url: https://usergroups.snowflake.com/houston/
+category: data
+verified_by:
+verified_at:
+aliases:
+  - Snowflake Houston
+# Asked to be listed on 2026-09-23, by reply to the htxdev announcement, for
+# the chapter's relaunch kickoff on 8 October at NOV (10353 Richmond Ave).
+# NOT VERIFIED YET: whether the person who asked is the chapter's organizer is
+# still an open question. If they are, that is the Side Project Society basis,
+# the organizer vouching for their own group; say so in the verification note.
+#
+# Dormant from October 2023 until this relaunch. The chapter page lists three
+# past meetings (2020, June 2023, October 2023) and nothing between.
+#
+# The chapter runs on Bevy, which publishes no calendar feed and closes /api/
+# in robots.txt. kind: bevy reads the chapter page for event links and each
+# event page for its schema.org JSON-LD, two seconds apart as robots.txt asks.
+# See internal/source/bevy.go.
+#
+# No default venue. The kickoff is at NOV, but the 2023 meetings moved between
+# NOV and ConocoPhillips, and every event page carries its own address anyway.
+sources:
+  - kind: bevy
+    url: https://usergroups.snowflake.com/houston/
+    priority: 10
+    enabled: true

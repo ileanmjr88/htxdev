@@ -185,10 +185,10 @@ func Load(fsys fs.FS) (*Registry, error) {
 			swhere := fmt.Sprintf("%s source %d", where, j)
 
 			switch core.SourceKind(ws.Kind) {
-			case core.KindTribe, core.KindICS, core.KindHTML:
+			case core.KindTribe, core.KindICS, core.KindHTML, core.KindBevy:
 			default:
-				problems = append(problems, fmt.Sprintf("%s: unknown kind %q, want one of %q, %q, %q",
-					swhere, ws.Kind, core.KindTribe, core.KindICS, core.KindHTML))
+				problems = append(problems, fmt.Sprintf("%s: unknown kind %q, want one of %q, %q, %q, %q",
+					swhere, ws.Kind, core.KindTribe, core.KindICS, core.KindHTML, core.KindBevy))
 				continue
 			}
 

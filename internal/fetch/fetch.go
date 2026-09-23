@@ -3,6 +3,7 @@ package fetch
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -143,13 +144,14 @@ var fetchers = map[core.SourceKind]Fetcher{
 	core.KindTribe: tribeFetcher{},
 	core.KindICS:   icsFetcher{},
 	core.KindHTML:  hossFetcher{},
+	core.KindBevy:  bevyFetcher{delay: bevyCrawlDelay},
 }
 
 func get(ctx context.Context, s core.Source, now time.Time) Result {
 	f, ok := fetchers[s.Kind]
 	if !ok {
 		// Unreachable by way of internal/registry, which rejects an unknown
-		// kind when sources.yaml loads. Kept because this package does not
+		// kind when the registry loads. Kept because this package does not
 		// depend on having been called through the registry, and a Result with
 		// Err set is a cheaper answer than a panic.
 		return Result{Source: s, Err: fmt.Errorf("unknown kind %q", s.Kind)}
@@ -162,6 +164,25 @@ type tribeFetcher struct{}
 type icsFetcher struct{}
 
 type hossFetcher struct{}
+
+// bevyFetcher carries its delay as a field rather than reading the constant,
+// so a test can build one with no delay without touching package state that
+// a parallel test might be reading.
+type bevyFetcher struct {
+	delay time.Duration
+}
+
+const (
+	// Bevy's robots.txt says Crawl-delay: 2 for every agent it names. Honoured
+	// between every request to one chapter, which is the only place this
+	// client makes more than one request to a host in quick succession.
+	bevyCrawlDelay = 2 * time.Second
+
+	// A ceiling on event pages per chapter, the counterpart of maxPages. The
+	// Houston chapter links four, and Bevy caps the past events it lists, so
+	// reaching this means something other than a busy chapter.
+	maxBevyEvents = 20
+)
 
 // window is the span every source in a run is asked for, derived once from the
 // run's shared now so that a tribe query string and an ICS filter cannot
@@ -470,5 +491,85 @@ func finish(s core.Source, events []core.RawEvent, skipped []error, now, windowE
 		Skipped:   skipped,
 		FetchedAt: now,
 		WindowEnd: windowEnd,
+	}
+}
+
+// Get fetches a Bevy chapter: the chapter page for its event links, then each
+// event page for its JSON-LD, one at a time and two seconds apart.
+//
+// Sequential on purpose. Fetch already runs sources concurrently, and a
+// chapter's requests all go to one host that has asked to be paced, so the
+// gain from parallelising within it would be spent breaking that request.
+// Four event pages cost about eight seconds, twice a day.
+//
+// An event page that fails to fetch or decode is a skip, not a failure of the
+// source: the chapter page answered, so the source is up, and a non-empty
+// Skipped is what stops a missing event from reading as a cancellation.
+func (f bevyFetcher) Get(ctx context.Context, s core.Source, now time.Time) Result {
+	windowStart, windowEnd := window(now)
+
+	base, err := url.Parse(s.URL)
+	if err != nil {
+		return Result{Source: s, Err: fmt.Errorf("parse source url %q: %w", s.URL, err)}
+	}
+	body, err := getBody(ctx, s.URL)
+	if err != nil {
+		return Result{Source: s, Err: err}
+	}
+	links, err := source.ParseBevyChapter(bytes.NewReader(body), base)
+	if err != nil {
+		return Result{Source: s, Err: fmt.Errorf("parse %s: %w", s.URL, err)}
+	}
+
+	var (
+		events  []core.RawEvent
+		skipped []error
+	)
+	if len(links) > maxBevyEvents {
+		skipped = append(skipped, fmt.Errorf("stopped after %d of %d event pages", maxBevyEvents, len(links)))
+		links = links[:maxBevyEvents]
+	}
+
+	for _, link := range links {
+		if err := pause(ctx, f.delay); err != nil {
+			return Result{Source: s, Err: err}
+		}
+		body, err := getBody(ctx, link)
+		if err != nil {
+			skipped = append(skipped, err)
+			continue
+		}
+		e, err := source.ParseBevyEvent(bytes.NewReader(body))
+		if errors.Is(err, source.ErrBevyCancelled) {
+			continue
+		}
+		if err != nil {
+			skipped = append(skipped, fmt.Errorf("parse %s: %w", link, err))
+			continue
+		}
+		// Past events are linked alongside upcoming ones and only their own
+		// page says which is which, so the window is applied here rather than
+		// in the decoder.
+		if e.Start.Before(windowStart) || e.Start.After(windowEnd) {
+			continue
+		}
+		events = append(events, e)
+	}
+
+	return finish(s, events, skipped, now, windowEnd)
+}
+
+// pause waits d, or returns early with the context's error.
+func pause(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return ctx.Err()
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
 	}
 }

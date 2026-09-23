@@ -27,7 +27,7 @@ venue: improving-houston   # optional; a filename in venues/
 verified_by:
 verified_at:
 sources:
-  - kind: ics              # ics, tribe or html
+  - kind: ics              # ics, tribe, html or bevy
     url: https://www.meetup.com/houston-code-and-coffee/events/ical/
     priority: 10
     enabled: true

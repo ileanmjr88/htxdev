@@ -18,17 +18,17 @@ func TestRealRegistryIsValid(t *testing.T) {
 		t.Fatalf("committed registry does not load:\n%v", err)
 	}
 
-	if len(reg.Groups) != 11 {
-		t.Errorf("got %d groups, want 11", len(reg.Groups))
+	if len(reg.Groups) != 12 {
+		t.Errorf("got %d groups, want 12", len(reg.Groups))
 	}
 	if len(reg.Venues) != 6 {
 		t.Errorf("got %d venues, want 6", len(reg.Venues))
 	}
-	if len(reg.Sources) != 11 {
-		t.Errorf("got %d sources, want 11", len(reg.Sources))
+	if len(reg.Sources) != 12 {
+		t.Errorf("got %d sources, want 12", len(reg.Sources))
 	}
-	if got := len(reg.EnabledSources()); got != 11 {
-		t.Errorf("got %d enabled sources, want 11", got)
+	if got := len(reg.EnabledSources()); got != 12 {
+		t.Errorf("got %d enabled sources, want 12", got)
 	}
 
 	// HOSS publishes no calendar, so it is the one source read as HTML. This
@@ -49,6 +49,19 @@ func TestRealRegistryIsValid(t *testing.T) {
 	}
 	if hoss[0].Kind != core.KindHTML {
 		t.Errorf("HOSS source kind = %q, want %q", hoss[0].Kind, core.KindHTML)
+	}
+
+	// Snowflake's Houston chapter is the source kind: bevy exists for, added
+	// 2026-09-23. Bevy publishes no calendar, so if this ever changes kind it
+	// is Snowflake having shipped one.
+	var snowflake []core.Source
+	for _, s := range reg.Sources {
+		if s.GroupSlug == "snowflake-houston" {
+			snowflake = append(snowflake, s)
+		}
+	}
+	if len(snowflake) != 1 || snowflake[0].Kind != core.KindBevy {
+		t.Errorf("snowflake-houston sources = %+v, want one of kind %q", snowflake, core.KindBevy)
 	}
 
 	// The alias that lets HLUG's "The Ion, Rooms 29 and 30, ..." resolve to

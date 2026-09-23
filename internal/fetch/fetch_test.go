@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -810,9 +812,9 @@ func TestGetDispatchesOnKind(t *testing.T) {
 
 	t.Run("every kind the registry accepts has a fetcher", func(t *testing.T) {
 		// The table and core's kind list are edited separately, and a kind
-		// that loads from sources.yaml but has no entry here would fail every
+		// that loads from the registry but has no entry here would fail every
 		// source of that kind at runtime with nothing catching it earlier.
-		for _, k := range []core.SourceKind{core.KindTribe, core.KindICS, core.KindHTML} {
+		for _, k := range []core.SourceKind{core.KindTribe, core.KindICS, core.KindHTML, core.KindBevy} {
 			if _, ok := fetchers[k]; !ok {
 				t.Errorf("kind %q has no Fetcher", k)
 			}
@@ -901,5 +903,196 @@ func TestGetDispatchesHTMLKind(t *testing.T) {
 	res = get(t.Context(), icsSource(srv.URL), icsNow)
 	if res.Err == nil || !strings.Contains(res.Err.Error(), "iCalendar") {
 		t.Errorf("ics kind over an HTML body: Err = %v, want the ICS decoder's complaint", res.Err)
+	}
+}
+
+// bevyChapter serves a Bevy chapter at / linking to each path, and each path
+// from pages. Links are relative, so they resolve to the test server the way
+// the real chapter's resolve to usergroups.snowflake.com. A path missing from
+// pages answers 404. The returned func reports every path requested so far,
+// under the lock the handler writes it with.
+func bevyChapter(t *testing.T, paths []string, pages map[string]string) (*httptest.Server, func() []string) {
+	t.Helper()
+	var (
+		mu   sync.Mutex
+		seen []string
+	)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		seen = append(seen, r.URL.Path)
+		mu.Unlock()
+		if r.URL.Path == "/" {
+			var b strings.Builder
+			b.WriteString("<html><body>")
+			for _, p := range paths {
+				b.WriteString(`<a href="` + p + `">event</a>`)
+			}
+			b.WriteString("</body></html>")
+			_, _ = w.Write([]byte(b.String()))
+			return
+		}
+		body, ok := pages[r.URL.Path]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(srv.Close)
+	return srv, func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return slices.Clone(seen)
+	}
+}
+
+func bevyEventPage(t *testing.T, fixture string) string {
+	t.Helper()
+	b, err := os.ReadFile("../source/testdata/" + fixture)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	return string(b)
+}
+
+func bevyLD(status, start string) string {
+	return `<html><head><link rel="canonical" href="https://usergroups.snowflake.com/events/details/x/">` +
+		`<script type="application/ld+json">{"@type":"Event","name":"X","startDate":"` + start +
+		`","eventStatus":"https://schema.org/` + status + `"}</script></head></html>`
+}
+
+// The day the chapter asked to be listed. The relaunch meeting is 15 days
+// out, inside the window; the 2020 one is not.
+var bevyNow = time.Date(2026, 9, 23, 17, 0, 0, 0, time.UTC)
+
+func TestBevyFetcherReadsEveryLinkedEventAndKeepsTheWindow(t *testing.T) {
+	srv, seen := bevyChapter(t,
+		[]string{
+			"/events/details/relaunch/",
+			"/events/details/virtual-2020/",
+			"/events/details/called-off/",
+			"/events/details/gone/",
+		},
+		map[string]string{
+			"/events/details/relaunch/":     bevyEventPage(t, "bevy-event.html"),
+			"/events/details/virtual-2020/": bevyEventPage(t, "bevy-event-virtual.html"),
+			"/events/details/called-off/":   bevyLD("EventCancelled", "2026-10-01T18:00:00-05:00"),
+		})
+	src := core.Source{GroupSlug: "snowflake-houston", Kind: core.KindBevy, URL: srv.URL + "/"}
+
+	res := bevyFetcher{}.Get(t.Context(), src, bevyNow)
+
+	if res.Err != nil {
+		t.Fatalf("Err = %v", res.Err)
+	}
+	if len(res.Events) != 1 || res.Events[0].Title != "Houston User Group Relaunch Kickoff Meeting" {
+		t.Fatalf("events = %+v, want only the relaunch meeting", res.Events)
+	}
+	if res.Events[0].SourceKey != src.URL {
+		t.Errorf("SourceKey = %q, want the chapter URL", res.Events[0].SourceKey)
+	}
+	// The cancelled event is left out quietly; its absence is the signal. The
+	// 404 is a skip, which is what keeps it from reading as a cancellation.
+	if len(res.Skipped) != 1 || !strings.Contains(res.Skipped[0].Error(), "404") {
+		t.Errorf("skipped = %v, want exactly the 404", res.Skipped)
+	}
+	if got, want := seen(), 5; len(got) != want {
+		t.Errorf("made %d requests (%v), want %d: the chapter and every event page", len(got), got, want)
+	}
+	if !res.WindowEnd.Equal(bevyNow.AddDate(0, 0, fetchWindowDays)) {
+		t.Errorf("WindowEnd = %s", res.WindowEnd)
+	}
+}
+
+func TestBevyFetcherChapterFailuresFailTheSource(t *testing.T) {
+	cases := []struct {
+		name   string
+		status int
+		body   string
+		want   string
+	}{
+		{"server error", http.StatusInternalServerError, "", "unexpected status"},
+		{"no event links", http.StatusOK, "<html><body>redesigned</body></html>", "page structure has changed"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := serve(t, tc.status, tc.body)
+			res := bevyFetcher{}.Get(t.Context(), core.Source{Kind: core.KindBevy, URL: srv.URL + "/"}, bevyNow)
+			if res.Err == nil || !strings.Contains(res.Err.Error(), tc.want) {
+				t.Fatalf("Err = %v, want it to mention %q", res.Err, tc.want)
+			}
+		})
+	}
+}
+
+// Every event page unreadable is a format change, and the ratio fails the
+// source for it rather than publishing an empty chapter.
+func TestBevyFetcherFailsWhenEveryEventPageIsUnreadable(t *testing.T) {
+	paths := []string{"/events/details/a/", "/events/details/b/", "/events/details/c/", "/events/details/d/"}
+	pages := map[string]string{}
+	for _, p := range paths {
+		pages[p] = "<html><head></head></html>"
+	}
+	srv, _ := bevyChapter(t, paths, pages)
+	res := bevyFetcher{}.Get(t.Context(), core.Source{Kind: core.KindBevy, URL: srv.URL + "/"}, bevyNow)
+	if res.Err == nil || !strings.Contains(res.Err.Error(), "4 of 4 events unusable") {
+		t.Fatalf("Err = %v, want the ratio to fail the source", res.Err)
+	}
+}
+
+func TestBevyFetcherStopsAtMaxBevyEvents(t *testing.T) {
+	var paths []string
+	pages := map[string]string{}
+	for i := range maxBevyEvents + 3 {
+		p := fmt.Sprintf("/events/details/e%d/", i)
+		paths = append(paths, p)
+		pages[p] = bevyLD("EventScheduled", "2026-10-08T18:00:00-05:00")
+	}
+	srv, seen := bevyChapter(t, paths, pages)
+	res := bevyFetcher{}.Get(t.Context(), core.Source{Kind: core.KindBevy, URL: srv.URL + "/"}, bevyNow)
+
+	if res.Err != nil {
+		t.Fatalf("Err = %v", res.Err)
+	}
+	if got := len(seen()); got != maxBevyEvents+1 {
+		t.Errorf("made %d requests, want %d", got, maxBevyEvents+1)
+	}
+	if len(res.Skipped) != 1 || !strings.Contains(res.Skipped[0].Error(), "stopped after") {
+		t.Errorf("skipped = %v, want the truncation recorded", res.Skipped)
+	}
+}
+
+// The pause between requests is where a Bevy sync spends nearly all its time,
+// so it has to give way to Ctrl-C rather than finish its two seconds.
+func TestBevyFetcherPauseHonoursCancellation(t *testing.T) {
+	srv, seen := bevyChapter(t, []string{"/events/details/a/"}, nil)
+	ctx, cancel := context.WithCancel(t.Context())
+	f := bevyFetcher{delay: time.Hour}
+
+	done := make(chan Result, 1)
+	go func() { done <- f.Get(ctx, core.Source{Kind: core.KindBevy, URL: srv.URL + "/"}, bevyNow) }()
+
+	// Let the chapter request land, then cancel mid-pause.
+	for deadline := time.Now().Add(5 * time.Second); len(seen()) == 0 && time.Now().Before(deadline); {
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+
+	select {
+	case res := <-done:
+		if !errors.Is(res.Err, context.Canceled) {
+			t.Errorf("Err = %v, want context.Canceled", res.Err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Get did not return after cancellation")
+	}
+}
+
+// The registered fetcher is the one real syncs use, so it is the one that has
+// to carry robots.txt's delay.
+func TestBevyFetcherIsRegisteredWithTheCrawlDelay(t *testing.T) {
+	f, ok := fetchers[core.KindBevy].(bevyFetcher)
+	if !ok || f.delay != 2*time.Second {
+		t.Fatalf("fetchers[bevy] = %#v, want a bevyFetcher with a 2s delay", fetchers[core.KindBevy])
 	}
 }
