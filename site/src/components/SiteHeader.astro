@@ -1,0 +1,22 @@
+---
+/* The row at the top of every page: the mark on the left, and on the right
+ * where this comes from and the theme toggle.
+ *
+ * One component so the front page and the 404 cannot drift apart, which they
+ * had already started to: each carried its own copy of this row.
+ */
+import Wordmark from './Wordmark.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { REPO_URL, SITE_URL } from '../lib/links';
+
+const link = 'text-muted no-underline transition-colors hover:text-accent';
+---
+
+<div class="flex items-center justify-between gap-4">
+  <Wordmark as="a" class="text-xl sm:text-2xl" />
+  <nav aria-label="Site" class="flex items-center gap-3 text-[.8rem] sm:gap-4">
+    <a class={link} href={REPO_URL}>GitHub</a>
+    <a class={link} href={SITE_URL}>ilean.me</a>
+    <ThemeToggle />
+  </nav>
+</div>
