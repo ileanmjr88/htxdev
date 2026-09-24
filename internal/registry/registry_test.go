@@ -18,17 +18,17 @@ func TestRealRegistryIsValid(t *testing.T) {
 		t.Fatalf("committed registry does not load:\n%v", err)
 	}
 
-	if len(reg.Groups) != 13 {
-		t.Errorf("got %d groups, want 13", len(reg.Groups))
+	if len(reg.Groups) != 14 {
+		t.Errorf("got %d groups, want 14", len(reg.Groups))
 	}
-	if len(reg.Venues) != 6 {
-		t.Errorf("got %d venues, want 6", len(reg.Venues))
+	if len(reg.Venues) != 7 {
+		t.Errorf("got %d venues, want 7", len(reg.Venues))
 	}
-	if len(reg.Sources) != 13 {
-		t.Errorf("got %d sources, want 13", len(reg.Sources))
+	if len(reg.Sources) != 14 {
+		t.Errorf("got %d sources, want 14", len(reg.Sources))
 	}
-	if got := len(reg.EnabledSources()); got != 13 {
-		t.Errorf("got %d enabled sources, want 13", got)
+	if got := len(reg.EnabledSources()); got != 14 {
+		t.Errorf("got %d enabled sources, want 14", got)
 	}
 
 	// HOSS publishes no calendar, so it is the one source read as HTML. This
