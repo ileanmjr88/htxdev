@@ -1,0 +1,23 @@
+name: Houston AI Club
+url: https://www.meetup.com/houston-ai-club/
+category: data
+venue: 801-travis
+verified_by:
+verified_at:
+# Checked 2026-09-24. A monthly meetup on the first Thursday and a hands-on
+# Build Lab on the third, running since at least April 2026. One upcoming
+# event in the feed, an AI governance panel on 1 October.
+#
+# Not the group in houston-ai-meetup.yaml (issue #5). That is a different
+# Meetup group id with an empty feed; this one does not settle whether #5
+# is the wrong group.
+#
+# The feed sends no LOCATION, so the venue comes from here. Nearly every
+# past event was at 801 Travis St; the 3 September meetup was at the Ion.
+# Titles name the venue in prose, which nothing reads. Same trade as the
+# Robotics Group: right most months beats no venue at all.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/houston-ai-club/events/ical/
+    priority: 10
+    enabled: true
