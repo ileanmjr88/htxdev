@@ -1,0 +1,25 @@
+name: JavascriptHTX
+url: https://www.meetup.com/javascript-htx/
+category: dev
+verified_by:
+verified_at:
+aliases:
+  - JavaScript HTX
+  - ReactHTX
+# Formerly ReactHTX. Same Meetup group renamed, not a successor: the old
+# slug meetup.com/react-htx still resolves and serves the same group id and
+# founding date (2016-08-10) as javascript-htx. The feed calls itself
+# "JavaScript HTX", which is why that spelling is an alias.
+#
+# Checked 2026-09-24: feed is valid with one upcoming event, a hands-on
+# workshop at The Ion. Ion's own Tribe feed does not list it, so there is
+# no cross-source duplicate to resolve.
+#
+# No default venue yet. Like every Meetup feed here it sends no LOCATION,
+# but one event is not enough to say the group meets at Ion every time.
+# Revisit after a few more events; if they are all at Ion, set venue: ion.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/javascript-htx/events/ical/
+    priority: 10
+    enabled: true
