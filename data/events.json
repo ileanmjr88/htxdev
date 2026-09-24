@@ -1,60 +1,6 @@
 {
-  "generated_at": "2026-09-24T09:33:00Z",
+  "generated_at": "2026-09-24T21:27:28Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=63707",
-      "title": "ENRG HTX – September 2026",
-      "excerpt": "ENRG (Entrepreneurial Networking Resource Group) is a community for entrepreneurs with 10-250 employees running on EOS or EOS Curious.",
-      "start": "2026-09-24T13:30:00Z",
-      "end": "2026-09-24T15:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 028",
-      "url": "https://iondistrict.com/event/enrg-htx-september-2026/",
-      "register_url": "https://www.eventbrite.com/e/enrg-htx-september-2026-tickets-1992148129683",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=65692",
-      "title": "Houston Startup Speedrun",
-      "excerpt": "The Houston Startup Speedrun is an intensive and fast-paced program designed to provide both early-stage founders and aspiring entrepreneurs with a comprehensive understanding of the Startup Founder’s Journey and the…",
-      "start": "2026-09-24T14:00:00Z",
-      "end": "2026-09-25T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 029",
-      "url": "https://iondistrict.com/event/houston-startup-speedrun-8/",
-      "register_url": "https://www.eventbrite.com/e/wades-houston-startup-speedrun-at-the-ion-tickets-1988360089553?aff=erelexpmlt",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=55206",
       "title": "NASA Tech Talks: Enhancing Autonomous Onboard Navigation Systems",
@@ -893,6 +839,30 @@
       "register_url": "https://luma.com/u7dflnu2",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "bevy:usergroups.snowflake.com/events/details/snowflake-houston-presents-houston-user-group-relaunch-kickoff-meeting/",
+      "title": "Houston User Group Relaunch Kickoff Meeting",
+      "excerpt": "🚀 Mastering CoCo at Scale: Driving Value with Smart Usage \u0026 Cost GovernanceJoin Snowflake Senior Solution Engineer G...",
+      "start": "2026-10-08T23:00:00Z",
+      "end": "2026-10-09T01:00:00Z",
+      "group": {
+        "slug": "snowflake-houston",
+        "name": "Snowflake Houston User Group",
+        "url": "https://usergroups.snowflake.com/houston/"
+      },
+      "venue": {
+        "name": "NOV",
+        "address": "10353 Richmond Avenue",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77042"
+      },
+      "url": "https://usergroups.snowflake.com/events/details/snowflake-houston-presents-houston-user-group-relaunch-kickoff-meeting/",
+      "categories": [
+        "data"
       ],
       "sources": 1
     },
