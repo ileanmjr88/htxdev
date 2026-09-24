@@ -1,54 +1,6 @@
 {
-  "generated_at": "2026-09-23T21:27:28Z",
+  "generated_at": "2026-09-24T09:33:00Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=66540",
-      "title": "Houston Methodist Innovation Discussion: Transforming Healthcare Through AI, Technology, and Innovation",
-      "excerpt": "▶ REGISTER NOW",
-      "start": "2026-09-23T22:30:00Z",
-      "end": "2026-09-24T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-methodist-innovation-discussion-transforming-healthcare-through-ai-technology-and-innovation/",
-      "register_url": "https://houston.himss.org/events/houston-methodist-innovation-discussion",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "html:fourth-wednesday_20260923T230000Z",
-      "title": "Houston Open Source Society, Fourth Wednesday",
-      "start": "2026-09-23T23:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Bayland Community Center",
-        "address": "6400 Bissonnet Street",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77074",
-        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=63707",
       "title": "ENRG HTX – September 2026",
@@ -1574,6 +1526,28 @@
         "city": "Houston",
         "state": "TX",
         "zip": "77004"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "html:fourth-wednesday_20261028T230000Z",
+      "title": "Houston Open Source Society, Fourth Wednesday",
+      "start": "2026-10-28T23:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Bayland Community Center",
+        "address": "6400 Bissonnet Street",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77074",
+        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
       },
       "categories": [
         "dev"
