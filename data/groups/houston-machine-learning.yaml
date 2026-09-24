@@ -1,0 +1,22 @@
+name: Houston Machine Learning
+url: https://www.meetup.com/houston-machine-learning/
+category: data
+verified_by:
+verified_at:
+# Checked 2026-09-24. Running since 2016. Three upcoming events in the feed.
+#
+# Mostly ONLINE, and the feed cannot say so. The regular programme is a
+# Friday 2 PM paper or tool deep dive held online; in-person events are
+# occasional (a hackathon, a symposium cross-post). Meetup's ics carries no
+# LOCATION and no conference field, so online sessions arrive looking like
+# in-person events with no venue. Hence no default venue: any address here
+# would put the online sessions somewhere they are not. Same shape as PyHou.
+#
+# For the verifier: one upcoming event is a paid multi-week course, not a
+# meetup. Decide whether that kind belongs on the calendar, and reject it
+# by fingerprint in rejects.yaml if not.
+sources:
+  - kind: ics
+    url: https://www.meetup.com/houston-machine-learning/events/ical/
+    priority: 10
+    enabled: true
