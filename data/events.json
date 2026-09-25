@@ -1,189 +1,6 @@
 {
-  "generated_at": "2026-09-25T09:33:22Z",
+  "generated_at": "2026-09-25T21:27:30Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=10004082",
-      "title": "Ion Networking with Cup of Joey",
-      "excerpt": "What is the purpose of Cup of Joey? It is to create a connected culture of coffee shop-open networking across our region. Every Friday morning, you’ll have the opportunity to meet new and expand your current networks…",
-      "start": "2026-09-25T13:30:00Z",
-      "end": "2026-09-25T15:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Lobby",
-      "url": "https://iondistrict.com/event/ion-networking-with-cup-of-joey-34/2026-09-25/",
-      "register_url": "https://www.cupofjoey.org/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=65725",
-      "title": "AI Circle Houston",
-      "excerpt": "AI Circle Houston is a weekly Friday morning gathering for people building, implementing, or exploring AI.",
-      "start": "2026-09-25T14:30:00Z",
-      "end": "2026-09-25T16:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/ai-circle-houston-6/",
-      "register_url": "https://www.linkedin.com/groups/18970005/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=64682",
-      "title": "NASA Office Hours",
-      "excerpt": "NASA is bringing its expertise to Houston’s innovation hub! Every other Friday, join us for NASA’s office hours, designed to bridge the gap between Houston’s innovators, entrepreneurs, and startups with NASA’s…",
-      "start": "2026-09-25T15:00:00Z",
-      "end": "2026-09-25T17:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/nasa-office-hours-22/",
-      "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=64738",
-      "title": "Mapping Houston’s Innovation Ecosystem",
-      "excerpt": "Facilitated by Wade Pinder, Ion’s Mentor in Residence",
-      "start": "2026-09-25T15:00:00Z",
-      "end": "2026-09-25T16:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 027",
-      "url": "https://iondistrict.com/event/mapping-houstons-innovation-ecosystem-7/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=65740",
-      "title": "SCORE Office Hours",
-      "excerpt": "About SCORE Office Hours",
-      "start": "2026-09-25T15:00:00Z",
-      "end": "2026-09-25T16:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/score-office-hours-53/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=65715",
-      "title": "Startup Circle Houston 💫",
-      "excerpt": "Startup Circle Houston 💫 brings together founders, teammates, experts and newbies of startups in Greater Houston! Past topics include:",
-      "start": "2026-09-25T15:30:00Z",
-      "end": "2026-09-25T16:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Lobby",
-      "url": "https://iondistrict.com/event/startup-circle-houston-%f0%9f%92%ab-22/",
-      "register_url": "https://www.linkedin.com/company/startup-circle-houston/about/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=66066",
-      "title": "Houston Hackathon 2026",
-      "excerpt": "The Houston Hackathon is an opportunity for people from all backgrounds and skillsets to come together and collaborate on projects to improve life in the Greater Houston area. In addition to RSVPing for the kickoff…",
-      "start": "2026-09-25T16:30:00Z",
-      "end": "2026-09-26T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-hackathon-2026/",
-      "register_url": "https://luma.com/a5qipdpz",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:trh5l9tva915dsjpt4adr4r6sn@google.com_20260926T010000Z",
       "title": "Houston Linux - Social at Finn MacCool's",
@@ -276,32 +93,6 @@
       },
       "url": "https://iondistrict.com/event/industrial-growth-series-why-great-reputations-dont-create-opportunities-2/",
       "register_url": "https://www.eventbrite.com/e/1996108502264?aff=oddtdtcreator",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=60330",
-      "title": "Women In Wealth",
-      "excerpt": "WOMEN IN WEALTH SERIES",
-      "start": "2026-09-29T23:00:00Z",
-      "end": "2026-09-30T01:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/women-in-wealth-2/",
-      "register_url": "https://www.eventbrite.com/e/women-in-wealth-tickets-2000660707031?aff=oddtdtcreator",
       "categories": [
         "startup"
       ],
@@ -916,6 +707,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=66799",
+      "title": "Ignite Possibilities with SUPERGirls SHINE Foundation",
+      "excerpt": "Register here",
+      "start": "2026-10-13T14:00:00Z",
+      "end": "2026-10-13T19:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/ignite-possibilities-sgsf/",
+      "register_url": "https://forms.cloud.microsoft/pages/responsepage.aspx?id=q3A7nQ_4wkC-9bVZAvLEIYFQytoNhz9FkVeIK_xvZeBUOEg0SkVSTzZZOENMRjA4Rk02N1EzMEU1QS4u\u0026amp;route=shorturl",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=55461",
       "title": "Mercury Fund Day at the Ion",
       "excerpt": "Welcome to “Mercury Fund Day at the Ion” – a program series hosted by the Ion and Mercury, where software founders can connect with mentorship at Houston’s HQ for innovation.",
@@ -986,6 +803,32 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=60330",
+      "title": "Women In Wealth",
+      "excerpt": "WOMEN IN WEALTH SERIES",
+      "start": "2026-10-14T23:00:00Z",
+      "end": "2026-10-15T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/women-in-wealth-2/",
+      "register_url": "https://www.eventbrite.com/e/women-in-wealth-tickets-2000660707031?aff=oddtdtcreator",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     },
