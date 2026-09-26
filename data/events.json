@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-09-26T09:29:12Z",
+  "generated_at": "2026-09-26T21:27:08Z",
   "events": [
-    {
-      "id": "ics:event_316720185@meetup.com",
-      "title": "Houston Robotics Group Meeting @TXRX",
-      "excerpt": "Houston Robotics Group",
-      "start": "2026-09-26T19:00:00Z",
-      "end": "2026-09-26T23:00:00Z",
-      "group": {
-        "slug": "houston-robotics-group",
-        "name": "Houston Robotics Group",
-        "url": "https://www.meetup.com/houstonroboticsgroup/"
-      },
-      "venue": {
-        "name": "TXRX Labs",
-        "address": "6501 Navigation Blvd",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77011",
-        "url": "https://txrxlabs.org"
-      },
-      "url": "https://www.meetup.com/houstonroboticsgroup/events/316720185/",
-      "categories": [
-        "hardware"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:event_316571151@meetup.com",
       "title": "Houston Code \u0026 Coffee",
