@@ -4,6 +4,8 @@ import EventCard from '../components/EventCard.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { readEvents } from '../lib/events';
+import Spotlight from '../components/Spotlight.astro';
+import { spotlight } from '../lib/spotlight';
 
 // Loaded from src/lib/events.ts, which this page and the /api/v1/events.json
 // endpoint both use. The loader explains where it looks and why.
@@ -201,24 +203,39 @@ const generated = new Intl.DateTimeFormat('en-US', {
       )}
 
       {days.length === 0 ? (
-        <div class="mt-8 rounded-lg border border-dashed border-line p-8 text-center text-muted">
-          <p>Nothing upcoming.</p>
-          <p class="mt-2">
-            If that is a surprise, no group has been verified yet, so every event is still
-            pending. Run <code>htxdev export -preview</code> to see what verifying them
-            would publish.
-          </p>
-        </div>
+        <>
+          <div class="mt-8 rounded-lg border border-dashed border-line p-8 text-center text-muted">
+            <p>Nothing upcoming.</p>
+            <p class="mt-2">
+              If that is a surprise, no group has been verified yet, so every event is still
+              pending. Run <code>htxdev export -preview</code> to see what verifying them
+              would publish.
+            </p>
+          </div>
+          <Spotlight {...spotlight} id="spotlight" placement="list" />
+        </>
       ) : (
-        days.map((day) => (
-          <section class="mt-9 scroll-mt-20" id={`day-${day.key}`} data-day={day.key}>
-            <h2 class="mb-2 border-b border-line pb-1.5 text-xs font-semibold tracking-[.08em] text-muted uppercase">
-              {day.label}
-            </h2>
-            {day.events.map((event) => <EventCard event={event} tz={TZ} />)}
-          </section>
+        days.map((day, d) => (
+          <>
+            <section class="mt-9 scroll-mt-20" id={`day-${day.key}`} data-day={day.key}>
+              <h2 class="mb-2 border-b border-line pb-1.5 text-xs font-semibold tracking-[.08em] text-muted uppercase">
+                {day.label}
+              </h2>
+              {day.events.map((event) => <EventCard event={event} tz={TZ} />)}
+            </section>
+            {/* The spotlight goes right after the first day: seen by everyone,
+                without splitting a day's events or pushing the list below the
+                fold. Filtering can hide that day, so the filter script moves it
+                to follow the first visible one. */}
+            {d === 0 && <Spotlight {...spotlight} id="spotlight" placement="list" />}
+          </>
         ))
       )}
+
+      {/* The second copy, for whoever reads to the end. Only with two or more
+          days: with one, it would sit directly under the first copy. The
+          filter script applies the same rule to the days still showing. */}
+      {days.length > 1 && <Spotlight {...spotlight} id="spotlight-end" placement="footer" />}
 
       <footer class="mt-12 border-t border-line pt-5 text-[.82rem] text-muted">
         <p>
@@ -260,6 +277,8 @@ const generated = new Intl.DateTimeFormat('en-US', {
         const status = document.getElementById('filter-status');
         const cards = [...document.querySelectorAll('article[data-group]')];
         const days = [...document.querySelectorAll('section[data-day]')];
+        const spotlight = document.getElementById('spotlight');
+        const spotlightEnd = document.getElementById('spotlight-end');
         const buttons = [...bar.querySelectorAll('button[data-filter]')];
         const all = buttons.filter((b) => b.dataset.filter !== 'all');
 
@@ -315,6 +334,16 @@ const generated = new Intl.DateTimeFormat('en-US', {
           // A date heading with nothing under it reads as a bug.
           for (const day of days) {
             day.hidden = !day.querySelector('article[data-group]:not([hidden])');
+          }
+          // Keep the spotlight after the first day still showing. With
+          // nothing showing, park it before the first (hidden) day.
+          if (spotlight) {
+            const first = days.find((d) => !d.hidden);
+            if (first) first.after(spotlight);
+            else days[0]?.before(spotlight);
+          }
+          if (spotlightEnd) {
+            spotlightEnd.hidden = days.filter((d) => !d.hidden).length < 2;
           }
           for (const b of all) {
             b.setAttribute('aria-pressed', String(!hidden.has(b.dataset.filter)));
