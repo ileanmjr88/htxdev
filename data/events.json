@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-09-27T09:30:46Z",
+  "generated_at": "2026-09-27T21:27:14Z",
   "events": [
-    {
-      "id": "ics:event_316571151@meetup.com",
-      "title": "Houston Code \u0026 Coffee",
-      "excerpt": "Houston Code and Coffee Code \u0026 Coffee is a friendly, low-pressure meetup for coders and code-curious. All skill levels are welcome!",
-      "start": "2026-09-27T15:00:00Z",
-      "end": "2026-09-27T17:30:00Z",
-      "group": {
-        "slug": "houston-code-and-coffee",
-        "name": "Houston Code and Coffee",
-        "url": "https://www.meetup.com/houston-code-and-coffee/"
-      },
-      "venue": {
-        "name": "Improving Houston",
-        "address": "10111 Richmond Avenue, Suite 100",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77042",
-        "url": "https://improving.com"
-      },
-      "url": "https://www.meetup.com/houston-code-and-coffee/events/316571151/",
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=65976",
       "title": "Industrial Growth Series: Why Great Reputations Don’t Create Opportunities",
