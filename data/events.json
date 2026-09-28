@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T21:27:14Z",
+  "generated_at": "2026-09-28T09:43:51Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=65976",
@@ -1791,6 +1791,33 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10004091",
+      "title": "Ion Networking with Cup of Joey",
+      "excerpt": "What is the purpose of Cup of Joey? It is to create a connected culture of coffee shop-open networking across our region. Every Friday morning, you’ll have the opportunity to meet new and expand your current networks…",
+      "start": "2026-11-27T14:30:00Z",
+      "end": "2026-11-27T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Lobby",
+      "url": "https://iondistrict.com/event/ion-networking-with-cup-of-joey-34/2026-11-27/",
+      "register_url": "https://www.cupofjoey.org/",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     }
