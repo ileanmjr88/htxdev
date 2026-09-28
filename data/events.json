@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-28T09:43:51Z",
+  "generated_at": "2026-09-28T21:28:43Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=65976",
@@ -100,7 +100,7 @@
     {
       "id": "tribe:iondistrict.com?id=49828",
       "title": "Biketoberfest + Ion Block Party",
-      "excerpt": "Join us for Biketoberfest with networking, biking and pints on the plaza!",
+      "excerpt": "Join us for Biketoberfest with networking, biking and pints on the plaza! Check-in at 4:00 PM. Bike ride begins at 5:30 PM.",
       "start": "2026-10-01T21:00:00Z",
       "end": "2026-10-02T00:00:00Z",
       "group": {
@@ -613,7 +613,7 @@
     {
       "id": "tribe:iondistrict.com?id=66475",
       "title": "Ion Family Tech Festival",
-      "excerpt": "Join the Ion and our partners in the inaugural Ion Family Tech Fest! During the event, your family will have access to hands-on Science, Technology, Engineering, Arts, and Math (STEAM) and Entrepreneurial workshop…",
+      "excerpt": "Join the Ion and our partners at the Ion Family Tech Fest! During the event, your family will have access to hands-on Science, Technology, Engineering, Arts, and Math (STEAM) and Entrepreneurial workshop experiences…",
       "start": "2026-10-10T14:00:00Z",
       "end": "2026-10-10T17:00:00Z",
       "group": {
