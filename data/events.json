@@ -1,33 +1,6 @@
 {
-  "generated_at": "2026-10-01T09:36:42Z",
+  "generated_at": "2026-10-01T21:30:06Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=49828",
-      "title": "Biketoberfest + Ion Block Party",
-      "excerpt": "UPDATE: Due to the weather forecast, we’re making a few changes to Biketoberfest + Ion Block Party this Thursday, October 1. The bike ride is canceled, but the celebration is still on—we’re moving the fun inside…",
-      "start": "2026-10-01T21:00:00Z",
-      "end": "2026-10-02T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Plaza",
-      "url": "https://iondistrict.com/event/biketoberfest-ion-block-party/",
-      "register_url": "https://secure.everyaction.com/RV1cTXtwP0OWsybD1gkmWQ2",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004083",
       "title": "Ion Networking with Cup of Joey",
@@ -302,6 +275,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_316800762@meetup.com",
+      "title": "Houston Robotics Group Meeting @TXRX",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-10-03T19:00:00Z",
+      "end": "2026-10-03T23:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/316800762/",
+      "categories": [
+        "hardware"
       ],
       "sources": 1
     },
