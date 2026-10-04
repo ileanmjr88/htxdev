@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03T22:17:12Z",
+  "generated_at": "2026-10-04T11:06:17Z",
   "events": [
     {
       "id": "ics:event_316448127@meetup.com",
@@ -2006,6 +2006,53 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:1c89bego081kmn78m7jpm3rs02@google.com",
+      "title": "Houston Linux - User Meeting",
+      "start": "2026-12-03T00:00:00Z",
+      "end": "2026-12-03T03:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Sesh Coworking",
+        "address": "2808 Caroline St #100",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77004"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=53932",
+      "title": "Holiday Block Party in the Ion District",
+      "excerpt": "Celebrate the season of innovation and community at the Ion District Holiday Block Party! Join us for an evening filled with holiday cheer, local bites, drinks, music and meaningful connection across Houston’s…",
+      "start": "2026-12-03T22:00:00Z",
+      "end": "2026-12-04T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/holiday-block-party-at-the-ion/",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     }
