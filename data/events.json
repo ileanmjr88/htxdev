@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-04T21:38:12Z",
+  "generated_at": "2026-10-05T09:47:13Z",
   "events": [
     {
       "id": "ics:event_316448127@meetup.com",
@@ -2051,6 +2051,58 @@
         "url": "https://iondistrict.com"
       },
       "url": "https://iondistrict.com/event/holiday-block-party-at-the-ion/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10004092",
+      "title": "Ion Networking with Cup of Joey",
+      "excerpt": "What is the purpose of Cup of Joey? It is to create a connected culture of coffee shop-open networking across our region. Every Friday morning, you’ll have the opportunity to meet new and expand your current networks…",
+      "start": "2026-12-04T14:30:00Z",
+      "end": "2026-12-04T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Lobby",
+      "url": "https://iondistrict.com/event/ion-networking-with-cup-of-joey-34/2026-12-04/",
+      "register_url": "https://www.cupofjoey.org/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=65689",
+      "title": "Welcome to the Ion: An Introduction and Tour",
+      "excerpt": "Join the Ion’s Mentor in Residence, Wade Pinder, for an engaging tour and introduction to the Ion, Houston’s dynamic hub for innovation and entrepreneurship, powered by Rice University. This event is designed for…",
+      "start": "2026-12-04T16:00:00Z",
+      "end": "2026-12-04T17:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/welcome-to-the-ion-an-introduction-and-tour-20/",
       "categories": [
         "startup"
       ],
