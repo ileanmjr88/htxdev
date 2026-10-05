@@ -1,6 +1,33 @@
 {
-  "generated_at": "2026-10-05T09:47:13Z",
+  "generated_at": "2026-10-05T21:30:38Z",
   "events": [
+    {
+      "id": "tribe:iondistrict.com?id=67106",
+      "title": "Tech + Tequila Talk: AI, Bottlenecks, and the Theory of Constraints",
+      "excerpt": "AI can speed up coding, but what happens when the bottleneck moves? Explore smarter software delivery with Alan Vargas of GitLab.",
+      "start": "2026-10-06T22:00:00Z",
+      "end": "2026-10-07T00:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 031",
+      "url": "https://iondistrict.com/event/tech-tequila-talk-ai-bottlenecks-and-the-theory-of-constraints/",
+      "register_url": "https://www.eventbrite.com/e/ai-bottlenecks-and-the-theory-of-constraints-tickets-2002480097878?aff=ebdsoporgprofile",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
     {
       "id": "ics:event_316448127@meetup.com",
       "title": "PyTexas Monthly Meetup: How to Read the AI Brain",
@@ -357,6 +384,31 @@
         "url": "https://iondistrict.com"
       },
       "url": "https://iondistrict.com/event/ion-family-tech-festival-2/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67023",
+      "title": "Agentic Engineering From First Principles To Production",
+      "excerpt": "Learn to build production software with AI agents, starting from first principles.",
+      "start": "2026-10-12T23:00:00Z",
+      "end": "2026-10-13T00:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/agentic-engineering-from-first-principles-to-production/",
       "categories": [
         "startup"
       ],
@@ -845,6 +897,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67040",
+      "title": "DOE From the Other Side of The Table",
+      "excerpt": "An inside perspective on how DOE evaluates technical work and how energy companies and technology developers can engage more effectively.",
+      "start": "2026-10-20T15:00:00Z",
+      "end": "2026-10-20T16:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/doe-from-the-other-side-of-the-table/",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     },
