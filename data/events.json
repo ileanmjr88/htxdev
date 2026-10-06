@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T21:30:38Z",
+  "generated_at": "2026-10-06T09:36:03Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67106",
@@ -235,6 +235,33 @@
       "room": "Lobby",
       "url": "https://iondistrict.com/event/ion-networking-with-cup-of-joey-34/2026-10-09/",
       "register_url": "https://www.cupofjoey.org/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67109",
+      "title": "Social Media Breakfast: How to Tell Better Stories That Inspire Action",
+      "excerpt": "The stories we tell influence what people notice, how they interpret what they see, and what they choose to do next.",
+      "start": "2026-10-09T13:30:00Z",
+      "end": "2026-10-09T15:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 031",
+      "url": "https://iondistrict.com/event/social-media-breakfast-how-to-tell-better-stories-that-inspire-action/",
+      "register_url": "https://houston.impacthub.net/calendar/how-to-tell-better-stories-that-inspire-action/",
       "categories": [
         "startup"
       ],
@@ -901,6 +928,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67119",
+      "title": "Greater Houston Business Procurement Breakfast",
+      "excerpt": "We are a nonprofit that brings together major corporations and government agencies as well as their contracting officers, purchasers, buyers, diversity managers, decision makers, and public officials with small and…",
+      "start": "2026-10-20T12:30:00Z",
+      "end": "2026-10-20T16:15:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/greater-houston-business-procurement-breakfast-11/",
+      "register_url": "https://ghbpf.org/contact/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=67040",
       "title": "DOE From the Other Side of The Table",
       "excerpt": "An inside perspective on how DOE evaluates technical work and how energy companies and technology developers can engage more effectively.",
@@ -1017,6 +1070,32 @@
       "register_url": "https://luma.com/kss9aypy",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67125",
+      "title": "Houston Open Source Society Meetup",
+      "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
+      "start": "2026-10-21T11:00:00Z",
+      "end": "2026-10-22T01:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/houston-open-source-society-meetup/",
+      "register_url": "https://houstonopensourcesociety.com/meetings/wednesday/third/",
+      "categories": [
+        "dev"
       ],
       "sources": 1
     },
@@ -1266,6 +1345,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67052",
+      "title": "Industrial Growth Series: How Industrial Companies Can Win Business in ’27",
+      "excerpt": "Industrial growth is changing. Learn how companies can stay visible, relevant, and competitive as buyers and markets evolve.",
+      "start": "2026-10-27T17:00:00Z",
+      "end": "2026-10-27T18:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/industrial-growth-series-how-industrial-companies-can-win-business-in-27/",
+      "register_url": "https://www.eventbrite.com/e/industrial-growth-series-how-industrial-companies-can-win-business-in-27-tickets-1996110948581?aff=oddtdtcreator",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=66665",
       "title": "TiEcon Texas 2026",
       "excerpt": "TiE Houston, TiE Dallas, and TiE Austin are hosting TiEcon Texas 2026 on October 28–29 at the Ion. The day-and-a-half conference, themed “The Future Runs on Automation,” brings together founders, investors…",
@@ -1491,6 +1596,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67130",
+      "title": "Impact Hub Houston’s 8th Anniversary Celebration",
+      "excerpt": "Eight years of ideas, connections, experiments, collaborations, pivots, and people who believe Houston can be better because of what we build together.",
+      "start": "2026-10-30T19:00:00Z",
+      "end": "2026-10-30T23:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/impact-hub-houstons-8th-anniversary-celebration/",
+      "register_url": "https://luma.com/66yyg93a",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "ics:trh5l9tva915dsjpt4adr4r6sn@google.com_20261031T010000Z",
       "title": "Houston Linux - Social at Finn MacCool's",
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
@@ -1533,6 +1664,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_316863054@meetup.com",
+      "title": "🎃 Houston Robotics Group: Halloween Hack \u0026 Build! 🤖",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-10-31T19:00:00Z",
+      "end": "2026-10-31T22:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/316863054/",
+      "categories": [
+        "hardware"
       ],
       "sources": 1
     },
@@ -2182,6 +2338,29 @@
       "url": "https://iondistrict.com/event/welcome-to-the-ion-an-introduction-and-tour-20/",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261205T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-12-05T03:00:00Z",
+      "end": "2026-12-05T07:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
       ],
       "sources": 1
     }
