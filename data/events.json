@@ -1,50 +1,6 @@
 {
-  "generated_at": "2026-10-06T21:29:59Z",
+  "generated_at": "2026-10-07T09:37:00Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67106",
-      "title": "Tech + Tequila Talk: AI, Bottlenecks, and the Theory of Constraints",
-      "excerpt": "AI can speed up coding, but what happens when the bottleneck moves? Explore smarter software delivery with Alan Vargas of GitLab.",
-      "start": "2026-10-06T22:00:00Z",
-      "end": "2026-10-07T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 031",
-      "url": "https://iondistrict.com/event/tech-tequila-talk-ai-bottlenecks-and-the-theory-of-constraints/",
-      "register_url": "https://www.eventbrite.com/e/ai-bottlenecks-and-the-theory-of-constraints-tickets-2002480097878?aff=ebdsoporgprofile",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "ics:event_316448127@meetup.com",
-      "title": "PyTexas Monthly Meetup: How to Read the AI Brain",
-      "excerpt": "PyHou - Houston Python Enthusiasts! Join us for our monthly meetup! The meetup will take place in the PyTexas Discord server, so be sure to join! This month we are excited to be joined by Shayan Ali",
-      "start": "2026-10-07T01:00:00Z",
-      "end": "2026-10-07T02:00:00Z",
-      "group": {
-        "slug": "pyhou",
-        "name": "PyHou",
-        "url": "https://www.meetup.com/python-14/"
-      },
-      "url": "https://www.meetup.com/python-14/events/316448127/",
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=66078",
       "title": "Rockets Get You to Orbit. Culture Gets You to Stay",
