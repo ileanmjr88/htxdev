@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-10-07T09:37:00Z",
+  "generated_at": "2026-10-07T21:31:23Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=66078",
-      "title": "Rockets Get You to Orbit. Culture Gets You to Stay",
-      "excerpt": "Getting to orbit is a rocket problem. Staying there is a culture problem.",
-      "start": "2026-10-07T13:30:00Z",
-      "end": "2026-10-07T16:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/rockets-get-you-to-orbit-culture-gets-you-to-stay/",
-      "register_url": "https://luma.com/fclj93sf",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:1mlq73mqk1ncjunhq5opkk9bps@google.com",
       "title": "Houston Linux - User Meeting",
@@ -373,6 +347,31 @@
       "sources": 1
     },
     {
+      "id": "ics:event_316883476@meetup.com",
+      "title": "Houston Robotics Group Meeting @TXRX",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-10-10T19:00:00Z",
+      "end": "2026-10-10T23:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/316883476/",
+      "categories": [
+        "hardware"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=67023",
       "title": "Agentic Engineering From First Principles To Production",
       "excerpt": "Learn to build production software with AI agents, starting from first principles.",
@@ -391,7 +390,9 @@
         "zip": "77002",
         "url": "https://iondistrict.com"
       },
+      "room": "Conference Room 027",
       "url": "https://iondistrict.com/event/agentic-engineering-from-first-principles-to-production/",
+      "register_url": "https://urldefense.com/v3/__https://aiblast.co/__;!!PcititFMkQu_!uWQmX5OitZRdvhZJJxiDcOELLQyoeQwKuiG2S4zw0F_CZeemg-isQN2-XboVDW4dtPvfL_TtQRUo6Doa$",
       "categories": [
         "startup"
       ],
