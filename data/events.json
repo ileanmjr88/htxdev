@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T09:38:02Z",
+  "generated_at": "2026-10-08T21:31:12Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=10004982",
@@ -205,6 +205,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67244",
+      "title": "NASA Office Hours",
+      "excerpt": "NASA is bringing its expertise to Houston’s innovation hub! Every other Friday, join us for NASA’s office hours, designed to bridge the gap between Houston’s innovators, entrepreneurs, and startups with NASA’s…",
+      "start": "2026-10-09T15:00:00Z",
+      "end": "2026-10-09T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/nasa-office-hours-26/",
+      "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=66913",
       "title": "Startup Circle Houston 💫",
       "excerpt": "Startup Circle Houston 💫 brings together founders, teammates, experts and newbies of startups in Greater Houston! Past topics include:",
@@ -401,32 +427,6 @@
       },
       "room": "Forum Stairs",
       "url": "https://iondistrict.com/event/mercury-fund-day-at-the-ion-4/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=55943",
-      "title": "Buying and Selling Businesses",
-      "excerpt": "Join Lenny Saizan, owner of Murphy Business \u0026 Financial – Southwest Houston, Managing Director of Urban Capital Network, and creator of the Legacy Maximizer exit strategy, for a practical, real-world discussion on…",
-      "start": "2026-10-14T22:30:00Z",
-      "end": "2026-10-15T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 029 – 030",
-      "url": "https://iondistrict.com/event/buying-and-selling-businesses-10/",
       "categories": [
         "startup"
       ],
@@ -709,32 +709,6 @@
         "url": "https://iondistrict.com"
       },
       "url": "https://iondistrict.com/event/rice-tech-transfer-office-hours-8/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=66936",
-      "title": "NASA Office Hours",
-      "excerpt": "NASA is bringing its expertise to Houston’s innovation hub! Every other Friday, join us for NASA’s office hours, designed to bridge the gap between Houston’s innovators, entrepreneurs, and startups with NASA’s…",
-      "start": "2026-10-16T15:00:00Z",
-      "end": "2026-10-16T17:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/nasa-office-hours-24/",
-      "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
       "categories": [
         "startup"
       ],
@@ -1135,6 +1109,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=66936",
+      "title": "NASA Office Hours",
+      "excerpt": "NASA is bringing its expertise to Houston’s innovation hub! Every other Friday, join us for NASA’s office hours, designed to bridge the gap between Houston’s innovators, entrepreneurs, and startups with NASA’s…",
+      "start": "2026-10-23T15:00:00Z",
+      "end": "2026-10-23T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/nasa-office-hours-24/",
+      "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=66907",
       "title": "Welcome to the Ion: An Introduction and Tour",
       "excerpt": "Join the Ion’s Mentor in Residence, Wade Pinder, for an engaging tour and introduction to the Ion, Houston’s dynamic hub for innovation and entrepreneurship, powered by Rice University. This event is designed for…",
@@ -1278,6 +1278,32 @@
       },
       "url": "https://iondistrict.com/event/industrial-growth-series-how-industrial-companies-can-win-business-in-27/",
       "register_url": "https://www.eventbrite.com/e/industrial-growth-series-how-industrial-companies-can-win-business-in-27-tickets-1996110948581?aff=oddtdtcreator",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=55943",
+      "title": "Buying and Selling Businesses",
+      "excerpt": "Join Lenny Saizan, owner of Murphy Business \u0026 Financial – Southwest Houston, Managing Director of Urban Capital Network, and creator of the Legacy Maximizer exit strategy, for a practical, real-world discussion on…",
+      "start": "2026-10-27T22:30:00Z",
+      "end": "2026-10-28T00:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 032",
+      "url": "https://iondistrict.com/event/buying-and-selling-businesses-10/",
       "categories": [
         "startup"
       ],
@@ -1696,6 +1722,32 @@
         "url": "https://iondistrict.com"
       },
       "url": "https://iondistrict.com/event/welcome-to-the-ion-an-introduction-and-tour-19/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67242",
+      "title": "NASA Office Hours",
+      "excerpt": "NASA is bringing its expertise to Houston’s innovation hub! Every other Friday, join us for NASA’s office hours, designed to bridge the gap between Houston’s innovators, entrepreneurs, and startups with NASA’s…",
+      "start": "2026-11-06T16:00:00Z",
+      "end": "2026-11-06T17:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/nasa-office-hours-25/",
+      "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
       "categories": [
         "startup"
       ],
