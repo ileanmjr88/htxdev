@@ -1,52 +1,6 @@
 {
-  "generated_at": "2026-10-09T21:30:27Z",
+  "generated_at": "2026-10-10T09:32:49Z",
   "events": [
-    {
-      "id": "ics:trh5l9tva915dsjpt4adr4r6sn@google.com_20261010T010000Z",
-      "title": "Houston Linux - Social at Finn MacCool's",
-      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
-      "start": "2026-10-10T01:00:00Z",
-      "end": "2026-10-10T05:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Finn MacCool’s Irish Bar",
-        "address": "1127 Eldridge Pkwy Suite 600",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77077"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261010T020000Z",
-      "title": "Houston Linux - Social at Finn MacCool's",
-      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
-      "start": "2026-10-10T02:00:00Z",
-      "end": "2026-10-10T06:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Finn MacCool’s Irish Bar",
-        "address": "1127 Eldridge Pkwy Suite 600",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77077"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=66475",
       "title": "Ion Family Tech Festival",
