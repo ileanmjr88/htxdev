@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-10T21:29:36Z",
+  "generated_at": "2026-10-11T09:32:52Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67023",
@@ -1996,6 +1996,80 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:6kh906752ogvsi11pi9bbvopdl@google.com",
+      "title": "Houston Linux - User Meeting",
+      "start": "2026-12-10T00:00:00Z",
+      "end": "2026-12-10T03:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Sesh Coworking",
+        "address": "2808 Caroline St #100",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77004"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10004984",
+      "title": "Upstream: Digital Tech Meetup at Second Draught",
+      "excerpt": "Upstream: Digital Tech Meetup – Monthly Social 🍻",
+      "start": "2026-12-10T23:30:00Z",
+      "end": "2026-12-11T02:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Second Draught",
+        "address": "4201 Main St. Suite 130",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com/venue/second-draught/"
+      },
+      "url": "https://iondistrict.com/event/upstream-digital-tech-meetup-at-second-draught-3/2026-12-10/",
+      "register_url": "https://luma.com/timbergrove",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=65852",
+      "title": "Out in Tech Houston Monthly Mixer",
+      "excerpt": "Out in Tech Houston is the local chapter for Out in Tech, the world’s largest non-profit community of LGBTQ+ tech leaders. Out in Tech creates opportunities for our 50,000 members to advance their careers, grow their…",
+      "start": "2026-12-11T01:00:00Z",
+      "end": "2026-12-11T02:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Second Draught",
+        "address": "4201 Main St. Suite 130",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com/venue/second-draught/"
+      },
+      "url": "https://iondistrict.com/event/out-in-tech-houston-monthly-mixer-7/",
+      "register_url": "https://www.eventbrite.com/e/out-in-tech-houston-monthly-mixer-tickets-1979625431957?aff=odcleoeventsincollection",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     }
