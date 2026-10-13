@@ -1,58 +1,6 @@
 {
-  "generated_at": "2026-10-13T09:39:53Z",
+  "generated_at": "2026-10-13T21:26:58Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=66799",
-      "title": "Ignite Possibilities with SUPERGirls SHINE Foundation",
-      "excerpt": "Register here",
-      "start": "2026-10-13T14:00:00Z",
-      "end": "2026-10-13T19:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/ignite-possibilities-sgsf/",
-      "register_url": "https://forms.cloud.microsoft/pages/responsepage.aspx?id=q3A7nQ_4wkC-9bVZAvLEIYFQytoNhz9FkVeIK_xvZeBUOEg0SkVSTzZZOENMRjA4Rk02N1EzMEU1QS4u\u0026amp;route=shorturl",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=55461",
-      "title": "Mercury Fund Day at the Ion",
-      "excerpt": "Welcome to “Mercury Fund Day at the Ion” – a program series hosted by the Ion and Mercury, where software founders can connect with mentorship at Houston’s HQ for innovation.",
-      "start": "2026-10-13T20:30:00Z",
-      "end": "2026-10-14T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Forum Stairs",
-      "url": "https://iondistrict.com/event/mercury-fund-day-at-the-ion-4/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "html:second-wednesday_20261014T230000Z",
       "title": "Houston Open Source Society, Second Wednesday",
@@ -454,6 +402,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_316963919@meetup.com",
+      "title": "Houston Robotics Group Meeting @TXRX",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-10-17T19:00:00Z",
+      "end": "2026-10-17T23:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/316963919/",
+      "categories": [
+        "hardware"
       ],
       "sources": 1
     },
@@ -895,6 +868,31 @@
         "state": "TX",
         "zip": "77077"
       },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_316962316@meetup.com",
+      "title": "Houston Code \u0026 Coffee",
+      "excerpt": "Houston Code and Coffee Code \u0026 Coffee is a friendly, low-pressure meetup for coders and code-curious. All skill levels are welcome!",
+      "start": "2026-10-25T15:00:00Z",
+      "end": "2026-10-25T17:30:00Z",
+      "group": {
+        "slug": "houston-code-and-coffee",
+        "name": "Houston Code and Coffee",
+        "url": "https://www.meetup.com/houston-code-and-coffee/"
+      },
+      "venue": {
+        "name": "Improving Houston",
+        "address": "10111 Richmond Avenue, Suite 100",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77042",
+        "url": "https://improving.com"
+      },
+      "url": "https://www.meetup.com/houston-code-and-coffee/events/316962316/",
       "categories": [
         "dev"
       ],
