@@ -1,54 +1,6 @@
 {
-  "generated_at": "2026-10-14T21:28:19Z",
+  "generated_at": "2026-10-15T09:34:17Z",
   "events": [
-    {
-      "id": "html:second-wednesday_20261014T230000Z",
-      "title": "Houston Open Source Society, Second Wednesday",
-      "start": "2026-10-14T23:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Zion Lutheran Church",
-        "address": "3606 Beauchamp Blvd",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77009",
-        "url": "https://zionhouston.org/"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=60330",
-      "title": "Women In Wealth",
-      "excerpt": "WOMEN IN WEALTH SERIES",
-      "start": "2026-10-14T23:00:00Z",
-      "end": "2026-10-15T01:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/women-in-wealth-2/",
-      "register_url": "https://www.eventbrite.com/e/women-in-wealth-tickets-2000660707031?aff=oddtdtcreator",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=65694",
       "title": "Houston Startup Speedrun",
@@ -1456,6 +1408,28 @@
         "city": "Houston",
         "state": "TX",
         "zip": "77004"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "html:second-wednesday_20261112T000000Z",
+      "title": "Houston Open Source Society, Second Wednesday",
+      "start": "2026-11-12T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Zion Lutheran Church",
+        "address": "3606 Beauchamp Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77009",
+        "url": "https://zionhouston.org/"
       },
       "categories": [
         "dev"
