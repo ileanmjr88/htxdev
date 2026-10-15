@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-10-15T09:34:17Z",
+  "generated_at": "2026-10-15T21:30:01Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=65694",
-      "title": "Houston Startup Speedrun",
-      "excerpt": "The Houston Startup Speedrun is an intensive and fast-paced program designed to provide both early-stage founders and aspiring entrepreneurs with a comprehensive understanding of the Startup Founder’s Journey and the…",
-      "start": "2026-10-15T14:00:00Z",
-      "end": "2026-10-16T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-startup-speedrun-9/",
-      "register_url": "https://www.eventbrite.com/e/wades-houston-startup-speedrun-at-the-ion-tickets-1988360089553?aff=erelexpmlt",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:7etbrqdpflj0laof5hflm47bvd@google.com",
       "title": "Houston Linux - Ion User Meeting",
@@ -600,7 +574,7 @@
     },
     {
       "id": "tribe:iondistrict.com?id=55208",
-      "title": "NASA Tech Talks",
+      "title": "NASA Tech Talks: NASA Technology Prizes and Challenges",
       "excerpt": "We want HOU! Join us to discover NASA’s toughest tech challenges—and apply your skills and expertise to solve them.",
       "start": "2026-10-22T23:00:00Z",
       "end": "2026-10-23T00:00:00Z",
