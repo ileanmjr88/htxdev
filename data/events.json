@@ -1,55 +1,6 @@
 {
-  "generated_at": "2026-10-15T21:30:01Z",
+  "generated_at": "2026-10-16T09:33:01Z",
   "events": [
-    {
-      "id": "ics:7etbrqdpflj0laof5hflm47bvd@google.com",
-      "title": "Houston Linux - Ion User Meeting",
-      "excerpt": "Parking is free for three hours, we recommend that you not arrive too early or leave late. We encourage members to park at 4203 Fannin Street, the \"red\" parking lot, located across Fannin St. from the Ion. This lot is…",
-      "start": "2026-10-15T23:00:00Z",
-      "end": "2026-10-16T01:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Rooms 29 and 30",
-      "url": "https://iondistrict.com/event/houston-linux-user-group-11/",
-      "register_url": "https://www.houstonlinux.org",
-      "categories": [
-        "dev"
-      ],
-      "sources": 2
-    },
-    {
-      "id": "ics:792l7kdf01qbsc4anqbkumo5mt@google.com",
-      "title": "Houston Linux - Social",
-      "start": "2026-10-16T01:00:00Z",
-      "end": "2026-10-16T05:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Social Beer Garden",
-        "address": "3101 San Jacinto St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77004"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004085",
       "title": "Ion Networking with Cup of Joey",
@@ -2061,6 +2012,32 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=56228",
+      "title": "Angel Investing 101",
+      "excerpt": "In a world where only the very wealthy, well connected, and major institutions have access to premium investment opportunities, which have created massive wealth for a small portion of the population, the Innovation…",
+      "start": "2026-12-15T23:30:00Z",
+      "end": "2026-12-16T00:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 029 – 030",
+      "url": "https://iondistrict.com/event/angel-investing-101-13/",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     }
