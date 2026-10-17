@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-10-17T09:28:52Z",
+  "generated_at": "2026-10-17T21:26:26Z",
   "events": [
-    {
-      "id": "ics:event_316963919@meetup.com",
-      "title": "Houston Robotics Group Meeting @TXRX",
-      "excerpt": "Houston Robotics Group",
-      "start": "2026-10-17T19:00:00Z",
-      "end": "2026-10-17T23:00:00Z",
-      "group": {
-        "slug": "houston-robotics-group",
-        "name": "Houston Robotics Group",
-        "url": "https://www.meetup.com/houstonroboticsgroup/"
-      },
-      "venue": {
-        "name": "TXRX Labs",
-        "address": "6501 Navigation Blvd",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77011",
-        "url": "https://txrxlabs.org"
-      },
-      "url": "https://www.meetup.com/houstonroboticsgroup/events/316963919/",
-      "categories": [
-        "hardware"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67119",
       "title": "Greater Houston Business Procurement Breakfast",
