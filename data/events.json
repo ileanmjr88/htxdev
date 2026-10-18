@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T21:26:26Z",
+  "generated_at": "2026-10-18T09:29:17Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67119",
@@ -1730,6 +1730,59 @@
       },
       "room": "Conference Room 029 – 030",
       "url": "https://iondistrict.com/event/angel-investing-101-13/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=65698",
+      "title": "Houston Startup Speedrun",
+      "excerpt": "The Houston Startup Speedrun is an intensive and fast-paced program designed to provide both early-stage founders and aspiring entrepreneurs with a comprehensive understanding of the Startup Founder’s Journey and the…",
+      "start": "2026-12-17T15:00:00Z",
+      "end": "2026-12-18T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/houston-startup-speedrun-11/",
+      "register_url": "https://www.eventbrite.com/e/wades-houston-startup-speedrun-at-the-ion-tickets-1988360089553?aff=erelexpmlt",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10005306",
+      "title": "Houston Linux User Group",
+      "excerpt": "Are you interested or already invested in the Linux Operating System?",
+      "start": "2026-12-18T00:00:00Z",
+      "end": "2026-12-18T02:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 029 – 030",
+      "url": "https://iondistrict.com/event/houston-linux-user-group-10/2026-12-17/",
+      "register_url": "https://www.houstonlinux.org",
       "categories": [
         "startup"
       ],
