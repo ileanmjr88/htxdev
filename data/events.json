@@ -1,83 +1,6 @@
 {
-  "generated_at": "2026-10-20T09:33:45Z",
+  "generated_at": "2026-10-20T21:29:51Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67119",
-      "title": "Greater Houston Business Procurement Breakfast",
-      "excerpt": "We are a nonprofit that brings together major corporations and government agencies as well as their contracting officers, purchasers, buyers, diversity managers, decision makers, and public officials with small and…",
-      "start": "2026-10-20T12:30:00Z",
-      "end": "2026-10-20T16:15:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/greater-houston-business-procurement-breakfast-11/",
-      "register_url": "https://ghbpf.org/contact/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=67040",
-      "title": "DOE From the Other Side of The Table",
-      "excerpt": "An inside perspective on how DOE evaluates technical work and how energy companies and technology developers can engage more effectively.",
-      "start": "2026-10-20T15:00:00Z",
-      "end": "2026-10-20T16:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/doe-from-the-other-side-of-the-table/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=66522",
-      "title": "The Technology Leadership Advantage Series – For CEOs, VCs and PE Firms",
-      "excerpt": "AI isn’t your biggest challenge. Leadership Is. Why most AI strategies fail before the technology does.",
-      "start": "2026-10-20T17:00:00Z",
-      "end": "2026-10-20T18:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/the-technology-leadership-advantage-series-for-ceos-vcs-and-pe-firms-2/",
-      "register_url": "https://www.eventbrite.com/e/the-technology-leadership-advantage-series-for-ceos-vcs-and-pe-firms-tickets-1997508541820?aff=erelpanelorg",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=56224",
       "title": "Angel Investing 101",
@@ -914,6 +837,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67159",
+      "title": "Can We Build the Next Virtual Patient?",
+      "excerpt": "What would it take to simulate a patient well enough to change how we train, test, research and deliver care?",
+      "start": "2026-11-05T00:00:00Z",
+      "end": "2026-11-05T02:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Industrious",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com/venue/industrious/"
+      },
+      "url": "https://iondistrict.com/event/can-we-build-the-next-virtual-patient/",
+      "register_url": "https://luma.com/rbsdhlcn",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=10004088",
       "title": "Ion Networking with Cup of Joey",
       "excerpt": "What is the purpose of Cup of Joey? It is to create a connected culture of coffee shop-open networking across our region. Every Friday morning, you’ll have the opportunity to meet new and expand your current networks…",
@@ -986,6 +935,32 @@
       },
       "url": "https://iondistrict.com/event/nasa-office-hours-25/",
       "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67541",
+      "title": "AfroTech TechWalk | Houston",
+      "excerpt": "We’re building a different sort of networking event for members of the Tech and SaaS communities to get outside, meet new people, and enjoy some fresh air, while practicing mindful movement.",
+      "start": "2026-11-06T17:30:00Z",
+      "end": "2026-11-06T19:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/afrotech-techwalk-houston/",
+      "register_url": "https://luma.com/techwalk-co9k",
       "categories": [
         "startup"
       ],
