@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T09:34:33Z",
+  "generated_at": "2026-10-22T21:28:46Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=55208",
@@ -648,6 +648,32 @@
       },
       "url": "https://iondistrict.com/event/innovation-x-culture-summit/",
       "register_url": "https://luma.com/12ioljzb",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67659",
+      "title": "Startup Heat Simulation",
+      "excerpt": "The Startup Simulation is an in-person startup simulation that brings founders, investors, mentors and ecosystem partners together to navigate real decisions, tradeoffs and uncertainty, before the stakes are real.",
+      "start": "2026-11-04T15:00:00Z",
+      "end": "2026-11-04T18:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/startup-heat-simulation/",
+      "register_url": "https://luma.com/bg6isp5z",
       "categories": [
         "startup"
       ],
