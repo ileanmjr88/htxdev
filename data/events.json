@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-10-22T21:28:46Z",
+  "generated_at": "2026-10-23T09:34:16Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=55208",
-      "title": "NASA Tech Talks: NASA Technology Prizes and Challenges",
-      "excerpt": "We want HOU! Join us to discover NASA’s toughest tech challenges—and apply your skills and expertise to solve them.",
-      "start": "2026-10-22T23:00:00Z",
-      "end": "2026-10-23T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/nasa-tech-talks-23/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004086",
       "title": "Ion Networking with Cup of Joey",
