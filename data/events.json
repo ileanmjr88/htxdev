@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-25T21:27:23Z",
+  "generated_at": "2026-10-26T09:45:54Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67052",
@@ -1148,6 +1148,32 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67746",
+      "title": "Mercury Fund Day at the Ion: Middle America and the Vertical Era of AI",
+      "excerpt": "Welcome to “Mercury Fund Day at the Ion” – a program series hosted by the Ion and Mercury, where software founders can connect with mentorship at Houston’s HQ for innovation.",
+      "start": "2026-12-02T21:30:00Z",
+      "end": "2026-12-03T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Forum Stairs",
+      "url": "https://iondistrict.com/event/mercury-fund-day-at-the-ion-middle-america-and-the-vertical-era-of-ai/",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     },
