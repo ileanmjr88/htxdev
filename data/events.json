@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-26T09:45:54Z",
+  "generated_at": "2026-10-26T21:30:41Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67052",
@@ -570,6 +570,56 @@
       },
       "url": "https://iondistrict.com/event/nasa-office-hours-25/",
       "register_url": "https://docs.google.com/forms/d/e/1FAIpQLSfOaWd356QyOBTRkvJmYvwsnpn0ikAAG-8Xy46fQrYlzrONAw/viewform",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67772",
+      "title": "Rice Tech Transfer Office Hours",
+      "excerpt": "Have an idea, startup, or company looking for innovative technology? Meet with the Rice University Office of Technology Transfer during office hours at The Ion to explore how university research can power your next…",
+      "start": "2026-11-06T16:00:00Z",
+      "end": "2026-11-06T17:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/rice-tech-transfer-office-hours-10/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67774",
+      "title": "SCORE Office Hours",
+      "excerpt": "About SCORE Office Hours",
+      "start": "2026-11-06T16:00:00Z",
+      "end": "2026-11-06T17:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/score-office-hours-59/",
       "categories": [
         "startup"
       ],
