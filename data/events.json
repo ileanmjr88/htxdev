@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-10-27T09:36:05Z",
+  "generated_at": "2026-10-27T21:23:32Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67052",
-      "title": "Industrial Growth Series: How Industrial Companies Can Win Business in ’27",
-      "excerpt": "Industrial growth is changing. Learn how companies can stay visible, relevant, and competitive as buyers and markets evolve.",
-      "start": "2026-10-27T17:00:00Z",
-      "end": "2026-10-27T18:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/industrial-growth-series-how-industrial-companies-can-win-business-in-27/",
-      "register_url": "https://www.eventbrite.com/e/industrial-growth-series-how-industrial-companies-can-win-business-in-27-tickets-1996110948581?aff=oddtdtcreator",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=55943",
       "title": "Buying and Selling Businesses",
@@ -398,6 +372,23 @@
       "register_url": "https://luma.com/12ioljzb",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_317161040@meetup.com",
+      "title": "PyTexas Monthly Meetup: Threat Modeling Python AI Applications",
+      "excerpt": "PyHou - Houston Python Enthusiasts! Join us for our monthly meetup! The meetup will take place in the PyTexas Discord server, so be sure to join! This month we are excited to be joined by Chakra Pavan Kumar Kota",
+      "start": "2026-11-04T02:00:00Z",
+      "end": "2026-11-04T03:00:00Z",
+      "group": {
+        "slug": "pyhou",
+        "name": "PyHou",
+        "url": "https://www.meetup.com/python-14/"
+      },
+      "url": "https://www.meetup.com/python-14/events/317161040/",
+      "categories": [
+        "dev"
       ],
       "sources": 1
     },
