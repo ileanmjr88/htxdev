@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-26T21:30:41Z",
+  "generated_at": "2026-10-27T09:36:05Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67052",
@@ -971,6 +971,28 @@
       "sources": 1
     },
     {
+      "id": "html:third-wednesday_20261119T000000Z",
+      "title": "Houston Open Source Society, Third Wednesday",
+      "start": "2026-11-19T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=65696",
       "title": "Houston Startup Speedrun",
       "excerpt": "The Houston Startup Speedrun is an intensive and fast-paced program designed to provide both early-stage founders and aspiring entrepreneurs with a comprehensive understanding of the Startup Founder’s Journey and the…",
@@ -1636,6 +1658,29 @@
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
       "start": "2026-12-19T03:00:00Z",
       "end": "2026-12-19T07:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261226T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2026-12-26T03:00:00Z",
+      "end": "2026-12-26T07:00:00Z",
       "group": {
         "slug": "houston-linux-user-group",
         "name": "Houston Linux User Group",
