@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-10-27T21:23:32Z",
+  "generated_at": "2026-10-28T09:26:54Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=55943",
-      "title": "Buying and Selling Businesses",
-      "excerpt": "Join Lenny Saizan, owner of Murphy Business \u0026 Financial – Southwest Houston, Managing Director of Urban Capital Network, and creator of the Legacy Maximizer exit strategy, for a practical, real-world discussion on…",
-      "start": "2026-10-27T22:30:00Z",
-      "end": "2026-10-28T00:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "room": "Conference Room 032",
-      "url": "https://iondistrict.com/event/buying-and-selling-businesses-10/",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=66665",
       "title": "TiEcon Texas 2026",
