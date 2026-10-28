@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-10-28T09:26:54Z",
+  "generated_at": "2026-10-28T21:23:49Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=66665",
-      "title": "TiEcon Texas 2026",
-      "excerpt": "TiE Houston, TiE Dallas, and TiE Austin are hosting TiEcon Texas 2026 on October 28–29 at the Ion. The day-and-a-half conference, themed “The Future Runs on Automation,” brings together founders, investors…",
-      "start": "2026-10-28T19:00:00Z",
-      "end": "2026-10-29T23:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/tiecon-texas-2026/",
-      "register_url": "https://www.tiecontexas.org",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:7uql4b3akmuqggmk895nm5d5jo@google.com",
       "title": "Houston Linux - User Meeting",
@@ -854,6 +828,32 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67793",
+      "title": "Entrepreneurship Roundtable with OPEN",
+      "excerpt": "This event will be a facilitated discussion bringing together founders, builders, and innovators to explore what it takes to create, scale, and sustain meaningful ventures. Every roundtable will have different topics of…",
+      "start": "2026-11-16T17:00:00Z",
+      "end": "2026-11-16T19:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/entrepreneurship-roundtable-with-open-5/",
+      "register_url": "https://luma.com/uah9mtju",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     },
