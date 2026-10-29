@@ -1,50 +1,6 @@
 {
-  "generated_at": "2026-10-28T21:23:49Z",
+  "generated_at": "2026-10-29T09:27:05Z",
   "events": [
-    {
-      "id": "ics:7uql4b3akmuqggmk895nm5d5jo@google.com",
-      "title": "Houston Linux - User Meeting",
-      "start": "2026-10-28T23:00:00Z",
-      "end": "2026-10-29T02:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Sesh Coworking",
-        "address": "2808 Caroline St #100",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77004"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "html:fourth-wednesday_20261028T230000Z",
-      "title": "Houston Open Source Society, Fourth Wednesday",
-      "start": "2026-10-28T23:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Bayland Community Center",
-        "address": "6400 Bissonnet Street",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77074",
-        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004087",
       "title": "Ion Networking with Cup of Joey",
@@ -1132,6 +1088,28 @@
         "city": "Houston",
         "state": "TX",
         "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "html:fourth-wednesday_20261126T000000Z",
+      "title": "Houston Open Source Society, Fourth Wednesday",
+      "start": "2026-11-26T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Bayland Community Center",
+        "address": "6400 Bissonnet Street",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77074",
+        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
       },
       "categories": [
         "dev"
