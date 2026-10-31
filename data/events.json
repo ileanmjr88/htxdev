@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-10-31T09:23:31Z",
+  "generated_at": "2026-10-31T21:23:30Z",
   "events": [
-    {
-      "id": "ics:event_316863054@meetup.com",
-      "title": "🎃 Houston Robotics Group: Halloween Hack \u0026 Build! 🤖",
-      "excerpt": "Houston Robotics Group",
-      "start": "2026-10-31T19:00:00Z",
-      "end": "2026-10-31T22:00:00Z",
-      "group": {
-        "slug": "houston-robotics-group",
-        "name": "Houston Robotics Group",
-        "url": "https://www.meetup.com/houstonroboticsgroup/"
-      },
-      "venue": {
-        "name": "TXRX Labs",
-        "address": "6501 Navigation Blvd",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77011",
-        "url": "https://txrxlabs.org"
-      },
-      "url": "https://www.meetup.com/houstonroboticsgroup/events/316863054/",
-      "categories": [
-        "hardware"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67605",
       "title": "Innovation x Culture Summit",
