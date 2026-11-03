@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T21:23:42Z",
+  "generated_at": "2026-11-03T09:24:27Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67605",
@@ -164,6 +164,28 @@
       "register_url": "https://luma.com/rbsdhlcn",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:3l9haled0rhg6h83bg4ookato5@google.com",
+      "title": "Houston Linux - Social",
+      "start": "2026-11-05T03:00:00Z",
+      "end": "2026-11-05T06:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Social Beer Garden HTX",
+        "address": "3101 San Jacinto St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77004"
+      },
+      "categories": [
+        "dev"
       ],
       "sources": 1
     },
@@ -567,6 +589,32 @@
       "sources": 1
     },
     {
+      "id": "tribe:iondistrict.com?id=67821",
+      "title": "Technology Transfer Thursdays",
+      "excerpt": "Houston’s top research institutions are driving the next wave of foundational computing breakthroughs. Join us at The Ion District for the third installment of Tech Transfer Thursday, focused squarely on Computing…",
+      "start": "2026-11-12T23:30:00Z",
+      "end": "2026-11-13T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/technology-transfer-thursdays/",
+      "register_url": "https://luma.com/dwz8sxk8",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=65850",
       "title": "Out in Tech Houston Monthly Mixer",
       "excerpt": "Out in Tech Houston is the local chapter for Out in Tech, the world’s largest non-profit community of LGBTQ+ tech leaders. Out in Tech creates opportunities for our 50,000 members to advance their careers, grow their…",
@@ -640,6 +688,32 @@
       },
       "url": "https://iondistrict.com/event/pr-and-social-media-strategies-to-get-found-and-build-trust/",
       "register_url": "https://houston.impacthub.net/calendar/pr-and-social-media-strategies-to-get-found-and-build-trust/",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67710",
+      "title": "PR and Social Media Strategies to Get Found and Build Trust",
+      "excerpt": "When someone searches for your business online or asks AI for a recommendation, will they find you, and will they trust what they find?",
+      "start": "2026-11-13T14:30:00Z",
+      "end": "2026-11-13T16:30:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/pr-and-social-media-strategies-to-get-found-and-build-trust-2/",
+      "register_url": "https://www.eventbrite.com/e/pr-and-social-media-strategies-to-get-found-and-build-trust-tickets-2003830757738",
       "categories": [
         "startup"
       ],
@@ -1630,6 +1704,29 @@
       "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
       "start": "2026-12-26T03:00:00Z",
       "end": "2026-12-26T07:00:00Z",
+      "group": {
+        "slug": "houston-linux-user-group",
+        "name": "Houston Linux User Group",
+        "url": "https://www.houstonlinux.org/"
+      },
+      "venue": {
+        "name": "Finn MacCool’s Irish Bar",
+        "address": "1127 Eldridge Pkwy Suite 600",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20270102T030000Z",
+      "title": "Houston Linux - Social at Finn MacCool's",
+      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
+      "start": "2027-01-02T03:00:00Z",
+      "end": "2027-01-02T07:00:00Z",
       "group": {
         "slug": "houston-linux-user-group",
         "name": "Houston Linux User Group",
