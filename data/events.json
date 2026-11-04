@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-11-04T09:25:06Z",
+  "generated_at": "2026-11-04T21:23:22Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67659",
-      "title": "Startup Heat Simulation",
-      "excerpt": "The Startup Simulation is an in-person startup simulation that brings founders, investors, mentors and ecosystem partners together to navigate real decisions, tradeoffs and uncertainty, before the stakes are real.",
-      "start": "2026-11-04T15:00:00Z",
-      "end": "2026-11-04T18:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/startup-heat-simulation/",
-      "register_url": "https://luma.com/bg6isp5z",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:0kkfciaoif3c46ev1h494cv0ir@google.com",
       "title": "Houston Linux - User Meeting",
@@ -1025,6 +999,32 @@
       "room": "Conference Room 028",
       "url": "https://iondistrict.com/event/enrg-htx-november-2026/",
       "register_url": "https://www.eventbrite.com/e/enrg-htx-november-2026-tickets-1992151890933?aff=oddtdtcreator",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67981",
+      "title": "EOS Workshop: Get a Grip on Your Business",
+      "excerpt": "Are you running your business, or is it running you? This free, hands-on workshop for owners of growing companies is a three-hour working session built around EOS, the Entrepreneurial Operating System, which more than…",
+      "start": "2026-11-20T15:00:00Z",
+      "end": "2026-11-20T18:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/eos-workshop/",
+      "register_url": "https://www.craigceccanti.com/eos-workshop/",
       "categories": [
         "startup"
       ],
