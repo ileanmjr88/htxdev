@@ -1,98 +1,6 @@
 {
-  "generated_at": "2026-11-04T21:23:22Z",
+  "generated_at": "2026-11-05T09:24:57Z",
   "events": [
-    {
-      "id": "ics:0kkfciaoif3c46ev1h494cv0ir@google.com",
-      "title": "Houston Linux - User Meeting",
-      "start": "2026-11-05T00:00:00Z",
-      "end": "2026-11-05T03:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Sesh Coworking",
-        "address": "2808 Caroline St #100",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77004"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "html:first-wednesday_20261105T000000Z",
-      "title": "Houston Open Source Society, First Wednesday",
-      "start": "2026-11-05T00:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Improving Houston",
-        "address": "10111 Richmond Avenue, Suite 100",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77042",
-        "url": "https://improving.com"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "tribe:iondistrict.com?id=67159",
-      "title": "Can We Build the Next Virtual Patient?",
-      "excerpt": "What would it take to simulate a patient well enough to change how we train, test, research and deliver care?",
-      "start": "2026-11-05T00:00:00Z",
-      "end": "2026-11-05T02:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Industrious",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com/venue/industrious/"
-      },
-      "url": "https://iondistrict.com/event/can-we-build-the-next-virtual-patient/",
-      "register_url": "https://luma.com/rbsdhlcn",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "ics:3l9haled0rhg6h83bg4ookato5@google.com",
-      "title": "Houston Linux - Social",
-      "start": "2026-11-05T03:00:00Z",
-      "end": "2026-11-05T06:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Social Beer Garden HTX",
-        "address": "3101 San Jacinto St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77004"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004088",
       "title": "Ion Networking with Cup of Joey",
@@ -1225,6 +1133,28 @@
       "sources": 1
     },
     {
+      "id": "html:first-wednesday_20261203T000000Z",
+      "title": "Houston Open Source Society, First Wednesday",
+      "start": "2026-12-03T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Improving Houston",
+        "address": "10111 Richmond Avenue, Suite 100",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77042",
+        "url": "https://improving.com"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=53932",
       "title": "Holiday Block Party in the Ion District",
       "excerpt": "Celebrate the season of innovation and community at the Ion District Holiday Block Party! Join us for an evening filled with holiday cheer, local bites, drinks, music and meaningful connection across Houston’s…",
@@ -1645,6 +1575,28 @@
         "city": "Houston",
         "state": "TX",
         "zip": "77077"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "html:fifth-wednesday_20261231T000000Z",
+      "title": "Houston Open Source Society, Fifth Wednesday",
+      "start": "2026-12-31T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Bayland Community Center",
+        "address": "6400 Bissonnet Street",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77074",
+        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
       },
       "categories": [
         "dev"
