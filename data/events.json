@@ -1,31 +1,6 @@
 {
-  "generated_at": "2026-11-07T09:23:04Z",
+  "generated_at": "2026-11-07T21:23:26Z",
   "events": [
-    {
-      "id": "ics:event_316967080@meetup.com",
-      "title": "The Techover",
-      "excerpt": "Houston Code and Coffee We’re inviting Houston tech groups from all over the city to come hang out together at the Texas Renaissance Festival!",
-      "start": "2026-11-07T15:00:00Z",
-      "end": "2026-11-08T02:00:00Z",
-      "group": {
-        "slug": "houston-code-and-coffee",
-        "name": "Houston Code and Coffee",
-        "url": "https://www.meetup.com/houston-code-and-coffee/"
-      },
-      "venue": {
-        "name": "Improving Houston",
-        "address": "10111 Richmond Avenue, Suite 100",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77042",
-        "url": "https://improving.com"
-      },
-      "url": "https://www.meetup.com/houston-code-and-coffee/events/316967080/",
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67842",
       "title": "Houston Cup of Capital",
