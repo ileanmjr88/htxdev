@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-11-09T09:27:37Z",
+  "generated_at": "2026-11-09T21:23:16Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67842",
-      "title": "Houston Cup of Capital",
-      "excerpt": "Join us for Capital Factory’s most popular public coffee networking event series co-hosted by Capital Factory, Rice Alliance, and Lilie Lab.",
-      "start": "2026-11-09T14:00:00Z",
-      "end": "2026-11-09T16:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-cup-of-capital/",
-      "register_url": "https://luma.com/d2rqt6h1",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67845",
       "title": "Hello Alice: Main Street Rising Tour Houston",
@@ -456,32 +430,6 @@
       "sources": 1
     },
     {
-      "id": "tribe:iondistrict.com?id=67861",
-      "title": "Houston Open Source Society Meetup",
-      "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
-      "start": "2026-11-18T12:00:00Z",
-      "end": "2026-11-19T02:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-open-source-society-meetup-2/",
-      "register_url": "https://houstonopensourcesociety.com/meetings/wednesday/third/",
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
-    {
       "id": "tribe:iondistrict.com?id=55701",
       "title": "How to Start a Startup",
       "excerpt": "You have an idea…now what?",
@@ -536,7 +484,9 @@
     {
       "id": "html:third-wednesday_20261119T000000Z",
       "title": "Houston Open Source Society, Third Wednesday",
+      "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
       "start": "2026-11-19T00:00:00Z",
+      "end": "2026-11-19T02:00:00Z",
       "group": {
         "slug": "houston-open-source-society",
         "name": "Houston Open Source Society",
@@ -550,10 +500,12 @@
         "zip": "77002",
         "url": "https://iondistrict.com"
       },
+      "url": "https://iondistrict.com/event/houston-open-source-society-meetup-2/",
+      "register_url": "https://houstonopensourcesociety.com/meetings/wednesday/third/",
       "categories": [
         "dev"
       ],
-      "sources": 1
+      "sources": 2
     },
     {
       "id": "tribe:iondistrict.com?id=65696",
@@ -1176,6 +1128,32 @@
       "url": "https://iondistrict.com/event/angel-investing-101-13/",
       "categories": [
         "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=68109",
+      "title": "Houston Open Source Society Meetup",
+      "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
+      "start": "2026-12-17T00:00:00Z",
+      "end": "2026-12-17T02:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/houston-open-source-society-meetup-3/",
+      "register_url": "https://houstonopensourcesociety.com/meetings/wednesday/third/",
+      "categories": [
+        "dev"
       ],
       "sources": 1
     },
