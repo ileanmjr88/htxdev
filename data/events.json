@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-11-10T09:24:46Z",
+  "generated_at": "2026-11-10T21:23:15Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67845",
-      "title": "Hello Alice: Main Street Rising Tour Houston",
-      "excerpt": "About this event",
-      "start": "2026-11-10T14:00:00Z",
-      "end": "2026-11-10T20:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/hello-alice-main-street-rising-tour-houston/",
-      "register_url": "https://www.helloalice.com/events/main-street-rising-houston",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=56226",
       "title": "FirstCheck: Investor Foundations",
