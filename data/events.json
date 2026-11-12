@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T09:24:40Z",
+  "generated_at": "2026-11-12T21:23:16Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=10004983",
@@ -711,6 +711,33 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=68238",
+      "title": "THE PLAYMAKERS – A Tech + Tequila Party!",
+      "excerpt": "The 2026 season is coming to a close, and it’s time to reveal our starting lineup!",
+      "start": "2026-12-01T23:00:00Z",
+      "end": "2026-12-02T01:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "room": "Conference Room 029 – 030",
+      "url": "https://iondistrict.com/event/the-playmakers-a-tech-tequila-party/",
+      "register_url": "https://luma.com/n2fhlg5o",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     },
