@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-14T21:22:55Z",
+  "generated_at": "2026-11-15T09:23:24Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=67793",
@@ -403,6 +403,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_317436251@meetup.com",
+      "title": "Houston Robotics Group Meeting @TXRX",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-11-21T20:00:00Z",
+      "end": "2026-11-22T00:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/317436251/",
+      "categories": [
+        "hardware"
       ],
       "sources": 1
     },
@@ -1110,6 +1135,58 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=67893",
+      "title": "10 Guiding Principles for a Winning Marketing Strategy",
+      "excerpt": "Workshop participants will learn time-tested marketing principles and business frameworks for growth. Key benefits of the workshop include:",
+      "start": "2027-01-14T22:00:00Z",
+      "end": "2027-01-15T00:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/10-guiding-principles-for-a-winning-marketing-strategy-7/",
+      "register_url": "https://sblemons.com/corporate-training/#wmsevents",
+      "categories": [
+        "startup"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=10004985",
+      "title": "Upstream: Digital Tech Meetup at Second Draught",
+      "excerpt": "Upstream: Digital Tech Meetup – Monthly Social 🍻",
+      "start": "2027-01-14T23:30:00Z",
+      "end": "2027-01-15T02:00:00Z",
+      "group": {
+        "slug": "ion-district",
+        "name": "Ion District",
+        "url": "https://iondistrict.com"
+      },
+      "venue": {
+        "name": "Second Draught",
+        "address": "4201 Main St. Suite 130",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com/venue/second-draught/"
+      },
+      "url": "https://iondistrict.com/event/upstream-digital-tech-meetup-at-second-draught-3/2027-01-14/",
+      "register_url": "https://luma.com/timbergrove",
+      "categories": [
+        "startup"
       ],
       "sources": 1
     }
