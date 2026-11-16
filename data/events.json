@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-11-16T09:34:55Z",
+  "generated_at": "2026-11-16T21:23:29Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67793",
-      "title": "Entrepreneurship Roundtable with OPEN",
-      "excerpt": "This event will be a facilitated discussion bringing together founders, builders, and innovators to explore what it takes to create, scale, and sustain meaningful ventures. Every roundtable will have different topics of…",
-      "start": "2026-11-16T17:00:00Z",
-      "end": "2026-11-16T19:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/entrepreneurship-roundtable-with-open-5/",
-      "register_url": "https://luma.com/uah9mtju",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67854",
       "title": "What CEOs, CCOs, and CXOs Should Know Before Hiring Another BD Team",
