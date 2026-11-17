@@ -1,32 +1,6 @@
 {
-  "generated_at": "2026-11-17T09:25:24Z",
+  "generated_at": "2026-11-17T21:23:38Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67854",
-      "title": "What CEOs, CCOs, and CXOs Should Know Before Hiring Another BD Team",
-      "excerpt": "Overview",
-      "start": "2026-11-17T18:00:00Z",
-      "end": "2026-11-17T19:00:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/what-ceos-ccos-and-cxos-should-know-before-hiring-another-bd-team/",
-      "register_url": "https://www.eventbrite.com/e/what-ceos-ccos-and-cxos-should-know-before-hiring-another-bd-team-tickets-2003936345554?aff=ebdsoporgprofile",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=67596",
       "title": "Houston Pitch Nights at The Ion: What Goes Into Your Pitch Deck",
