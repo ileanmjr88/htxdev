@@ -1,49 +1,6 @@
 {
-  "generated_at": "2026-11-17T21:23:38Z",
+  "generated_at": "2026-11-18T09:24:50Z",
   "events": [
-    {
-      "id": "tribe:iondistrict.com?id=67596",
-      "title": "Houston Pitch Nights at The Ion: What Goes Into Your Pitch Deck",
-      "excerpt": "Hello friends!",
-      "start": "2026-11-18T00:00:00Z",
-      "end": "2026-11-18T01:30:00Z",
-      "group": {
-        "slug": "ion-district",
-        "name": "Ion District",
-        "url": "https://iondistrict.com"
-      },
-      "venue": {
-        "name": "Ion",
-        "address": "4201 Main St",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77002",
-        "url": "https://iondistrict.com"
-      },
-      "url": "https://iondistrict.com/event/houston-pitch-nights-at-the-ion-what-goes-into-your-pitch-deck/",
-      "register_url": "https://luma.com/fwo5t7zm",
-      "categories": [
-        "startup"
-      ],
-      "sources": 1
-    },
-    {
-      "id": "ics:event_317414276@meetup.com",
-      "title": " Large Language Models Without Language - Using LLM Techniques in Other Domains",
-      "excerpt": "PyHou - Houston Python Enthusiasts! Welcome to our next Python Meetup! Whether you're a seasoned developer or just beginning your Python journey, this event is designed to help you dive deeper into the language, meet…",
-      "start": "2026-11-18T00:00:00Z",
-      "end": "2026-11-18T02:00:00Z",
-      "group": {
-        "slug": "pyhou",
-        "name": "PyHou",
-        "url": "https://www.meetup.com/python-14/"
-      },
-      "url": "https://www.meetup.com/python-14/events/317414276/",
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=55701",
       "title": "How to Start a Startup",
