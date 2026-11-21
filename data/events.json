@@ -1,29 +1,6 @@
 {
-  "generated_at": "2026-11-20T21:23:36Z",
+  "generated_at": "2026-11-21T09:23:40Z",
   "events": [
-    {
-      "id": "ics:dunmq90cjgatqiqbbl2e5ra7eq@google.com_20261121T030000Z",
-      "title": "Houston Linux - Social at Finn MacCool's",
-      "excerpt": "Awesome HLUG party at Finn MacCool's! Food is whatever you want to bring. See you all there!",
-      "start": "2026-11-21T03:00:00Z",
-      "end": "2026-11-21T07:00:00Z",
-      "group": {
-        "slug": "houston-linux-user-group",
-        "name": "Houston Linux User Group",
-        "url": "https://www.houstonlinux.org/"
-      },
-      "venue": {
-        "name": "Finn MacCool’s Irish Bar",
-        "address": "1127 Eldridge Pkwy Suite 600",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77077"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "ics:event_317436251@meetup.com",
       "title": "Houston Robotics Group Meeting @TXRX",
@@ -957,6 +934,32 @@
         "state": "TX",
         "zip": "77077"
       },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "tribe:iondistrict.com?id=68111",
+      "title": "Houston Open Source Society Meetup",
+      "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
+      "start": "2027-01-21T00:00:00Z",
+      "end": "2027-01-21T02:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Ion",
+        "address": "4201 Main St",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77002",
+        "url": "https://iondistrict.com"
+      },
+      "url": "https://iondistrict.com/event/houston-open-source-society-meetup-4/",
+      "register_url": "https://houstonopensourcesociety.com/meetings/wednesday/third/",
       "categories": [
         "dev"
       ],
