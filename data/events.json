@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-22T21:23:25Z",
+  "generated_at": "2026-11-23T09:28:16Z",
   "events": [
     {
       "id": "html:fourth-wednesday_20261126T000000Z",
@@ -412,6 +412,28 @@
       "sources": 1
     },
     {
+      "id": "html:second-wednesday_20261210T000000Z",
+      "title": "Houston Open Source Society, Second Wednesday",
+      "start": "2026-12-10T00:00:00Z",
+      "group": {
+        "slug": "houston-open-source-society",
+        "name": "Houston Open Source Society",
+        "url": "https://houstonopensourcesociety.com"
+      },
+      "venue": {
+        "name": "Zion Lutheran Church",
+        "address": "3606 Beauchamp Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77009",
+        "url": "https://zionhouston.org/"
+      },
+      "categories": [
+        "dev"
+      ],
+      "sources": 1
+    },
+    {
       "id": "tribe:iondistrict.com?id=10004984",
       "title": "Upstream: Digital Tech Meetup at Second Draught",
       "excerpt": "Upstream: Digital Tech Meetup – Monthly Social 🍻",
@@ -541,7 +563,7 @@
     },
     {
       "id": "tribe:iondistrict.com?id=68109",
-      "title": "Houston Open Source Society Meetup",
+      "title": "Houston Open Source Society, Third Wednesday",
       "excerpt": "The Houston Open Source Society (HOSS) is a society dedicated to promoting open source software education, development, and support. We profess collaborative coding practices, user-ownership of data and software, and…",
       "start": "2026-12-17T00:00:00Z",
       "end": "2026-12-17T02:00:00Z",
@@ -563,7 +585,7 @@
       "categories": [
         "dev"
       ],
-      "sources": 1
+      "sources": 2
     },
     {
       "id": "tribe:iondistrict.com?id=65698",
