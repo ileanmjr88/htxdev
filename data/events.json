@@ -1,28 +1,6 @@
 {
-  "generated_at": "2026-11-25T21:24:03Z",
+  "generated_at": "2026-11-26T09:26:02Z",
   "events": [
-    {
-      "id": "html:fourth-wednesday_20261126T000000Z",
-      "title": "Houston Open Source Society, Fourth Wednesday",
-      "start": "2026-11-26T00:00:00Z",
-      "group": {
-        "slug": "houston-open-source-society",
-        "name": "Houston Open Source Society",
-        "url": "https://houstonopensourcesociety.com"
-      },
-      "venue": {
-        "name": "Bayland Community Center",
-        "address": "6400 Bissonnet Street",
-        "city": "Houston",
-        "state": "TX",
-        "zip": "77074",
-        "url": "https://cp4.harriscountytx.gov/Community-Centers/Community-Center/bayland-community-center"
-      },
-      "categories": [
-        "dev"
-      ],
-      "sources": 1
-    },
     {
       "id": "tribe:iondistrict.com?id=10004091",
       "title": "Ion Networking with Cup of Joey",
