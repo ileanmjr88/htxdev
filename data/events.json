@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T21:23:53Z",
+  "generated_at": "2026-11-27T09:25:34Z",
   "events": [
     {
       "id": "tribe:iondistrict.com?id=10004091",
@@ -71,6 +71,31 @@
       },
       "categories": [
         "dev"
+      ],
+      "sources": 1
+    },
+    {
+      "id": "ics:event_317603054@meetup.com",
+      "title": "Houston Robotics Group Meeting @TXRX",
+      "excerpt": "Houston Robotics Group",
+      "start": "2026-11-28T20:00:00Z",
+      "end": "2026-11-29T00:00:00Z",
+      "group": {
+        "slug": "houston-robotics-group",
+        "name": "Houston Robotics Group",
+        "url": "https://www.meetup.com/houstonroboticsgroup/"
+      },
+      "venue": {
+        "name": "TXRX Labs",
+        "address": "6501 Navigation Blvd",
+        "city": "Houston",
+        "state": "TX",
+        "zip": "77011",
+        "url": "https://txrxlabs.org"
+      },
+      "url": "https://www.meetup.com/houstonroboticsgroup/events/317603054/",
+      "categories": [
+        "hardware"
       ],
       "sources": 1
     },
